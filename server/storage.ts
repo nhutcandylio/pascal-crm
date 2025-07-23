@@ -165,6 +165,8 @@ export class MemStorage implements IStorage {
     const id = this.currentCustomerId++;
     const customer: Customer = {
       ...insertCustomer,
+      phone: insertCustomer.phone || null,
+      industry: insertCustomer.industry || null,
       id,
       createdAt: new Date()
     };
@@ -236,6 +238,7 @@ export class MemStorage implements IStorage {
     const now = new Date();
     const deal: Deal = {
       ...insertDeal,
+      closeDate: insertDeal.closeDate || null,
       id,
       createdAt: now,
       updatedAt: now
@@ -307,6 +310,8 @@ export class MemStorage implements IStorage {
     const id = this.currentActivityId++;
     const activity: Activity = {
       ...insertActivity,
+      customerId: insertActivity.customerId || null,
+      dealId: insertActivity.dealId || null,
       id,
       createdAt: new Date()
     };

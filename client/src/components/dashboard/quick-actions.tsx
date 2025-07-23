@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Handshake, Plus, BarChart3 } from "lucide-react";
 import CustomerModal from "@/components/modals/customer-modal";
-import DealModal from "@/components/modals/deal-modal";
-import ActivityModal from "@/components/modals/activity-modal";
+import DealModal from "../modals/deal-modal";
+import ActivityModal from "../modals/activity-modal";
 
 export default function QuickActions() {
   const [customerModalOpen, setCustomerModalOpen] = useState(false);

@@ -126,14 +126,14 @@ export default function CustomerModal({ isOpen, onClose }: CustomerModalProps) {
               id="phone"
               type="tel"
               placeholder="Enter phone number"
-              value={formData.phone}
+              value={formData.phone || ""}
               onChange={(e) => handleInputChange("phone", e.target.value)}
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="industry">Industry</Label>
-            <Select value={formData.industry} onValueChange={(value) => handleInputChange("industry", value)}>
+            <Select value={formData.industry || ""} onValueChange={(value) => handleInputChange("industry", value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select industry" />
               </SelectTrigger>
