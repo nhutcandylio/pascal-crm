@@ -6,11 +6,20 @@ import { Search, Bell } from "lucide-react";
 interface TopBarProps {
   title: string;
   subtitle?: string;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+  searchPlaceholder?: string;
+  action?: React.ReactNode;
 }
 
-export default function TopBar({ title, subtitle }: TopBarProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-
+export default function TopBar({ 
+  title, 
+  subtitle, 
+  searchQuery = "", 
+  onSearchChange, 
+  searchPlaceholder = "Search...",
+  action 
+}: TopBarProps) {
   return (
     <header className="bg-white border-b border-slate-200 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -22,15 +31,20 @@ export default function TopBar({ title, subtitle }: TopBarProps) {
         </div>
         <div className="flex items-center space-x-4">
           {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
-            <Input
-              placeholder="Search customers, deals..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-80 pl-10"
-            />
-          </div>
+          {onSearchChange && (
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
+              <Input
+                placeholder={searchPlaceholder}
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                className="w-80 pl-10"
+              />
+            </div>
+          )}
+          
+          {/* Action Button */}
+          {action}
           
           {/* Notifications */}
           <Button variant="ghost" size="sm" className="relative">

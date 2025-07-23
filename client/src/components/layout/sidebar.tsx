@@ -6,18 +6,20 @@ import {
   Handshake, 
   Calendar, 
   BarChart3, 
-  Settings, 
   TrendingUp,
-  User
+  User,
+  Building,
+  UserPlus
 } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: Home },
-  { name: "Customers", href: "/customers", icon: Users },
-  { name: "Deals", href: "/deals", icon: Handshake },
+  { name: "Accounts", href: "/accounts", icon: Building },
+  { name: "Contacts", href: "/contacts", icon: Users },
+  { name: "Leads", href: "/leads", icon: UserPlus },
+  { name: "Opportunities", href: "/opportunities", icon: Handshake },
   { name: "Activities", href: "/activities", icon: Calendar },
   { name: "Reports", href: "/reports", icon: BarChart3 },
-  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 export default function Sidebar() {

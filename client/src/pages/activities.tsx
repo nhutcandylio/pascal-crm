@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import TopBar from "@/components/layout/top-bar";
-import ActivityModal from "../components/modals/activity-modal";
+// import ActivityModal from "../components/modals/activity-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -121,17 +121,17 @@ export default function Activities() {
                         <p className="text-slate-900 mb-3">{activity.description}</p>
                         
                         <div className="flex items-center space-x-4 text-sm text-slate-600">
-                          {activity.customer && (
+                          {activity.account && (
                             <div className="flex items-center">
                               <Building className="h-3 w-3 mr-1 text-slate-400" />
-                              <span>{activity.customer.companyName}</span>
+                              <span>{activity.account.companyName}</span>
                             </div>
                           )}
                           
-                          {activity.deal && (
+                          {activity.opportunity && (
                             <div className="flex items-center">
                               <DollarSign className="h-3 w-3 mr-1 text-slate-400" />
-                              <span>{activity.deal.title}</span>
+                              <span>{activity.opportunity.name}</span>
                             </div>
                           )}
                         </div>
@@ -145,10 +145,10 @@ export default function Activities() {
         )}
       </main>
 
-      <ActivityModal 
+      {/* <ActivityModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-      />
+      /> */}
     </>
   );
 }

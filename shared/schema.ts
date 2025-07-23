@@ -2,22 +2,48 @@ import { pgTable, text, serial, integer, boolean, timestamp, decimal } from "dri
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-export const customers = pgTable("customers", {
+export const accounts = pgTable("accounts", {
   id: serial("id").primaryKey(),
   companyName: text("company_name").notNull(),
-  contactName: text("contact_name").notNull(),
-  email: text("email").notNull().unique(),
-  phone: text("phone"),
   industry: text("industry"),
+  website: text("website"),
+  phone: text("phone"),
+  address: text("address"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const deals = pgTable("deals", {
+export const contacts = pgTable("contacts", {
   id: serial("id").primaryKey(),
-  customerId: integer("customer_id").notNull(),
-  title: text("title").notNull(),
+  accountId: integer("account_id"),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull().unique(),
+  phone: text("phone"),
+  title: text("title"), // job title
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const leads = pgTable("leads", {
+  id: serial("id").primaryKey(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull().unique(),
+  phone: text("phone"),
+  company: text("company"),
+  title: text("title"), // job title
+  source: text("source"), // 'website', 'referral', 'cold-call', 'social-media', 'email-campaign'
+  status: text("status").notNull().default('new'), // 'new', 'contacted', 'qualified', 'converted', 'lost'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const opportunities = pgTable("opportunities", {
+  id: serial("id").primaryKey(),
+  accountId: integer("account_id"),
+  contactId: integer("contact_id"),
+  name: text("name").notNull(),
   value: decimal("value", { precision: 12, scale: 2 }).notNull(),
-  stage: text("stage").notNull(), // 'lead', 'proposal', 'negotiation', 'closed-won', 'closed-lost'
+  stage: text("stage").notNull(), // 'prospecting', 'qualification', 'proposal', 'negotiation', 'closed-won', 'closed-lost'
+  probability: integer("probability").default(0), // 0-100%
   closeDate: timestamp("close_date"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -25,19 +51,34 @@ export const deals = pgTable("deals", {
 
 export const activities = pgTable("activities", {
   id: serial("id").primaryKey(),
-  customerId: integer("customer_id"),
-  dealId: integer("deal_id"),
-  type: text("type").notNull(), // 'call', 'email', 'meeting', 'note'
-  description: text("description").notNull(),
+  accountId: integer("account_id"),
+  contactId: integer("contact_id"),
+  leadId: integer("lead_id"),
+  opportunityId: integer("opportunity_id"),
+  type: text("type").notNull(), // 'call', 'email', 'meeting', 'note', 'task'
+  subject: text("subject").notNull(),
+  description: text("description"),
+  dueDate: timestamp("due_date"),
+  completed: boolean("completed").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-export const insertCustomerSchema = createInsertSchema(customers).omit({
+export const insertAccountSchema = createInsertSchema(accounts).omit({
   id: true,
   createdAt: true,
 });
 
-export const insertDealSchema = createInsertSchema(deals).omit({
+export const insertContactSchema = createInsertSchema(contacts).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertLeadSchema = createInsertSchema(leads).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertOpportunitySchema = createInsertSchema(opportunities).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -48,30 +89,43 @@ export const insertActivitySchema = createInsertSchema(activities).omit({
   createdAt: true,
 });
 
-export type Customer = typeof customers.$inferSelect;
-export type InsertCustomer = z.infer<typeof insertCustomerSchema>;
-export type Deal = typeof deals.$inferSelect;
-export type InsertDeal = z.infer<typeof insertDealSchema>;
+export type Account = typeof accounts.$inferSelect;
+export type InsertAccount = z.infer<typeof insertAccountSchema>;
+export type Contact = typeof contacts.$inferSelect;
+export type InsertContact = z.infer<typeof insertContactSchema>;
+export type Lead = typeof leads.$inferSelect;
+export type InsertLead = z.infer<typeof insertLeadSchema>;
+export type Opportunity = typeof opportunities.$inferSelect;
+export type InsertOpportunity = z.infer<typeof insertOpportunitySchema>;
 export type Activity = typeof activities.$inferSelect;
 export type InsertActivity = z.infer<typeof insertActivitySchema>;
 
 // Extended types for API responses
-export type DealWithCustomer = Deal & {
-  customer: Customer;
+export type OpportunityWithRelations = Opportunity & {
+  account?: Account;
+  contact?: Contact;
 };
 
 export type ActivityWithRelations = Activity & {
-  customer?: Customer;
-  deal?: Deal;
+  account?: Account;
+  contact?: Contact;
+  lead?: Lead;
+  opportunity?: Opportunity;
+};
+
+export type ContactWithAccount = Contact & {
+  account?: Account;
 };
 
 export type DashboardMetrics = {
-  totalCustomers: number;
-  activeDeals: number;
+  totalAccounts: number;
+  totalContacts: number;
+  totalLeads: number;
+  activeOpportunities: number;
   revenue: number;
   conversionRate: number;
-  customerGrowth: number;
-  dealGrowth: number;
+  accountGrowth: number;
+  leadGrowth: number;
+  opportunityGrowth: number;
   revenueGrowth: number;
-  conversionGrowth: number;
 };

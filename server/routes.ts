@@ -1,187 +1,119 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCustomerSchema, insertDealSchema, insertActivitySchema } from "@shared/schema";
+import { 
+  insertAccountSchema, 
+  insertContactSchema, 
+  insertLeadSchema, 
+  insertOpportunitySchema, 
+  insertActivitySchema 
+} from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Customer routes
-  app.get("/api/customers", async (req, res) => {
+  // Account routes
+  app.get("/api/accounts", async (req, res) => {
     try {
-      const { search } = req.query;
-      let customers;
-      
-      if (search && typeof search === 'string') {
-        customers = await storage.searchCustomers(search);
+      const accounts = await storage.getAccounts();
+      res.json(accounts);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch accounts" });
+    }
+  });
+
+  app.post("/api/accounts", async (req, res) => {
+    try {
+      const accountData = insertAccountSchema.parse(req.body);
+      const account = await storage.createAccount(accountData);
+      res.status(201).json(account);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid account data", details: error.errors });
       } else {
-        customers = await storage.getCustomers();
+        res.status(500).json({ error: "Failed to create account" });
       }
-      
-      res.json(customers);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch customers" });
     }
   });
 
-  app.get("/api/customers/:id", async (req, res) => {
+  // Contact routes
+  app.get("/api/contacts", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const customer = await storage.getCustomer(id);
-      
-      if (!customer) {
-        return res.status(404).json({ message: "Customer not found" });
-      }
-      
-      res.json(customer);
+      const contacts = await storage.getContactsWithAccounts();
+      res.json(contacts);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch customer" });
+      res.status(500).json({ error: "Failed to fetch contacts" });
     }
   });
 
-  app.post("/api/customers", async (req, res) => {
+  app.post("/api/contacts", async (req, res) => {
     try {
-      const customerData = insertCustomerSchema.parse(req.body);
-      const customer = await storage.createCustomer(customerData);
-      res.status(201).json(customer);
+      const contactData = insertContactSchema.parse(req.body);
+      const contact = await storage.createContact(contactData);
+      res.status(201).json(contact);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid customer data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to create customer" });
-    }
-  });
-
-  app.put("/api/customers/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const customerData = insertCustomerSchema.partial().parse(req.body);
-      const customer = await storage.updateCustomer(id, customerData);
-      
-      if (!customer) {
-        return res.status(404).json({ message: "Customer not found" });
-      }
-      
-      res.json(customer);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid customer data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to update customer" });
-    }
-  });
-
-  app.delete("/api/customers/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const deleted = await storage.deleteCustomer(id);
-      
-      if (!deleted) {
-        return res.status(404).json({ message: "Customer not found" });
-      }
-      
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete customer" });
-    }
-  });
-
-  // Deal routes
-  app.get("/api/deals", async (req, res) => {
-    try {
-      const { customerId } = req.query;
-      let deals;
-      
-      if (customerId && typeof customerId === 'string') {
-        deals = await storage.getDealsByCustomer(parseInt(customerId));
+        res.status(400).json({ error: "Invalid contact data", details: error.errors });
       } else {
-        deals = await storage.getDealsWithCustomers();
+        res.status(500).json({ error: "Failed to create contact" });
       }
-      
-      res.json(deals);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch deals" });
     }
   });
 
-  app.get("/api/deals/:id", async (req, res) => {
+  // Lead routes
+  app.get("/api/leads", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const deal = await storage.getDeal(id);
-      
-      if (!deal) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-      
-      res.json(deal);
+      const leads = await storage.getLeads();
+      res.json(leads);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch deal" });
+      res.status(500).json({ error: "Failed to fetch leads" });
     }
   });
 
-  app.post("/api/deals", async (req, res) => {
+  app.post("/api/leads", async (req, res) => {
     try {
-      const dealData = insertDealSchema.parse(req.body);
-      const deal = await storage.createDeal(dealData);
-      res.status(201).json(deal);
+      const leadData = insertLeadSchema.parse(req.body);
+      const lead = await storage.createLead(leadData);
+      res.status(201).json(lead);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid deal data", errors: error.errors });
+        res.status(400).json({ error: "Invalid lead data", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to create lead" });
       }
-      res.status(500).json({ message: "Failed to create deal" });
     }
   });
 
-  app.put("/api/deals/:id", async (req, res) => {
+  // Opportunity routes
+  app.get("/api/opportunities", async (req, res) => {
     try {
-      const id = parseInt(req.params.id);
-      const dealData = insertDealSchema.partial().parse(req.body);
-      const deal = await storage.updateDeal(id, dealData);
-      
-      if (!deal) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-      
-      res.json(deal);
+      const opportunities = await storage.getOpportunitiesWithRelations();
+      res.json(opportunities);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch opportunities" });
+    }
+  });
+
+  app.post("/api/opportunities", async (req, res) => {
+    try {
+      const opportunityData = insertOpportunitySchema.parse(req.body);
+      const opportunity = await storage.createOpportunity(opportunityData);
+      res.status(201).json(opportunity);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid deal data", errors: error.errors });
+        res.status(400).json({ error: "Invalid opportunity data", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to create opportunity" });
       }
-      res.status(500).json({ message: "Failed to update deal" });
-    }
-  });
-
-  app.delete("/api/deals/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const deleted = await storage.deleteDeal(id);
-      
-      if (!deleted) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-      
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete deal" });
     }
   });
 
   // Activity routes
   app.get("/api/activities", async (req, res) => {
     try {
-      const { customerId, dealId } = req.query;
-      let activities;
-      
-      if (customerId && typeof customerId === 'string') {
-        activities = await storage.getActivitiesByCustomer(parseInt(customerId));
-      } else if (dealId && typeof dealId === 'string') {
-        activities = await storage.getActivitiesByDeal(parseInt(dealId));
-      } else {
-        activities = await storage.getActivitiesWithRelations();
-      }
-      
+      const activities = await storage.getActivitiesWithRelations();
       res.json(activities);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch activities" });
+      res.status(500).json({ error: "Failed to fetch activities" });
     }
   });
 
@@ -192,43 +124,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(201).json(activity);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid activity data", errors: error.errors });
+        res.status(400).json({ error: "Invalid activity data", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to create activity" });
       }
-      res.status(500).json({ message: "Failed to create activity" });
-    }
-  });
-
-  app.put("/api/activities/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const activityData = insertActivitySchema.partial().parse(req.body);
-      const activity = await storage.updateActivity(id, activityData);
-      
-      if (!activity) {
-        return res.status(404).json({ message: "Activity not found" });
-      }
-      
-      res.json(activity);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ message: "Invalid activity data", errors: error.errors });
-      }
-      res.status(500).json({ message: "Failed to update activity" });
-    }
-  });
-
-  app.delete("/api/activities/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const deleted = await storage.deleteActivity(id);
-      
-      if (!deleted) {
-        return res.status(404).json({ message: "Activity not found" });
-      }
-      
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete activity" });
     }
   });
 
@@ -238,7 +137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const metrics = await storage.getDashboardMetrics();
       res.json(metrics);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch dashboard metrics" });
+      res.status(500).json({ error: "Failed to fetch dashboard metrics" });
     }
   });
 

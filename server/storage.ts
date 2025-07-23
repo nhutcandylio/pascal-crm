@@ -1,42 +1,70 @@
 import { 
-  customers, 
-  deals, 
+  accounts,
+  contacts,
+  leads,
+  opportunities,
   activities, 
-  type Customer, 
-  type InsertCustomer,
-  type Deal,
-  type InsertDeal,
+  type Account, 
+  type InsertAccount,
+  type Contact,
+  type InsertContact,
+  type Lead,
+  type InsertLead,
+  type Opportunity,
+  type InsertOpportunity,
   type Activity,
   type InsertActivity,
-  type DealWithCustomer,
+  type OpportunityWithRelations,
   type ActivityWithRelations,
+  type ContactWithAccount,
   type DashboardMetrics
 } from "@shared/schema";
 
 export interface IStorage {
-  // Customer operations
-  getCustomer(id: number): Promise<Customer | undefined>;
-  getCustomers(): Promise<Customer[]>;
-  createCustomer(customer: InsertCustomer): Promise<Customer>;
-  updateCustomer(id: number, customer: Partial<InsertCustomer>): Promise<Customer | undefined>;
-  deleteCustomer(id: number): Promise<boolean>;
-  searchCustomers(query: string): Promise<Customer[]>;
+  // Account operations
+  getAccount(id: number): Promise<Account | undefined>;
+  getAccounts(): Promise<Account[]>;
+  createAccount(account: InsertAccount): Promise<Account>;
+  updateAccount(id: number, account: Partial<InsertAccount>): Promise<Account | undefined>;
+  deleteAccount(id: number): Promise<boolean>;
+  searchAccounts(query: string): Promise<Account[]>;
 
-  // Deal operations
-  getDeal(id: number): Promise<Deal | undefined>;
-  getDeals(): Promise<Deal[]>;
-  getDealsWithCustomers(): Promise<DealWithCustomer[]>;
-  getDealsByCustomer(customerId: number): Promise<Deal[]>;
-  createDeal(deal: InsertDeal): Promise<Deal>;
-  updateDeal(id: number, deal: Partial<InsertDeal>): Promise<Deal | undefined>;
-  deleteDeal(id: number): Promise<boolean>;
+  // Contact operations
+  getContact(id: number): Promise<Contact | undefined>;
+  getContacts(): Promise<Contact[]>;
+  getContactsWithAccounts(): Promise<ContactWithAccount[]>;
+  getContactsByAccount(accountId: number): Promise<Contact[]>;
+  createContact(contact: InsertContact): Promise<Contact>;
+  updateContact(id: number, contact: Partial<InsertContact>): Promise<Contact | undefined>;
+  deleteContact(id: number): Promise<boolean>;
+  searchContacts(query: string): Promise<Contact[]>;
+
+  // Lead operations
+  getLead(id: number): Promise<Lead | undefined>;
+  getLeads(): Promise<Lead[]>;
+  createLead(lead: InsertLead): Promise<Lead>;
+  updateLead(id: number, lead: Partial<InsertLead>): Promise<Lead | undefined>;
+  deleteLead(id: number): Promise<boolean>;
+  searchLeads(query: string): Promise<Lead[]>;
+
+  // Opportunity operations
+  getOpportunity(id: number): Promise<Opportunity | undefined>;
+  getOpportunities(): Promise<Opportunity[]>;
+  getOpportunitiesWithRelations(): Promise<OpportunityWithRelations[]>;
+  getOpportunitiesByAccount(accountId: number): Promise<Opportunity[]>;
+  getOpportunitiesByContact(contactId: number): Promise<Opportunity[]>;
+  createOpportunity(opportunity: InsertOpportunity): Promise<Opportunity>;
+  updateOpportunity(id: number, opportunity: Partial<InsertOpportunity>): Promise<Opportunity | undefined>;
+  deleteOpportunity(id: number): Promise<boolean>;
 
   // Activity operations
   getActivity(id: number): Promise<Activity | undefined>;
   getActivities(): Promise<Activity[]>;
   getActivitiesWithRelations(): Promise<ActivityWithRelations[]>;
-  getActivitiesByCustomer(customerId: number): Promise<Activity[]>;
-  getActivitiesByDeal(dealId: number): Promise<Activity[]>;
+  getActivitiesByAccount(accountId: number): Promise<Activity[]>;
+  getActivitiesByContact(contactId: number): Promise<Activity[]>;
+  getActivitiesByLead(leadId: number): Promise<Activity[]>;
+  getActivitiesByOpportunity(opportunityId: number): Promise<Activity[]>;
   createActivity(activity: InsertActivity): Promise<Activity>;
   updateActivity(id: number, activity: Partial<InsertActivity>): Promise<Activity | undefined>;
   deleteActivity(id: number): Promise<boolean>;
@@ -46,11 +74,15 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
-  private customers: Map<number, Customer> = new Map();
-  private deals: Map<number, Deal> = new Map();
+  private accounts: Map<number, Account> = new Map();
+  private contacts: Map<number, Contact> = new Map();
+  private leads: Map<number, Lead> = new Map();
+  private opportunities: Map<number, Opportunity> = new Map();
   private activities: Map<number, Activity> = new Map();
-  private currentCustomerId = 1;
-  private currentDealId = 1;
+  private currentAccountId = 1;
+  private currentContactId = 1;
+  private currentLeadId = 1;
+  private currentOpportunityId = 1;
   private currentActivityId = 1;
 
   constructor() {
@@ -59,89 +91,164 @@ export class MemStorage implements IStorage {
   }
 
   private initializeData() {
-    // Add sample customers
-    const sampleCustomers: InsertCustomer[] = [
+    // Add sample accounts
+    const sampleAccounts: InsertAccount[] = [
       {
         companyName: "Acme Corp",
-        contactName: "John Smith",
-        email: "john@acme.com",
+        industry: "Technology",
+        website: "https://acme.com",
         phone: "(555) 123-4567",
-        industry: "technology"
+        address: "123 Tech Street, San Francisco, CA"
       },
       {
-        companyName: "TechInnovate",
-        contactName: "Sarah Johnson",
-        email: "sarah@techinnovate.com",
+        companyName: "TechInnovate Solutions",
+        industry: "Software",
+        website: "https://techinnovate.com",
         phone: "(555) 234-5678",
-        industry: "technology"
+        address: "456 Innovation Ave, Austin, TX"
       },
       {
-        companyName: "Global Solutions",
-        contactName: "Mike Wilson",
-        email: "mike@globalsol.com",
+        companyName: "Global Enterprises",
+        industry: "Finance",
+        website: "https://globalent.com",
         phone: "(555) 345-6789",
-        industry: "finance"
+        address: "789 Business Blvd, New York, NY"
       }
     ];
 
-    sampleCustomers.forEach(customer => {
-      this.createCustomer(customer);
+    sampleAccounts.forEach(account => {
+      this.createAccount(account);
     });
 
-    // Add sample deals
-    const sampleDeals: InsertDeal[] = [
+    // Add sample contacts
+    const sampleContacts: InsertContact[] = [
       {
-        customerId: 1,
-        title: "Software License Renewal",
+        accountId: 1,
+        firstName: "John",
+        lastName: "Smith",
+        email: "john.smith@acme.com",
+        phone: "(555) 123-4567",
+        title: "CTO"
+      },
+      {
+        accountId: 2,
+        firstName: "Sarah",
+        lastName: "Johnson",
+        email: "sarah.johnson@techinnovate.com",
+        phone: "(555) 234-5678",
+        title: "VP of Engineering"
+      },
+      {
+        accountId: 3,
+        firstName: "Mike",
+        lastName: "Wilson",
+        email: "mike.wilson@globalent.com",
+        phone: "(555) 345-6789",
+        title: "CFO"
+      }
+    ];
+
+    sampleContacts.forEach(contact => {
+      this.createContact(contact);
+    });
+
+    // Add sample leads
+    const sampleLeads: InsertLead[] = [
+      {
+        firstName: "Alex",
+        lastName: "Chen",
+        email: "alex.chen@startup.com",
+        phone: "(555) 111-2222",
+        company: "StartupCo",
+        title: "CEO",
+        source: "website",
+        status: "new"
+      },
+      {
+        firstName: "Emily",
+        lastName: "Davis",
+        email: "emily.davis@retailco.com",
+        phone: "(555) 333-4444",
+        company: "RetailCo",
+        title: "Marketing Director",
+        source: "referral",
+        status: "contacted"
+      }
+    ];
+
+    sampleLeads.forEach(lead => {
+      this.createLead(lead);
+    });
+
+    // Add sample opportunities
+    const sampleOpportunities: InsertOpportunity[] = [
+      {
+        accountId: 1,
+        contactId: 1,
+        name: "Software License Renewal",
         value: "45000.00",
         stage: "proposal",
+        probability: 75,
         closeDate: new Date("2024-03-15")
       },
       {
-        customerId: 2,
-        title: "Enterprise Solution",
+        accountId: 2,
+        contactId: 2,
+        name: "Enterprise Solution Implementation",
         value: "78500.00",
         stage: "negotiation",
+        probability: 60,
         closeDate: new Date("2024-03-22")
       },
       {
-        customerId: 3,
-        title: "Consulting Services",
+        accountId: 3,
+        contactId: 3,
+        name: "Financial Consulting Services",
         value: "32000.00",
         stage: "closed-won",
+        probability: 100,
         closeDate: new Date("2024-03-10")
       }
     ];
 
-    sampleDeals.forEach(deal => {
-      this.createDeal(deal);
+    sampleOpportunities.forEach(opportunity => {
+      this.createOpportunity(opportunity);
     });
 
     // Add sample activities
     const sampleActivities: InsertActivity[] = [
       {
-        customerId: 1,
-        dealId: 1,
+        accountId: 1,
+        contactId: 1,
+        opportunityId: 1,
+        leadId: null,
         type: "call",
-        description: "Called John at Acme Corp to discuss renewal terms"
+        subject: "License Renewal Discussion",
+        description: "Discussed renewal terms and pricing options",
+        dueDate: null,
+        completed: true
       },
       {
-        customerId: 2,
-        dealId: 2,
+        accountId: 2,
+        contactId: 2,
+        opportunityId: 2,
+        leadId: null,
         type: "email",
-        description: "Sent proposal to TechInnovate"
+        subject: "Proposal Sent",
+        description: "Sent detailed proposal for enterprise solution",
+        dueDate: null,
+        completed: true
       },
       {
-        customerId: 3,
-        dealId: 3,
-        type: "meeting",
-        description: "Meeting scheduled with Global Solutions"
-      },
-      {
-        customerId: null,
-        dealId: null,
-        type: "note",
-        description: "Updated CRM system with new lead qualification criteria"
+        leadId: 1,
+        accountId: null,
+        contactId: null,
+        opportunityId: null,
+        type: "call",
+        subject: "Initial Lead Contact",
+        description: "First contact with potential customer",
+        dueDate: new Date("2024-03-20"),
+        completed: false
       }
     ];
 
@@ -150,118 +257,254 @@ export class MemStorage implements IStorage {
     });
   }
 
-  // Customer operations
-  async getCustomer(id: number): Promise<Customer | undefined> {
-    return this.customers.get(id);
+  // Account operations
+  async getAccount(id: number): Promise<Account | undefined> {
+    return this.accounts.get(id);
   }
 
-  async getCustomers(): Promise<Customer[]> {
-    return Array.from(this.customers.values()).sort((a, b) => 
+  async getAccounts(): Promise<Account[]> {
+    return Array.from(this.accounts.values()).sort((a, b) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }
 
-  async createCustomer(insertCustomer: InsertCustomer): Promise<Customer> {
-    const id = this.currentCustomerId++;
-    const customer: Customer = {
-      ...insertCustomer,
-      phone: insertCustomer.phone || null,
-      industry: insertCustomer.industry || null,
+  async createAccount(insertAccount: InsertAccount): Promise<Account> {
+    const id = this.currentAccountId++;
+    const account: Account = {
+      ...insertAccount,
+      industry: insertAccount.industry || null,
+      website: insertAccount.website || null,
+      phone: insertAccount.phone || null,
+      address: insertAccount.address || null,
       id,
       createdAt: new Date()
     };
-    this.customers.set(id, customer);
-    return customer;
+    this.accounts.set(id, account);
+    return account;
   }
 
-  async updateCustomer(id: number, customerUpdate: Partial<InsertCustomer>): Promise<Customer | undefined> {
-    const customer = this.customers.get(id);
-    if (!customer) return undefined;
+  async updateAccount(id: number, accountUpdate: Partial<InsertAccount>): Promise<Account | undefined> {
+    const account = this.accounts.get(id);
+    if (!account) return undefined;
 
-    const updatedCustomer: Customer = {
-      ...customer,
-      ...customerUpdate
+    const updatedAccount: Account = {
+      ...account,
+      ...accountUpdate
     };
-    this.customers.set(id, updatedCustomer);
-    return updatedCustomer;
+    this.accounts.set(id, updatedAccount);
+    return updatedAccount;
   }
 
-  async deleteCustomer(id: number): Promise<boolean> {
-    return this.customers.delete(id);
+  async deleteAccount(id: number): Promise<boolean> {
+    return this.accounts.delete(id);
   }
 
-  async searchCustomers(query: string): Promise<Customer[]> {
-    const customers = Array.from(this.customers.values());
+  async searchAccounts(query: string): Promise<Account[]> {
+    const accounts = Array.from(this.accounts.values());
     const lowerQuery = query.toLowerCase();
-    return customers.filter(customer =>
-      customer.companyName.toLowerCase().includes(lowerQuery) ||
-      customer.contactName.toLowerCase().includes(lowerQuery) ||
-      customer.email.toLowerCase().includes(lowerQuery)
+    return accounts.filter(account =>
+      account.companyName.toLowerCase().includes(lowerQuery) ||
+      (account.industry && account.industry.toLowerCase().includes(lowerQuery))
     );
   }
 
-  // Deal operations
-  async getDeal(id: number): Promise<Deal | undefined> {
-    return this.deals.get(id);
+  // Contact operations
+  async getContact(id: number): Promise<Contact | undefined> {
+    return this.contacts.get(id);
   }
 
-  async getDeals(): Promise<Deal[]> {
-    return Array.from(this.deals.values()).sort((a, b) => 
+  async getContacts(): Promise<Contact[]> {
+    return Array.from(this.contacts.values()).sort((a, b) => 
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
   }
 
-  async getDealsWithCustomers(): Promise<DealWithCustomer[]> {
-    const deals = await this.getDeals();
-    const dealsWithCustomers: DealWithCustomer[] = [];
+  async getContactsWithAccounts(): Promise<ContactWithAccount[]> {
+    const contacts = await this.getContacts();
+    const contactsWithAccounts: ContactWithAccount[] = [];
 
-    for (const deal of deals) {
-      const customer = await this.getCustomer(deal.customerId);
-      if (customer) {
-        dealsWithCustomers.push({
-          ...deal,
-          customer
-        });
+    for (const contact of contacts) {
+      const result: ContactWithAccount = { ...contact };
+      if (contact.accountId) {
+        result.account = await this.getAccount(contact.accountId);
       }
+      contactsWithAccounts.push(result);
     }
 
-    return dealsWithCustomers;
+    return contactsWithAccounts;
   }
 
-  async getDealsByCustomer(customerId: number): Promise<Deal[]> {
-    const deals = Array.from(this.deals.values());
-    return deals.filter(deal => deal.customerId === customerId);
+  async getContactsByAccount(accountId: number): Promise<Contact[]> {
+    const contacts = Array.from(this.contacts.values());
+    return contacts.filter(contact => contact.accountId === accountId);
   }
 
-  async createDeal(insertDeal: InsertDeal): Promise<Deal> {
-    const id = this.currentDealId++;
+  async createContact(insertContact: InsertContact): Promise<Contact> {
+    const id = this.currentContactId++;
+    const contact: Contact = {
+      ...insertContact,
+      accountId: insertContact.accountId || null,
+      phone: insertContact.phone || null,
+      title: insertContact.title || null,
+      id,
+      createdAt: new Date()
+    };
+    this.contacts.set(id, contact);
+    return contact;
+  }
+
+  async updateContact(id: number, contactUpdate: Partial<InsertContact>): Promise<Contact | undefined> {
+    const contact = this.contacts.get(id);
+    if (!contact) return undefined;
+
+    const updatedContact: Contact = {
+      ...contact,
+      ...contactUpdate
+    };
+    this.contacts.set(id, updatedContact);
+    return updatedContact;
+  }
+
+  async deleteContact(id: number): Promise<boolean> {
+    return this.contacts.delete(id);
+  }
+
+  async searchContacts(query: string): Promise<Contact[]> {
+    const contacts = Array.from(this.contacts.values());
+    const lowerQuery = query.toLowerCase();
+    return contacts.filter(contact =>
+      contact.firstName.toLowerCase().includes(lowerQuery) ||
+      contact.lastName.toLowerCase().includes(lowerQuery) ||
+      contact.email.toLowerCase().includes(lowerQuery)
+    );
+  }
+
+  // Lead operations
+  async getLead(id: number): Promise<Lead | undefined> {
+    return this.leads.get(id);
+  }
+
+  async getLeads(): Promise<Lead[]> {
+    return Array.from(this.leads.values()).sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  async createLead(insertLead: InsertLead): Promise<Lead> {
+    const id = this.currentLeadId++;
+    const lead: Lead = {
+      ...insertLead,
+      phone: insertLead.phone || null,
+      company: insertLead.company || null,
+      title: insertLead.title || null,
+      source: insertLead.source || null,
+      id,
+      createdAt: new Date()
+    };
+    this.leads.set(id, lead);
+    return lead;
+  }
+
+  async updateLead(id: number, leadUpdate: Partial<InsertLead>): Promise<Lead | undefined> {
+    const lead = this.leads.get(id);
+    if (!lead) return undefined;
+
+    const updatedLead: Lead = {
+      ...lead,
+      ...leadUpdate
+    };
+    this.leads.set(id, updatedLead);
+    return updatedLead;
+  }
+
+  async deleteLead(id: number): Promise<boolean> {
+    return this.leads.delete(id);
+  }
+
+  async searchLeads(query: string): Promise<Lead[]> {
+    const leads = Array.from(this.leads.values());
+    const lowerQuery = query.toLowerCase();
+    return leads.filter(lead =>
+      lead.firstName.toLowerCase().includes(lowerQuery) ||
+      lead.lastName.toLowerCase().includes(lowerQuery) ||
+      lead.email.toLowerCase().includes(lowerQuery) ||
+      (lead.company && lead.company.toLowerCase().includes(lowerQuery))
+    );
+  }
+
+  // Opportunity operations
+  async getOpportunity(id: number): Promise<Opportunity | undefined> {
+    return this.opportunities.get(id);
+  }
+
+  async getOpportunities(): Promise<Opportunity[]> {
+    return Array.from(this.opportunities.values()).sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  async getOpportunitiesWithRelations(): Promise<OpportunityWithRelations[]> {
+    const opportunities = await this.getOpportunities();
+    const opportunitiesWithRelations: OpportunityWithRelations[] = [];
+
+    for (const opportunity of opportunities) {
+      const result: OpportunityWithRelations = { ...opportunity };
+      
+      if (opportunity.accountId) {
+        result.account = await this.getAccount(opportunity.accountId);
+      }
+      
+      if (opportunity.contactId) {
+        result.contact = await this.getContact(opportunity.contactId);
+      }
+      
+      opportunitiesWithRelations.push(result);
+    }
+
+    return opportunitiesWithRelations;
+  }
+
+  async getOpportunitiesByAccount(accountId: number): Promise<Opportunity[]> {
+    const opportunities = Array.from(this.opportunities.values());
+    return opportunities.filter(opportunity => opportunity.accountId === accountId);
+  }
+
+  async getOpportunitiesByContact(contactId: number): Promise<Opportunity[]> {
+    const opportunities = Array.from(this.opportunities.values());
+    return opportunities.filter(opportunity => opportunity.contactId === contactId);
+  }
+
+  async createOpportunity(insertOpportunity: InsertOpportunity): Promise<Opportunity> {
+    const id = this.currentOpportunityId++;
     const now = new Date();
-    const deal: Deal = {
-      ...insertDeal,
-      closeDate: insertDeal.closeDate || null,
+    const opportunity: Opportunity = {
+      ...insertOpportunity,
+      accountId: insertOpportunity.accountId || null,
+      contactId: insertOpportunity.contactId || null,
+      closeDate: insertOpportunity.closeDate || null,
       id,
       createdAt: now,
       updatedAt: now
     };
-    this.deals.set(id, deal);
-    return deal;
+    this.opportunities.set(id, opportunity);
+    return opportunity;
   }
 
-  async updateDeal(id: number, dealUpdate: Partial<InsertDeal>): Promise<Deal | undefined> {
-    const deal = this.deals.get(id);
-    if (!deal) return undefined;
+  async updateOpportunity(id: number, opportunityUpdate: Partial<InsertOpportunity>): Promise<Opportunity | undefined> {
+    const opportunity = this.opportunities.get(id);
+    if (!opportunity) return undefined;
 
-    const updatedDeal: Deal = {
-      ...deal,
-      ...dealUpdate,
+    const updatedOpportunity: Opportunity = {
+      ...opportunity,
+      ...opportunityUpdate,
       updatedAt: new Date()
     };
-    this.deals.set(id, updatedDeal);
-    return updatedDeal;
+    this.opportunities.set(id, updatedOpportunity);
+    return updatedOpportunity;
   }
 
-  async deleteDeal(id: number): Promise<boolean> {
-    return this.deals.delete(id);
+  async deleteOpportunity(id: number): Promise<boolean> {
+    return this.opportunities.delete(id);
   }
 
   // Activity operations
@@ -282,12 +525,20 @@ export class MemStorage implements IStorage {
     for (const activity of activities) {
       const result: ActivityWithRelations = { ...activity };
       
-      if (activity.customerId) {
-        result.customer = await this.getCustomer(activity.customerId);
+      if (activity.accountId) {
+        result.account = await this.getAccount(activity.accountId);
       }
       
-      if (activity.dealId) {
-        result.deal = await this.getDeal(activity.dealId);
+      if (activity.contactId) {
+        result.contact = await this.getContact(activity.contactId);
+      }
+      
+      if (activity.leadId) {
+        result.lead = await this.getLead(activity.leadId);
+      }
+      
+      if (activity.opportunityId) {
+        result.opportunity = await this.getOpportunity(activity.opportunityId);
       }
       
       activitiesWithRelations.push(result);
@@ -296,22 +547,36 @@ export class MemStorage implements IStorage {
     return activitiesWithRelations;
   }
 
-  async getActivitiesByCustomer(customerId: number): Promise<Activity[]> {
+  async getActivitiesByAccount(accountId: number): Promise<Activity[]> {
     const activities = Array.from(this.activities.values());
-    return activities.filter(activity => activity.customerId === customerId);
+    return activities.filter(activity => activity.accountId === accountId);
   }
 
-  async getActivitiesByDeal(dealId: number): Promise<Activity[]> {
+  async getActivitiesByContact(contactId: number): Promise<Activity[]> {
     const activities = Array.from(this.activities.values());
-    return activities.filter(activity => activity.dealId === dealId);
+    return activities.filter(activity => activity.contactId === contactId);
+  }
+
+  async getActivitiesByLead(leadId: number): Promise<Activity[]> {
+    const activities = Array.from(this.activities.values());
+    return activities.filter(activity => activity.leadId === leadId);
+  }
+
+  async getActivitiesByOpportunity(opportunityId: number): Promise<Activity[]> {
+    const activities = Array.from(this.activities.values());
+    return activities.filter(activity => activity.opportunityId === opportunityId);
   }
 
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
     const id = this.currentActivityId++;
     const activity: Activity = {
       ...insertActivity,
-      customerId: insertActivity.customerId || null,
-      dealId: insertActivity.dealId || null,
+      accountId: insertActivity.accountId || null,
+      contactId: insertActivity.contactId || null,
+      leadId: insertActivity.leadId || null,
+      opportunityId: insertActivity.opportunityId || null,
+      description: insertActivity.description || null,
+      dueDate: insertActivity.dueDate || null,
       id,
       createdAt: new Date()
     };
@@ -337,32 +602,36 @@ export class MemStorage implements IStorage {
 
   // Dashboard operations
   async getDashboardMetrics(): Promise<DashboardMetrics> {
-    const customers = await this.getCustomers();
-    const deals = await this.getDeals();
+    const accounts = await this.getAccounts();
+    const contacts = await this.getContacts();
+    const leads = await this.getLeads();
+    const opportunities = await this.getOpportunities();
     
-    const activeDeals = deals.filter(deal => 
-      deal.stage !== 'closed-won' && deal.stage !== 'closed-lost'
+    const activeOpportunities = opportunities.filter(opp => 
+      opp.stage !== 'closed-won' && opp.stage !== 'closed-lost'
     );
     
-    const closedWonDeals = deals.filter(deal => deal.stage === 'closed-won');
-    const totalRevenue = closedWonDeals.reduce((sum, deal) => 
-      sum + parseFloat(deal.value), 0
+    const closedWonOpportunities = opportunities.filter(opp => opp.stage === 'closed-won');
+    const totalRevenue = closedWonOpportunities.reduce((sum, opp) => 
+      sum + parseFloat(opp.value), 0
     );
     
-    const conversionRate = deals.length > 0 
-      ? (closedWonDeals.length / deals.length) * 100 
+    const conversionRate = opportunities.length > 0 
+      ? (closedWonOpportunities.length / opportunities.length) * 100 
       : 0;
 
     // Mock growth percentages (in a real app, this would compare with previous periods)
     return {
-      totalCustomers: customers.length,
-      activeDeals: activeDeals.length,
+      totalAccounts: accounts.length,
+      totalContacts: contacts.length,
+      totalLeads: leads.length,
+      activeOpportunities: activeOpportunities.length,
       revenue: totalRevenue,
       conversionRate: Math.round(conversionRate * 10) / 10,
-      customerGrowth: 12,
-      dealGrowth: 8,
-      revenueGrowth: -3,
-      conversionGrowth: 5
+      accountGrowth: 12,
+      leadGrowth: 25,
+      opportunityGrowth: 8,
+      revenueGrowth: -3
     };
   }
 }

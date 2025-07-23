@@ -1,0 +1,127 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import TopBar from "@/components/layout/top-bar";
+import ContactModal from "../components/modals/contact-modal";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus, User, Phone, Mail, Building } from "lucide-react";
+import type { ContactWithAccount } from "@shared/schema";
+
+export default function Contacts() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const { data: contacts = [], isLoading } = useQuery<ContactWithAccount[]>({
+    queryKey: ['/api/contacts'],
+  });
+
+  const filteredContacts = contacts.filter(contact =>
+    contact.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    contact.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    contact.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (contact.account?.companyName.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  return (
+    <div className="flex-1 flex flex-col h-full">
+      <TopBar 
+        title="Contacts"
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search contacts..."
+        action={
+          <Button onClick={() => setIsModalOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Contact
+          </Button>
+        }
+      />
+      
+      <div className="flex-1 overflow-auto p-6">
+        <Card>
+          <CardContent className="p-0">
+            {isLoading ? (
+              <div className="p-8 text-center text-slate-500">Loading contacts...</div>
+            ) : filteredContacts.length === 0 ? (
+              <div className="p-8 text-center text-slate-500">
+                {searchQuery ? "No contacts found matching your search." : "No contacts found. Create your first contact to get started."}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Account</TableHead>
+                    <TableHead>Contact Info</TableHead>
+                    <TableHead>Created</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredContacts.map((contact) => (
+                    <TableRow key={contact.id} className="cursor-pointer hover:bg-slate-50">
+                      <TableCell>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <User className="h-4 w-4 text-green-600" />
+                          </div>
+                          <div>
+                            <div className="font-medium">{contact.firstName} {contact.lastName}</div>
+                            {contact.title && (
+                              <div className="text-sm text-slate-500">{contact.title}</div>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {contact.title ? (
+                          <Badge variant="outline">{contact.title}</Badge>
+                        ) : (
+                          <span className="text-slate-400">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {contact.account ? (
+                          <div className="flex items-center text-sm">
+                            <Building className="h-3 w-3 mr-1 text-slate-400" />
+                            {contact.account.companyName}
+                          </div>
+                        ) : (
+                          <span className="text-slate-400">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center text-sm">
+                            <Mail className="h-3 w-3 mr-1 text-slate-400" />
+                            {contact.email}
+                          </div>
+                          {contact.phone && (
+                            <div className="flex items-center text-sm">
+                              <Phone className="h-3 w-3 mr-1 text-slate-400" />
+                              {contact.phone}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-slate-500">
+                        {new Date(contact.createdAt).toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <ContactModal 
+        open={isModalOpen} 
+        onOpenChange={setIsModalOpen}
+      />
+    </div>
+  );
+}
