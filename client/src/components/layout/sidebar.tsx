@@ -19,7 +19,6 @@ const navigation = [
   { name: "Leads", href: "/leads", icon: UserPlus },
   { name: "Opportunities", href: "/opportunities", icon: Handshake },
   { name: "Activities", href: "/activities", icon: Calendar },
-  { name: "Reports", href: "/reports", icon: BarChart3 },
 ];
 
 export default function Sidebar() {
