@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TopBar from "@/components/layout/top-bar";
 import OpportunityModal from "../components/modals/opportunity-modal";
 import AccountModal from "../components/modals/account-modal";
+import ContactModal from "../components/modals/contact-modal";
 import DescriptionModal from "../components/modals/description-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Handshake, DollarSign, Calendar, Building, FileText, Edit2, Check, X } from "lucide-react";
+import { Plus, Handshake, DollarSign, Calendar, Building, FileText, Edit2, Check, X, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { OpportunityWithRelations, Opportunity, InsertOpportunity, Account } from "@shared/schema";
@@ -54,6 +55,7 @@ export default function Opportunities() {
   const [pendingOpportunityId, setPendingOpportunityId] = useState<number | null>(null);
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
   const [selectedOpportunityForDescription, setSelectedOpportunityForDescription] = useState<Opportunity | null>(null);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -477,6 +479,14 @@ export default function Opportunities() {
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => setIsContactModalOpen(true)}
+                            title="Create new contact"
+                          >
+                            <UserPlus className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => {
                               setEditingOpportunity(opportunity);
                               setIsModalOpen(true);
@@ -527,6 +537,11 @@ export default function Opportunities() {
           setPendingOpportunityId(null);
           setEditingField(null);
         }}
+      />
+
+      <ContactModal 
+        open={isContactModalOpen} 
+        onOpenChange={setIsContactModalOpen}
       />
 
       <DescriptionModal
