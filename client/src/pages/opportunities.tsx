@@ -347,7 +347,6 @@ export default function Opportunities() {
                       <TableCell>
                         <div className="flex items-center text-sm font-medium text-slate-600 bg-slate-50 p-1 rounded">
                           {opportunity.grossProfitMargin || 0}%
-                          <span className="text-xs text-slate-400 ml-1">(auto)</span>
                         </div>
                       </TableCell>
                       <TableCell>
