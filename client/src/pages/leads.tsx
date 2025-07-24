@@ -10,22 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, UserPlus, Phone, Mail, Building, ArrowRight } from "lucide-react";
 import type { Lead } from "@shared/schema";
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'new':
-      return 'bg-blue-100 text-blue-800';
-    case 'contacted':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'qualified':
-      return 'bg-green-100 text-green-800';
-    case 'converted':
-      return 'bg-purple-100 text-purple-800';
-    case 'lost':
-      return 'bg-red-100 text-red-800';
-    default:
-      return 'bg-slate-100 text-slate-800';
-  }
-};
+
 
 const getSourceColor = (source: string) => {
   switch (source) {
@@ -99,7 +84,6 @@ export default function Leads() {
                   <TableRow>
                     <TableHead>Name</TableHead>
                     <TableHead>Company</TableHead>
-                    <TableHead>Status</TableHead>
                     <TableHead>Source</TableHead>
                     <TableHead>Contact Info</TableHead>
                     <TableHead>Created</TableHead>
@@ -131,11 +115,6 @@ export default function Leads() {
                         ) : (
                           <span className="text-slate-400">-</span>
                         )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStatusColor(lead.status)}>
-                          {lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}
-                        </Badge>
                       </TableCell>
                       <TableCell>
                         {lead.source ? (
