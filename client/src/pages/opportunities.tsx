@@ -118,14 +118,18 @@ export default function Opportunities() {
     } else if (field === 'closeDate') {
       value = editingValue ? editingValue : null;
     } else if (field === 'accountId') {
-      value = editingValue ? parseInt(editingValue) : null;
-      if (editingValue && isNaN(value)) {
-        toast({
-          title: "Error",
-          description: "Invalid account selection.",
-          variant: "destructive",
-        });
-        return;
+      if (editingValue === 'none' || !editingValue) {
+        value = null;
+      } else {
+        value = parseInt(editingValue);
+        if (isNaN(value)) {
+          toast({
+            title: "Error",
+            description: "Invalid account selection.",
+            variant: "destructive",
+          });
+          return;
+        }
       }
     }
 
@@ -216,7 +220,7 @@ export default function Opportunities() {
                                 <SelectValue placeholder="Select account" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">No Account</SelectItem>
+                                <SelectItem value="none">No Account</SelectItem>
                                 {accounts.map((account) => (
                                   <SelectItem key={account.id} value={account.id.toString()}>
                                     {account.companyName}
@@ -244,7 +248,7 @@ export default function Opportunities() {
                         ) : (
                           <div 
                             className="flex items-center text-sm cursor-pointer hover:bg-slate-50 p-1 rounded"
-                            onClick={() => handleFieldEdit('accountId', opportunity.id, opportunity.accountId?.toString() || '')}
+                            onClick={() => handleFieldEdit('accountId', opportunity.id, opportunity.accountId?.toString() || 'none')}
                           >
                             {opportunity.account ? (
                               <>
