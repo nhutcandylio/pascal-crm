@@ -302,7 +302,7 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated, acc
                     onClick={handleAddNewContact}
                   >
                     <UserPlus className="h-3 w-3 mr-1" />
-                    New Contact
+                    Add Contact
                   </Button>
                 </div>
 
