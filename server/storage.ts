@@ -173,6 +173,46 @@ export class MemStorage implements IStorage {
         title: "Marketing Director",
         source: "referral",
         status: "contacted"
+      },
+      {
+        firstName: "David",
+        lastName: "Martinez",
+        email: "d.martinez@healthtech.com",
+        phone: "(555) 777-8888",
+        company: "HealthTech Solutions",
+        title: "VP of Sales",
+        source: "trade-show",
+        status: "qualified"
+      },
+      {
+        firstName: "Lisa",
+        lastName: "Wang",
+        email: "lisa.wang@ecommerce.net",
+        phone: "(555) 999-0000",
+        company: "E-Commerce Plus",
+        title: "COO",
+        source: "social-media",
+        status: "new"
+      },
+      {
+        firstName: "Robert",
+        lastName: "Thompson",
+        email: "robert.t@manufacturing.com",
+        phone: "(555) 444-5555",
+        company: "Manufacturing Co",
+        title: "Plant Manager",
+        source: "cold-call",
+        status: "contacted"
+      },
+      {
+        firstName: "Jennifer",
+        lastName: "Lee",
+        email: "j.lee@consulting.biz",
+        phone: "(555) 666-7777",
+        company: "Consulting Partners",
+        title: "Partner",
+        source: "referral",
+        status: "qualified"
       }
     ];
 
