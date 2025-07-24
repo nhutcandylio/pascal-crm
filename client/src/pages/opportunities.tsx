@@ -294,7 +294,6 @@ export default function Opportunities() {
                             {opportunity.leadSource ? (
                               <Badge variant="secondary" className="text-xs">
                                 {opportunity.leadSource.charAt(0).toUpperCase() + opportunity.leadSource.slice(1).replace('-', ' ')}
-                                <span className="ml-1 text-xs opacity-70">(từ lead)</span>
                               </Badge>
                             ) : (
                               <span className="text-slate-400 text-xs">No source (từ lead)</span>
