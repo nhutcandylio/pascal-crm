@@ -36,6 +36,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/accounts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const accountData = insertAccountSchema.partial().parse(req.body);
+      const account = await storage.updateAccount(id, accountData);
+      if (account) {
+        res.json(account);
+      } else {
+        res.status(404).json({ error: "Account not found" });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid account data", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to update account" });
+      }
+    }
+  });
+
   // Contact routes
   app.get("/api/contacts", async (req, res) => {
     try {
@@ -56,6 +75,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(400).json({ error: "Invalid contact data", details: error.errors });
       } else {
         res.status(500).json({ error: "Failed to create contact" });
+      }
+    }
+  });
+
+  app.patch("/api/contacts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const contactData = insertContactSchema.partial().parse(req.body);
+      const contact = await storage.updateContact(id, contactData);
+      if (contact) {
+        res.json(contact);
+      } else {
+        res.status(404).json({ error: "Contact not found" });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid contact data", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to update contact" });
       }
     }
   });
