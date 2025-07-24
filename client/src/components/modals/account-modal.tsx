@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,15 +9,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { insertAccountSchema, type InsertAccount } from "@shared/schema";
+import { insertAccountSchema, type InsertAccount, type Account } from "@shared/schema";
 
 interface AccountModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAccountCreated?: (account: any) => void;
+  account?: Account | null;
 }
 
-export default function AccountModal({ open, onOpenChange, onAccountCreated }: AccountModalProps) {
+export default function AccountModal({ open, onOpenChange, onAccountCreated, account }: AccountModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -32,20 +33,50 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated }: A
     },
   });
 
+  // Reset form when modal opens with account data
+  useEffect(() => {
+    if (open) {
+      if (account) {
+        form.reset({
+          companyName: account.companyName,
+          industry: account.industry,
+          website: account.website,
+          phone: account.phone,
+          address: account.address,
+        });
+      } else {
+        form.reset({
+          companyName: "",
+          industry: null,
+          website: null,
+          phone: null,
+          address: null,
+        });
+      }
+    }
+  }, [open, account, form]);
+
   const createAccountMutation = useMutation({
     mutationFn: async (data: InsertAccount) => {
-      const response = await apiRequest("POST", "/api/accounts", data);
-      return response.json();
+      if (account) {
+        // Update existing account
+        const response = await apiRequest("PATCH", `/api/accounts/${account.id}`, data);
+        return response.json();
+      } else {
+        // Create new account
+        const response = await apiRequest("POST", "/api/accounts", data);
+        return response.json();
+      }
     },
-    onSuccess: (newAccount) => {
+    onSuccess: (updatedAccount) => {
       queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
       toast({
         title: "Success",
-        description: "Account created successfully.",
+        description: account ? "Account updated successfully." : "Account created successfully.",
       });
       form.reset();
       if (onAccountCreated) {
-        onAccountCreated(newAccount);
+        onAccountCreated(updatedAccount);
       } else {
         onOpenChange(false);
       }
@@ -53,7 +84,7 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated }: A
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to create account.",
+        description: error.message || (account ? "Failed to update account." : "Failed to create account."),
         variant: "destructive",
       });
     },
@@ -67,9 +98,9 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated }: A
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create New Account</DialogTitle>
+          <DialogTitle>{account ? "Edit Account" : "Create New Account"}</DialogTitle>
           <DialogDescription>
-            Add a new company account to your CRM system.
+            {account ? "Update the company account information." : "Add a new company account to your CRM system."}
           </DialogDescription>
         </DialogHeader>
 
@@ -162,7 +193,10 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated }: A
                 type="submit"
                 disabled={createAccountMutation.isPending}
               >
-                {createAccountMutation.isPending ? "Creating..." : "Create Account"}
+                {createAccountMutation.isPending 
+                  ? (account ? "Updating..." : "Creating...") 
+                  : (account ? "Update Account" : "Create Account")
+                }
               </Button>
             </div>
           </form>

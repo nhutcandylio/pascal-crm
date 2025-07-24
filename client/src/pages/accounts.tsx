@@ -10,13 +10,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Building, Phone, Globe, MapPin, X, UserPlus } from "lucide-react";
+import { Plus, Building, Phone, Globe, MapPin, X, UserPlus, Edit } from "lucide-react";
 import type { Account, Contact } from "@shared/schema";
 
 export default function Accounts() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
+  const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -87,6 +88,11 @@ export default function Accounts() {
     setIsContactModalOpen(true);
   };
 
+  const handleEditAccount = (account: Account) => {
+    setEditingAccount(account);
+    setIsModalOpen(true);
+  };
+
   const filteredAccounts = accounts.filter(account =>
     account.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (account.industry && account.industry.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -133,6 +139,7 @@ export default function Accounts() {
                     <TableHead>Contact Info</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Created</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -239,6 +246,19 @@ export default function Accounts() {
                       <TableCell className="text-slate-500">
                         {new Date(account.createdAt).toLocaleDateString()}
                       </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditAccount(account);
+                          }}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -250,7 +270,13 @@ export default function Accounts() {
 
       <AccountModal 
         open={isModalOpen} 
-        onOpenChange={setIsModalOpen}
+        onOpenChange={(open) => {
+          setIsModalOpen(open);
+          if (!open) {
+            setEditingAccount(null);
+          }
+        }}
+        account={editingAccount}
       />
       
       <ContactModal
