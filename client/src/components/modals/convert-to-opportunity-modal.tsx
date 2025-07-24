@@ -72,9 +72,9 @@ export default function ConvertToOpportunityModal({
       }
 
       // Create contact if lead info exists and no contact selected
-      if (!contactId && lead) {
+      if (!contactId && lead && selectedAccountId !== "none") {
         const contactData = {
-          accountId: accountId ? parseInt(accountId) : null,
+          accountId: (accountId && accountId !== "none") ? parseInt(accountId) : null,
           firstName: lead.firstName,
           lastName: lead.lastName,
           email: lead.email,
@@ -91,8 +91,8 @@ export default function ConvertToOpportunityModal({
 
       // Create opportunity
       const opportunityData = {
-        accountId: accountId ? parseInt(accountId) : null,
-        contactId: contactId ? parseInt(contactId) : null,
+        accountId: (accountId && accountId !== "none") ? parseInt(accountId) : null,
+        contactId: (contactId && selectedAccountId !== "none") ? parseInt(contactId) : null,
         name: opportunityName.trim(),
         value: value,
         stage: stage,
@@ -272,13 +272,16 @@ export default function ConvertToOpportunityModal({
                   type="radio"
                   id="existing-account"
                   name="account-choice"
-                  checked={!createNewAccount}
-                  onChange={() => setCreateNewAccount(false)}
+                  checked={!createNewAccount && selectedAccountId !== "none"}
+                  onChange={() => {
+                    setCreateNewAccount(false);
+                    setSelectedAccountId("");
+                  }}
                 />
                 <label htmlFor="existing-account" className="text-sm">Use existing account</label>
               </div>
               
-              {!createNewAccount && (
+              {!createNewAccount && selectedAccountId !== "none" && (
                 <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select an account" />
@@ -296,10 +299,28 @@ export default function ConvertToOpportunityModal({
               <div className="flex items-center space-x-2">
                 <input
                   type="radio"
+                  id="no-account"
+                  name="account-choice"
+                  checked={selectedAccountId === "none" && !createNewAccount}
+                  onChange={() => {
+                    setCreateNewAccount(false);
+                    setSelectedAccountId("none");
+                    setSelectedContactId("");
+                  }}
+                />
+                <label htmlFor="no-account" className="text-sm">No account</label>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="radio"
                   id="new-account"
                   name="account-choice"
                   checked={createNewAccount}
-                  onChange={() => setCreateNewAccount(true)}
+                  onChange={() => {
+                    setCreateNewAccount(true);
+                    setSelectedAccountId("");
+                  }}
                 />
                 <label htmlFor="new-account" className="text-sm">Create new account</label>
               </div>
@@ -315,7 +336,7 @@ export default function ConvertToOpportunityModal({
           </div>
 
           {/* Contact Selection */}
-          {!createNewAccount && selectedAccountId && (
+          {!createNewAccount && selectedAccountId && selectedAccountId !== "none" && (
             <div>
               <Label htmlFor="contact">Contact</Label>
               <Select value={selectedContactId} onValueChange={setSelectedContactId}>
