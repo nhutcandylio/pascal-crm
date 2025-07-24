@@ -45,6 +45,8 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
     defaultValues: {
       name: "",
       value: "",
+      grossProfit: "",
+      grossProfitMargin: 0,
       stage: "prospecting",
       probability: 50,
       closeDate: "",
@@ -59,6 +61,8 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
       form.reset({
         name: opportunity.name || "",
         value: opportunity.value?.toString() || "",
+        grossProfit: opportunity.grossProfit?.toString() || "",
+        grossProfitMargin: opportunity.grossProfitMargin || 0,
         stage: opportunity.stage || "prospecting",
         probability: opportunity.probability || 50,
         closeDate: opportunity.closeDate ? new Date(opportunity.closeDate).toISOString().split('T')[0] : "",
@@ -69,6 +73,8 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
       form.reset({
         name: "",
         value: "",
+        grossProfit: "",
+        grossProfitMargin: 0,
         stage: "prospecting",
         probability: 50,
         closeDate: "",
@@ -146,18 +152,18 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <FormField
                 control={form.control}
                 name="value"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Value ($) *</FormLabel>
+                    <FormLabel>Opportunity Value ($) *</FormLabel>
                     <FormControl>
                       <Input 
                         type="number" 
                         step="0.01"
-                        placeholder="45000.00" 
+                        placeholder="63650.00" 
                         {...field} 
                       />
                     </FormControl>
@@ -168,29 +174,69 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
 
               <FormField
                 control={form.control}
-                name="stage"
+                name="grossProfit"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Stage *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select stage" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {stageOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <FormLabel>Gross Profit ($)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        step="0.01"
+                        placeholder="41150.00" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="grossProfitMargin"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gross Profit Margin (%)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="0"
+                        max="100"
+                        placeholder="65" 
+                        {...field} 
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="stage"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Stage *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select stage" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {stageOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}

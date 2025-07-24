@@ -192,7 +192,9 @@ export default function Opportunities() {
                     <TableHead>Opportunity</TableHead>
                     <TableHead>Account</TableHead>
 
-                    <TableHead>Value</TableHead>
+                    <TableHead>Opportunity Value</TableHead>
+                    <TableHead>Gross Profit</TableHead>
+                    <TableHead>Gross Profit Margin</TableHead>
                     <TableHead>Stage</TableHead>
                     <TableHead>Probability</TableHead>
                     <TableHead>Close Date</TableHead>
@@ -292,8 +294,71 @@ export default function Opportunities() {
                             className="flex items-center text-sm font-medium cursor-pointer hover:bg-slate-50 p-1 rounded"
                             onClick={() => handleFieldEdit('value', opportunity.id, opportunity.value)}
                           >
-                            <DollarSign className="h-3 w-3 mr-1 text-green-600" />
                             ${parseFloat(opportunity.value).toLocaleString()}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {editingField === `grossProfit-${opportunity.id}` ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              className="w-24 h-8"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleFieldSave(opportunity.id, 'grossProfit');
+                                if (e.key === 'Escape') handleFieldCancel();
+                              }}
+                              autoFocus
+                            />
+                            <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'grossProfit')}>
+                              <Check className="h-3 w-3" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div 
+                            className="flex items-center text-sm font-medium cursor-pointer hover:bg-slate-50 p-1 rounded"
+                            onClick={() => handleFieldEdit('grossProfit', opportunity.id, opportunity.grossProfit || '0')}
+                          >
+                            ${parseFloat(opportunity.grossProfit || '0').toLocaleString()}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {editingField === `grossProfitMargin-${opportunity.id}` ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              className="w-16 h-8"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleFieldSave(opportunity.id, 'grossProfitMargin');
+                                if (e.key === 'Escape') handleFieldCancel();
+                              }}
+                              autoFocus
+                            />
+                            <span className="text-sm">%</span>
+                            <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'grossProfitMargin')}>
+                              <Check className="h-3 w-3" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div 
+                            className="flex items-center text-sm font-medium cursor-pointer hover:bg-slate-50 p-1 rounded"
+                            onClick={() => handleFieldEdit('grossProfitMargin', opportunity.id, (opportunity.grossProfitMargin || 0).toString())}
+                          >
+                            {opportunity.grossProfitMargin || 0}%
                           </div>
                         )}
                       </TableCell>
