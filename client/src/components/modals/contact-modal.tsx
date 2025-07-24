@@ -162,33 +162,7 @@ export default function ContactModal({ open, onOpenChange, preselectedAccountId 
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="accountId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Account</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}
-                    value={field.value?.toString()}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select an account" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {accounts.map((account) => (
-                        <SelectItem key={account.id} value={account.id.toString()}>
-                          {account.companyName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button
