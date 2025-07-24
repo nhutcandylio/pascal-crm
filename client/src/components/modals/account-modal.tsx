@@ -3,6 +3,7 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import ContactModal from "./contact-modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +23,7 @@ interface AccountModalProps {
 }
 
 export default function AccountModal({ open, onOpenChange, onAccountCreated, account }: AccountModalProps) {
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -153,6 +155,10 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated, acc
     }
   };
 
+  const handleAddNewContact = () => {
+    setIsContactModalOpen(true);
+  };
+
   const handleSubmit = (data: InsertAccount) => {
     createAccountMutation.mutate(data);
   };
@@ -269,13 +275,13 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated, acc
                   </div>
                 )}
 
-                {/* Assign Existing Contact */}
-                {unassignedContacts.length > 0 && (
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-slate-700">Assign Existing Contact:</div>
+                {/* Add Contact Actions */}
+                <div className="flex items-center gap-2">
+                  {/* Assign Existing Contact */}
+                  {unassignedContacts.length > 0 && (
                     <Select onValueChange={(value) => handleAssignContact(parseInt(value))}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a contact to assign" />
+                      <SelectTrigger className="h-8 w-auto text-xs">
+                        <SelectValue placeholder="+ Assign" />
                       </SelectTrigger>
                       <SelectContent>
                         {unassignedContacts.map(contact => (
@@ -285,11 +291,23 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated, acc
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                )}
+                  )}
+                  
+                  {/* Add New Contact */}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 px-3 text-xs"
+                    onClick={handleAddNewContact}
+                  >
+                    <UserPlus className="h-3 w-3 mr-1" />
+                    New Contact
+                  </Button>
+                </div>
 
-                {accountContacts.length === 0 && unassignedContacts.length === 0 && (
-                  <div className="text-sm text-slate-500">No contacts available. Create contacts first to assign them to this account.</div>
+                {accountContacts.length === 0 && (
+                  <div className="text-sm text-slate-500">No contacts assigned.</div>
                 )}
               </div>
             )}
@@ -315,6 +333,12 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated, acc
           </form>
         </Form>
       </DialogContent>
+      
+      <ContactModal
+        open={isContactModalOpen}
+        onOpenChange={setIsContactModalOpen}
+        preselectedAccountId={account?.id || null}
+      />
     </Dialog>
   );
 }
