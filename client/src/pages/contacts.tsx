@@ -112,7 +112,6 @@ export default function Contacts() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead>Title</TableHead>
                     <TableHead>Account</TableHead>
                     <TableHead>Contact Info</TableHead>
                     <TableHead>Created</TableHead>
@@ -135,13 +134,7 @@ export default function Contacts() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        {contact.title ? (
-                          <Badge variant="outline">{contact.title}</Badge>
-                        ) : (
-                          <span className="text-slate-400">-</span>
-                        )}
-                      </TableCell>
+
                       <TableCell>
                         {contact.account ? (
                           <div className="flex items-center text-sm">
