@@ -1,13 +1,17 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TopBar from "@/components/layout/top-bar";
 import OpportunityModal from "../components/modals/opportunity-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Handshake, DollarSign, Calendar, Building, User, Edit2 } from "lucide-react";
-import type { OpportunityWithRelations, Opportunity } from "@shared/schema";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Handshake, DollarSign, Calendar, Building, User, Edit2, Check, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import type { OpportunityWithRelations, Opportunity, InsertOpportunity } from "@shared/schema";
 
 const getStageColor = (stage: string) => {
   switch (stage) {
@@ -28,14 +32,95 @@ const getStageColor = (stage: string) => {
   }
 };
 
+const stageOptions = [
+  { value: "prospecting", label: "Prospecting" },
+  { value: "qualification", label: "Qualification" },
+  { value: "proposal", label: "Proposal" },
+  { value: "negotiation", label: "Negotiation" },
+  { value: "closed-won", label: "Closed Won" },
+  { value: "closed-lost", label: "Closed Lost" },
+];
+
 export default function Opportunities() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editingValue, setEditingValue] = useState<string>("");
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: opportunities = [], isLoading } = useQuery<OpportunityWithRelations[]>({
     queryKey: ['/api/opportunities'],
   });
+
+  const updateOpportunityMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: Partial<InsertOpportunity> }) => {
+      const response = await apiRequest("PATCH", `/api/opportunities/${id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
+      toast({
+        title: "Success",
+        description: "Opportunity updated successfully.",
+      });
+      setEditingField(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update opportunity.",
+        variant: "destructive",
+      });
+      setEditingField(null);
+    },
+  });
+
+  const handleFieldEdit = (fieldKey: string, opportunityId: number, currentValue: string) => {
+    setEditingField(`${fieldKey}-${opportunityId}`);
+    setEditingValue(currentValue);
+  };
+
+  const handleFieldSave = (opportunityId: number, field: string) => {
+    let value: any = editingValue;
+    
+    // Convert value based on field type
+    if (field === 'probability') {
+      value = parseInt(editingValue);
+      if (isNaN(value) || value < 0 || value > 100) {
+        toast({
+          title: "Error",
+          description: "Probability must be between 0 and 100.",
+          variant: "destructive",
+        });
+        return;
+      }
+    } else if (field === 'value') {
+      if (!editingValue || isNaN(parseFloat(editingValue))) {
+        toast({
+          title: "Error",
+          description: "Value must be a valid number.",
+          variant: "destructive",
+        });
+        return;
+      }
+    } else if (field === 'closeDate') {
+      value = editingValue ? editingValue : null;
+    }
+
+    updateOpportunityMutation.mutate({
+      id: opportunityId,
+      data: { [field]: value }
+    });
+  };
+
+  const handleFieldCancel = () => {
+    setEditingField(null);
+    setEditingValue("");
+  };
 
   const filteredOpportunities = opportunities.filter(opp =>
     opp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -123,35 +208,145 @@ export default function Opportunities() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center text-sm font-medium">
-                          <DollarSign className="h-3 w-3 mr-1 text-green-600" />
-                          ${parseFloat(opportunity.value).toLocaleString()}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getStageColor(opportunity.stage)}>
-                          {opportunity.stage.charAt(0).toUpperCase() + opportunity.stage.slice(1).replace('-', ' ')}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <div className="w-12 bg-slate-200 rounded-full h-2 mr-2">
-                            <div 
-                              className="bg-green-600 h-2 rounded-full" 
-                              style={{ width: `${opportunity.probability || 0}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm text-slate-600">{opportunity.probability || 0}%</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {opportunity.closeDate ? (
-                          <div className="flex items-center text-sm">
-                            <Calendar className="h-3 w-3 mr-1 text-slate-400" />
-                            {new Date(opportunity.closeDate).toLocaleDateString()}
+                        {editingField === `value-${opportunity.id}` ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              className="w-24 h-8"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleFieldSave(opportunity.id, 'value');
+                                if (e.key === 'Escape') handleFieldCancel();
+                              }}
+                              autoFocus
+                            />
+                            <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'value')}>
+                              <Check className="h-3 w-3" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
+                              <X className="h-3 w-3" />
+                            </Button>
                           </div>
                         ) : (
-                          <span className="text-slate-400">-</span>
+                          <div 
+                            className="flex items-center text-sm font-medium cursor-pointer hover:bg-slate-50 p-1 rounded"
+                            onClick={() => handleFieldEdit('value', opportunity.id, opportunity.value)}
+                          >
+                            <DollarSign className="h-3 w-3 mr-1 text-green-600" />
+                            ${parseFloat(opportunity.value).toLocaleString()}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {editingField === `stage-${opportunity.id}` ? (
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={editingValue}
+                              onValueChange={setEditingValue}
+                            >
+                              <SelectTrigger className="w-32 h-8">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {stageOptions.map((stage) => (
+                                  <SelectItem key={stage.value} value={stage.value}>
+                                    {stage.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'stage')}>
+                              <Check className="h-3 w-3" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Badge 
+                            className={`${getStageColor(opportunity.stage)} cursor-pointer hover:opacity-80`}
+                            onClick={() => handleFieldEdit('stage', opportunity.id, opportunity.stage)}
+                          >
+                            {opportunity.stage.charAt(0).toUpperCase() + opportunity.stage.slice(1).replace('-', ' ')}
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {editingField === `probability-${opportunity.id}` ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="number"
+                              min="0"
+                              max="100"
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              className="w-16 h-8"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleFieldSave(opportunity.id, 'probability');
+                                if (e.key === 'Escape') handleFieldCancel();
+                              }}
+                              autoFocus
+                            />
+                            <span className="text-sm">%</span>
+                            <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'probability')}>
+                              <Check className="h-3 w-3" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div 
+                            className="flex items-center cursor-pointer hover:bg-slate-50 p-1 rounded"
+                            onClick={() => handleFieldEdit('probability', opportunity.id, (opportunity.probability || 0).toString())}
+                          >
+                            <div className="w-12 bg-slate-200 rounded-full h-2 mr-2">
+                              <div 
+                                className="bg-green-600 h-2 rounded-full" 
+                                style={{ width: `${opportunity.probability || 0}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-sm text-slate-600">{opportunity.probability || 0}%</span>
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {editingField === `closeDate-${opportunity.id}` ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              type="date"
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              className="w-36 h-8"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleFieldSave(opportunity.id, 'closeDate');
+                                if (e.key === 'Escape') handleFieldCancel();
+                              }}
+                              autoFocus
+                            />
+                            <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'closeDate')}>
+                              <Check className="h-3 w-3" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div 
+                            className="flex items-center text-sm cursor-pointer hover:bg-slate-50 p-1 rounded"
+                            onClick={() => handleFieldEdit('closeDate', opportunity.id, opportunity.closeDate ? new Date(opportunity.closeDate).toISOString().split('T')[0] : '')}
+                          >
+                            {opportunity.closeDate ? (
+                              <>
+                                <Calendar className="h-3 w-3 mr-1 text-slate-400" />
+                                {new Date(opportunity.closeDate).toLocaleDateString()}
+                              </>
+                            ) : (
+                              <span className="text-slate-400">Click to set date</span>
+                            )}
+                          </div>
                         )}
                       </TableCell>
                       <TableCell>
