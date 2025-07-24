@@ -229,7 +229,8 @@ export class MemStorage implements IStorage {
         value: "45000.00",
         stage: "proposal",
         probability: 75,
-        closeDate: new Date("2024-03-15")
+        closeDate: new Date("2024-03-15"),
+        description: "Annual software license renewal for enterprise package including premium support"
       },
       {
         accountId: 2,
@@ -238,7 +239,8 @@ export class MemStorage implements IStorage {
         value: "78500.00",
         stage: "negotiation",
         probability: 60,
-        closeDate: new Date("2024-03-22")
+        closeDate: new Date("2024-03-22"),
+        description: "Full enterprise solution deployment with custom integrations and training"
       },
       {
         accountId: 3,
@@ -247,7 +249,8 @@ export class MemStorage implements IStorage {
         value: "32000.00",
         stage: "closed-won",
         probability: 100,
-        closeDate: new Date("2024-03-10")
+        closeDate: new Date("2024-03-10"),
+        description: "Strategic financial consulting for Q2 business expansion planning"
       }
     ];
 

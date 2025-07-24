@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TopBar from "@/components/layout/top-bar";
 import OpportunityModal from "../components/modals/opportunity-modal";
 import AccountModal from "../components/modals/account-modal";
+import DescriptionModal from "../components/modals/description-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +52,8 @@ export default function Opportunities() {
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
   const [newAccountMode, setNewAccountMode] = useState(false);
   const [pendingOpportunityId, setPendingOpportunityId] = useState<number | null>(null);
+  const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
+  const [selectedOpportunityForDescription, setSelectedOpportunityForDescription] = useState<Opportunity | null>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -406,48 +409,27 @@ export default function Opportunities() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          {editingField === `description-${opportunity.id}` ? (
-                            <div className="flex items-center gap-2">
-                              <Input
-                                value={editingValue}
-                                onChange={(e) => setEditingValue(e.target.value)}
-                                className="w-48 h-8"
-                                placeholder="Enter description"
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') handleFieldSave(opportunity.id, 'description');
-                                  if (e.key === 'Escape') handleFieldCancel();
-                                }}
-                                autoFocus
-                              />
-                              <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'description')}>
-                                <Check className="h-3 w-3" />
-                              </Button>
-                              <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleFieldEdit('description', opportunity.id, opportunity.description || '')}
-                                title={opportunity.description || 'Add description'}
-                              >
-                                <FileText className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setEditingOpportunity(opportunity);
-                                  setIsModalOpen(true);
-                                }}
-                              >
-                                <Edit2 className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedOpportunityForDescription(opportunity);
+                              setIsDescriptionModalOpen(true);
+                            }}
+                            title={opportunity.description || 'Add description'}
+                          >
+                            <FileText className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setEditingOpportunity(opportunity);
+                              setIsModalOpen(true);
+                            }}
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -490,6 +472,17 @@ export default function Opportunities() {
           setNewAccountMode(false);
           setPendingOpportunityId(null);
           setEditingField(null);
+        }}
+      />
+
+      <DescriptionModal
+        opportunity={selectedOpportunityForDescription}
+        open={isDescriptionModalOpen}
+        onOpenChange={(open) => {
+          setIsDescriptionModalOpen(open);
+          if (!open) {
+            setSelectedOpportunityForDescription(null);
+          }
         }}
       />
     </div>
