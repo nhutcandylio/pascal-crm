@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Handshake, DollarSign, Calendar, Building, User } from "lucide-react";
-import type { OpportunityWithRelations } from "@shared/schema";
+import { Plus, Handshake, DollarSign, Calendar, Building, User, Edit2 } from "lucide-react";
+import type { OpportunityWithRelations, Opportunity } from "@shared/schema";
 
 const getStageColor = (stage: string) => {
   switch (stage) {
@@ -30,6 +30,7 @@ const getStageColor = (stage: string) => {
 
 export default function Opportunities() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: opportunities = [], isLoading } = useQuery<OpportunityWithRelations[]>({
@@ -85,6 +86,7 @@ export default function Opportunities() {
                     <TableHead>Stage</TableHead>
                     <TableHead>Probability</TableHead>
                     <TableHead>Close Date</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -152,6 +154,18 @@ export default function Opportunities() {
                           <span className="text-slate-400">-</span>
                         )}
                       </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditingOpportunity(opportunity);
+                            setIsModalOpen(true);
+                          }}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -163,7 +177,13 @@ export default function Opportunities() {
 
       <OpportunityModal 
         open={isModalOpen} 
-        onOpenChange={setIsModalOpen}
+        onOpenChange={(open) => {
+          setIsModalOpen(open);
+          if (!open) {
+            setEditingOpportunity(null);
+          }
+        }}
+        opportunity={editingOpportunity}
       />
     </div>
   );

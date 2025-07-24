@@ -10,11 +10,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { insertOpportunitySchema, type InsertOpportunity, type Account, type Contact } from "@shared/schema";
+import { insertOpportunitySchema, type InsertOpportunity, type Account, type Contact, type Opportunity } from "@shared/schema";
 
 interface OpportunityModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  opportunity?: Opportunity | null;
 }
 
 const stageOptions = [
@@ -26,7 +27,7 @@ const stageOptions = [
   { value: "closed-lost", label: "Closed Lost" },
 ];
 
-export default function OpportunityModal({ open, onOpenChange }: OpportunityModalProps) {
+export default function OpportunityModal({ open, onOpenChange, opportunity }: OpportunityModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -43,13 +44,13 @@ export default function OpportunityModal({ open, onOpenChange }: OpportunityModa
       probability: insertOpportunitySchema.shape.probability.default(50)
     })),
     defaultValues: {
-      name: "",
-      value: "",
-      stage: "prospecting",
-      probability: 50,
-      closeDate: null,
-      accountId: null,
-      contactId: null,
+      name: opportunity?.name || "",
+      value: opportunity?.value || "",
+      stage: opportunity?.stage || "prospecting",
+      probability: opportunity?.probability || 50,
+      closeDate: opportunity?.closeDate ? new Date(opportunity.closeDate).toISOString().split('T')[0] : "",
+      accountId: opportunity?.accountId || null,
+      contactId: opportunity?.contactId || null,
     },
   });
 
@@ -58,16 +59,22 @@ export default function OpportunityModal({ open, onOpenChange }: OpportunityModa
     ? contacts.filter(contact => contact.accountId === selectedAccountId)
     : contacts;
 
-  const createOpportunityMutation = useMutation({
+  const saveOpportunityMutation = useMutation({
     mutationFn: async (data: InsertOpportunity) => {
-      const response = await apiRequest("POST", "/api/opportunities", data);
-      return response.json();
+      if (opportunity) {
+        const response = await apiRequest("PATCH", `/api/opportunities/${opportunity.id}`, data);
+        return response.json();
+      } else {
+        const response = await apiRequest("POST", "/api/opportunities", data);
+        return response.json();
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
       toast({
         title: "Success",
-        description: "Opportunity created successfully.",
+        description: opportunity ? "Opportunity updated successfully." : "Opportunity created successfully.",
       });
       form.reset();
       onOpenChange(false);
@@ -75,7 +82,7 @@ export default function OpportunityModal({ open, onOpenChange }: OpportunityModa
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to create opportunity.",
+        description: error.message || `Failed to ${opportunity ? 'update' : 'create'} opportunity.`,
         variant: "destructive",
       });
     },
@@ -84,18 +91,18 @@ export default function OpportunityModal({ open, onOpenChange }: OpportunityModa
   const handleSubmit = (data: InsertOpportunity & { probability: number }) => {
     const opportunityData: InsertOpportunity = {
       ...data,
-      closeDate: data.closeDate ? new Date(data.closeDate) : undefined,
+      closeDate: data.closeDate ? data.closeDate : null,
     };
-    createOpportunityMutation.mutate(opportunityData);
+    saveOpportunityMutation.mutate(opportunityData);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Create New Opportunity</DialogTitle>
+          <DialogTitle>{opportunity ? 'Edit Opportunity' : 'Create New Opportunity'}</DialogTitle>
           <DialogDescription>
-            Add a new sales opportunity to your CRM system.
+            {opportunity ? 'Update opportunity details.' : 'Add a new sales opportunity to your CRM system.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -273,9 +280,9 @@ export default function OpportunityModal({ open, onOpenChange }: OpportunityModa
               </Button>
               <Button
                 type="submit"
-                disabled={createOpportunityMutation.isPending}
+                disabled={saveOpportunityMutation.isPending}
               >
-                {createOpportunityMutation.isPending ? "Creating..." : "Create Opportunity"}
+                {saveOpportunityMutation.isPending ? (opportunity ? "Updating..." : "Creating...") : (opportunity ? "Update Opportunity" : "Create Opportunity")}
               </Button>
             </div>
           </form>

@@ -126,6 +126,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/opportunities/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const opportunityData = insertOpportunitySchema.parse(req.body);
+      const opportunity = await storage.updateOpportunity(id, opportunityData);
+      res.json(opportunity);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid opportunity data", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to update opportunity" });
+      }
+    }
+  });
+
   // Activity routes
   app.get("/api/activities", async (req, res) => {
     try {
