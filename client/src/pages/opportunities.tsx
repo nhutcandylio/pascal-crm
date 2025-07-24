@@ -210,7 +210,7 @@ export default function Opportunities() {
                   <TableRow>
                     <TableHead>Opportunity</TableHead>
                     <TableHead>Account</TableHead>
-
+                    <TableHead>Lead Source</TableHead>
                     <TableHead>Opportunity Value</TableHead>
                     <TableHead>Gross Profit</TableHead>
                     <TableHead>Gross Profit Margin</TableHead>
@@ -285,7 +285,49 @@ export default function Opportunities() {
                           </div>
                         )}
                       </TableCell>
-
+                      <TableCell>
+                        {editingField === `leadSource-${opportunity.id}` ? (
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={editingValue}
+                              onValueChange={setEditingValue}
+                            >
+                              <SelectTrigger className="w-32 h-8">
+                                <SelectValue placeholder="Select source" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">No Source</SelectItem>
+                                <SelectItem value="website">Website</SelectItem>
+                                <SelectItem value="referral">Referral</SelectItem>
+                                <SelectItem value="cold-call">Cold Call</SelectItem>
+                                <SelectItem value="social-media">Social Media</SelectItem>
+                                <SelectItem value="email-campaign">Email Campaign</SelectItem>
+                                <SelectItem value="trade-show">Trade Show</SelectItem>
+                                <SelectItem value="partner">Partner</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'leadSource')}>
+                              <Check className="h-3 w-3" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div 
+                            className="flex items-center text-sm cursor-pointer hover:bg-slate-50 p-1 rounded"
+                            onClick={() => handleFieldEdit('leadSource', opportunity.id, opportunity.leadSource || '')}
+                          >
+                            {opportunity.leadSource ? (
+                              <Badge variant="outline" className="text-xs">
+                                {opportunity.leadSource.charAt(0).toUpperCase() + opportunity.leadSource.slice(1).replace('-', ' ')}
+                              </Badge>
+                            ) : (
+                              <span className="text-slate-400">Click to set source</span>
+                            )}
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {editingField === `value-${opportunity.id}` ? (
                           <div className="flex items-center gap-2">

@@ -245,6 +245,7 @@ export class MemStorage implements IStorage {
         stage: "proposal",
         probability: 75,
         closeDate: new Date("2024-03-15"),
+        leadSource: "website",
         description: "Annual software license renewal for enterprise package including premium support"
       },
       {
@@ -257,6 +258,7 @@ export class MemStorage implements IStorage {
         stage: "negotiation",
         probability: 60,
         closeDate: new Date("2024-03-22"),
+        leadSource: "referral",
         description: "Full enterprise solution deployment with custom integrations and training"
       },
       {
@@ -269,6 +271,7 @@ export class MemStorage implements IStorage {
         stage: "closed-won",
         probability: 100,
         closeDate: new Date("2024-03-10"),
+        leadSource: "trade-show",
         description: "Strategic financial consulting for Q2 business expansion planning"
       }
     ];
@@ -525,6 +528,7 @@ export class MemStorage implements IStorage {
       company: insertLead.company || null,
       title: insertLead.title || null,
       source: insertLead.source || null,
+      status: insertLead.status || 'new',
       id,
       createdAt: new Date()
     };
@@ -609,6 +613,11 @@ export class MemStorage implements IStorage {
       accountId: insertOpportunity.accountId || null,
       contactId: insertOpportunity.contactId || null,
       closeDate: insertOpportunity.closeDate || null,
+      leadSource: insertOpportunity.leadSource || null,
+      grossProfit: insertOpportunity.grossProfit || null,
+      grossProfitMargin: insertOpportunity.grossProfitMargin || null,
+      probability: insertOpportunity.probability || null,
+      description: insertOpportunity.description || null,
       id,
       createdAt: now,
       updatedAt: now
@@ -704,6 +713,7 @@ export class MemStorage implements IStorage {
       opportunityId: insertActivity.opportunityId || null,
       description: insertActivity.description || null,
       dueDate: insertActivity.dueDate || null,
+      completed: insertActivity.completed || null,
       id,
       createdAt: new Date()
     };

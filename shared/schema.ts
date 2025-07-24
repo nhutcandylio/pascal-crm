@@ -54,6 +54,7 @@ export const opportunities = pgTable("opportunities", {
   stage: text("stage").notNull(), // 'prospecting', 'qualification', 'proposal', 'negotiation', 'closed-won', 'closed-lost'
   probability: integer("probability").default(0), // 0-100%
   closeDate: timestamp("close_date"),
+  leadSource: text("lead_source"), // 'website', 'referral', 'cold-call', 'social-media', 'email-campaign', 'trade-show', 'partner'
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
