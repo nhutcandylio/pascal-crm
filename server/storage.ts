@@ -1,6 +1,7 @@
 import { 
   accounts,
   contacts,
+  accountContacts,
   leads,
   opportunities,
   activities, 
@@ -8,6 +9,8 @@ import {
   type InsertAccount,
   type Contact,
   type InsertContact,
+  type AccountContact,
+  type InsertAccountContact,
   type Lead,
   type InsertLead,
   type Opportunity,
@@ -16,7 +19,8 @@ import {
   type InsertActivity,
   type OpportunityWithRelations,
   type ActivityWithRelations,
-  type ContactWithAccount,
+  type ContactWithAccounts,
+  type AccountWithContacts,
   type DashboardMetrics
 } from "@shared/schema";
 
@@ -32,12 +36,17 @@ export interface IStorage {
   // Contact operations
   getContact(id: number): Promise<Contact | undefined>;
   getContacts(): Promise<Contact[]>;
-  getContactsWithAccounts(): Promise<ContactWithAccount[]>;
+  getContactsWithAccounts(): Promise<ContactWithAccounts[]>;
   getContactsByAccount(accountId: number): Promise<Contact[]>;
   createContact(contact: InsertContact): Promise<Contact>;
   updateContact(id: number, contact: Partial<InsertContact>): Promise<Contact | undefined>;
   deleteContact(id: number): Promise<boolean>;
   searchContacts(query: string): Promise<Contact[]>;
+  
+  // Account-Contact relationship operations
+  addContactToAccount(accountId: number, contactId: number): Promise<AccountContact>;
+  removeContactFromAccount(accountId: number, contactId: number): Promise<boolean>;
+  getAccountsWithContacts(): Promise<AccountWithContacts[]>;
 
   // Lead operations
   getLead(id: number): Promise<Lead | undefined>;
@@ -76,11 +85,13 @@ export interface IStorage {
 export class MemStorage implements IStorage {
   private accounts: Map<number, Account> = new Map();
   private contacts: Map<number, Contact> = new Map();
+  private accountContacts: Map<number, AccountContact> = new Map();
   private leads: Map<number, Lead> = new Map();
   private opportunities: Map<number, Opportunity> = new Map();
   private activities: Map<number, Activity> = new Map();
   private currentAccountId = 1;
   private currentContactId = 1;
+  private currentAccountContactId = 1;
   private currentLeadId = 1;
   private currentOpportunityId = 1;
   private currentActivityId = 1;
@@ -123,7 +134,6 @@ export class MemStorage implements IStorage {
     // Add sample contacts
     const sampleContacts: InsertContact[] = [
       {
-        accountId: 1,
         firstName: "John",
         lastName: "Smith",
         email: "john.smith@acme.com",
@@ -131,7 +141,6 @@ export class MemStorage implements IStorage {
         title: "CTO"
       },
       {
-        accountId: 2,
         firstName: "Sarah",
         lastName: "Johnson",
         email: "sarah.johnson@techinnovate.com",
@@ -139,7 +148,6 @@ export class MemStorage implements IStorage {
         title: "VP of Engineering"
       },
       {
-        accountId: 3,
         firstName: "Mike",
         lastName: "Wilson",
         email: "mike.wilson@globalent.com",
@@ -151,6 +159,11 @@ export class MemStorage implements IStorage {
     sampleContacts.forEach(contact => {
       this.createContact(contact);
     });
+
+    // Add sample account-contact relationships
+    this.addContactToAccount(1, 1); // John Smith -> Acme Corp
+    this.addContactToAccount(2, 2); // Sarah Johnson -> TechInnovate Solutions  
+    this.addContactToAccount(3, 3); // Mike Wilson -> Global Enterprises
 
     // Add sample leads
     const sampleLeads: InsertLead[] = [
@@ -368,15 +381,24 @@ export class MemStorage implements IStorage {
     );
   }
 
-  async getContactsWithAccounts(): Promise<ContactWithAccount[]> {
+  async getContactsWithAccounts(): Promise<ContactWithAccounts[]> {
     const contacts = await this.getContacts();
-    const contactsWithAccounts: ContactWithAccount[] = [];
+    const contactsWithAccounts: ContactWithAccounts[] = [];
 
     for (const contact of contacts) {
-      const result: ContactWithAccount = { ...contact };
-      if (contact.accountId) {
-        result.account = await this.getAccount(contact.accountId);
+      const result: ContactWithAccounts = { ...contact, accounts: [] };
+      
+      // Find all accounts this contact is associated with
+      const contactAccountRelations = Array.from(this.accountContacts.values())
+        .filter(ac => ac.contactId === contact.id);
+      
+      for (const relation of contactAccountRelations) {
+        const account = await this.getAccount(relation.accountId);
+        if (account) {
+          result.accounts!.push(account);
+        }
       }
+      
       contactsWithAccounts.push(result);
     }
 
@@ -384,15 +406,24 @@ export class MemStorage implements IStorage {
   }
 
   async getContactsByAccount(accountId: number): Promise<Contact[]> {
-    const contacts = Array.from(this.contacts.values());
-    return contacts.filter(contact => contact.accountId === accountId);
+    const contactAccountRelations = Array.from(this.accountContacts.values())
+      .filter(ac => ac.accountId === accountId);
+    
+    const contacts: Contact[] = [];
+    for (const relation of contactAccountRelations) {
+      const contact = await this.getContact(relation.contactId);
+      if (contact) {
+        contacts.push(contact);
+      }
+    }
+    
+    return contacts;
   }
 
   async createContact(insertContact: InsertContact): Promise<Contact> {
     const id = this.currentContactId++;
     const contact: Contact = {
       ...insertContact,
-      accountId: insertContact.accountId || null,
       phone: insertContact.phone || null,
       title: insertContact.title || null,
       id,
@@ -426,6 +457,53 @@ export class MemStorage implements IStorage {
       contact.lastName.toLowerCase().includes(lowerQuery) ||
       contact.email.toLowerCase().includes(lowerQuery)
     );
+  }
+
+  // Account-Contact relationship operations
+  async addContactToAccount(accountId: number, contactId: number): Promise<AccountContact> {
+    const id = this.currentAccountContactId++;
+    const accountContact: AccountContact = {
+      id,
+      accountId,
+      contactId,
+      createdAt: new Date()
+    };
+    this.accountContacts.set(id, accountContact);
+    return accountContact;
+  }
+
+  async removeContactFromAccount(accountId: number, contactId: number): Promise<boolean> {
+    const relationToDelete = Array.from(this.accountContacts.entries())
+      .find(([_, ac]) => ac.accountId === accountId && ac.contactId === contactId);
+    
+    if (relationToDelete) {
+      return this.accountContacts.delete(relationToDelete[0]);
+    }
+    return false;
+  }
+
+  async getAccountsWithContacts(): Promise<AccountWithContacts[]> {
+    const accounts = await this.getAccounts();
+    const accountsWithContacts: AccountWithContacts[] = [];
+
+    for (const account of accounts) {
+      const result: AccountWithContacts = { ...account, contacts: [] };
+      
+      // Find all contacts associated with this account
+      const accountContactRelations = Array.from(this.accountContacts.values())
+        .filter(ac => ac.accountId === account.id);
+      
+      for (const relation of accountContactRelations) {
+        const contact = await this.getContact(relation.contactId);
+        if (contact) {
+          result.contacts!.push(contact);
+        }
+      }
+      
+      accountsWithContacts.push(result);
+    }
+
+    return accountsWithContacts;
   }
 
   // Lead operations

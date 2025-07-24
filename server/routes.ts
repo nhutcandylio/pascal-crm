@@ -65,6 +65,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Account routes with contacts
+  app.get("/api/accounts/with-contacts", async (req, res) => {
+    try {
+      const accounts = await storage.getAccountsWithContacts();
+      res.json(accounts);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch accounts with contacts" });
+    }
+  });
+
+  // Add contact to account
+  app.post("/api/accounts/:accountId/contacts/:contactId", async (req, res) => {
+    try {
+      const accountId = parseInt(req.params.accountId);
+      const contactId = parseInt(req.params.contactId);
+      const accountContact = await storage.addContactToAccount(accountId, contactId);
+      res.status(201).json(accountContact);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to add contact to account" });
+    }
+  });
+
+  // Remove contact from account
+  app.delete("/api/accounts/:accountId/contacts/:contactId", async (req, res) => {
+    try {
+      const accountId = parseInt(req.params.accountId);
+      const contactId = parseInt(req.params.contactId);
+      const success = await storage.removeContactFromAccount(accountId, contactId);
+      if (success) {
+        res.json({ success: true });
+      } else {
+        res.status(404).json({ error: "Relationship not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to remove contact from account" });
+    }
+  });
+
   app.post("/api/contacts", async (req, res) => {
     try {
       const contactData = insertContactSchema.parse(req.body);

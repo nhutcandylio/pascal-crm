@@ -20,16 +20,16 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Plus, User, Phone, Mail, Building, Trash2 } from "lucide-react";
-import type { ContactWithAccount } from "@shared/schema";
+import type { ContactWithAccounts } from "@shared/schema";
 
 export default function Contacts() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [contactToDelete, setContactToDelete] = useState<ContactWithAccount | null>(null);
+  const [contactToDelete, setContactToDelete] = useState<ContactWithAccounts | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: contacts = [], isLoading } = useQuery<ContactWithAccount[]>({
+  const { data: contacts = [], isLoading } = useQuery<ContactWithAccounts[]>({
     queryKey: ['/api/contacts'],
   });
 
@@ -58,7 +58,7 @@ export default function Contacts() {
     },
   });
 
-  const handleDeleteContact = (contact: ContactWithAccount) => {
+  const handleDeleteContact = (contact: ContactWithAccounts) => {
     setContactToDelete(contact);
   };
 
@@ -72,7 +72,7 @@ export default function Contacts() {
     contact.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     contact.lastName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     contact.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (contact.account?.companyName.toLowerCase().includes(searchQuery.toLowerCase()))
+    (contact.accounts?.some(account => account.companyName.toLowerCase().includes(searchQuery.toLowerCase())))
   );
 
   return (
@@ -136,10 +136,13 @@ export default function Contacts() {
                       </TableCell>
 
                       <TableCell>
-                        {contact.account ? (
-                          <div className="flex items-center text-sm">
-                            <Building className="h-3 w-3 mr-1 text-slate-400" />
-                            {contact.account.companyName}
+                        {contact.accounts && contact.accounts.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {contact.accounts.map(account => (
+                              <Badge key={account.id} variant="outline" className="text-xs">
+                                {account.companyName}
+                              </Badge>
+                            ))}
                           </div>
                         ) : (
                           <span className="text-slate-400">-</span>

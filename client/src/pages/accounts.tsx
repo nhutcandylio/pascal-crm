@@ -23,22 +23,23 @@ export default function Accounts() {
   const queryClient = useQueryClient();
 
   const { data: accounts = [], isLoading } = useQuery<Account[]>({
-    queryKey: ['/api/accounts'],
+    queryKey: ['/api/accounts/with-contacts'],
   });
 
   const { data: contacts = [] } = useQuery<Contact[]>({
     queryKey: ['/api/contacts'],
   });
 
-  // Get all contacts not assigned to any account (for adding to accounts)
-  const unassignedContacts = contacts.filter(contact => !contact.accountId);
+  // Get all contacts (since we now support many-to-many relationships)
+  const allContacts = contacts;
 
   const removeContactMutation = useMutation({
-    mutationFn: async ({ contactId }: { contactId: number }) => {
-      const response = await apiRequest("PATCH", `/api/contacts/${contactId}`, { accountId: null });
+    mutationFn: async ({ contactId, accountId }: { contactId: number; accountId: number }) => {
+      const response = await apiRequest("DELETE", `/api/accounts/${accountId}/contacts/${contactId}`);
       return response.json();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/accounts/with-contacts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
       toast({
         title: "Success",
@@ -56,10 +57,11 @@ export default function Accounts() {
 
   const assignContactMutation = useMutation({
     mutationFn: async ({ contactId, accountId }: { contactId: number; accountId: number }) => {
-      const response = await apiRequest("PATCH", `/api/contacts/${contactId}`, { accountId });
+      const response = await apiRequest("POST", `/api/accounts/${accountId}/contacts/${contactId}`);
       return response.json();
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/accounts/with-contacts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
       toast({
         title: "Success", 
@@ -75,8 +77,8 @@ export default function Accounts() {
     },
   });
 
-  const handleRemoveContact = (contactId: number) => {
-    removeContactMutation.mutate({ contactId });
+  const handleRemoveContact = (contactId: number, accountId: number) => {
+    removeContactMutation.mutate({ contactId, accountId });
   };
 
   const handleAssignContact = (contactId: number, accountId: number) => {
@@ -170,12 +172,12 @@ export default function Accounts() {
                       </TableCell>
                       <TableCell>
                         {(() => {
-                          const accountContacts = contacts.filter(contact => contact.accountId === account.id);
+                          const accountContacts = (account as any).contacts || [];
                           return (
                             <div className="space-y-1">
                               {accountContacts.length > 0 ? (
                                 <div className="flex flex-wrap gap-1">
-                                  {accountContacts.map(contact => (
+                                  {accountContacts.map((contact: any) => (
                                     <Badge key={contact.id} variant="outline" className="text-xs">
                                       {contact.firstName} {contact.lastName}
                                     </Badge>

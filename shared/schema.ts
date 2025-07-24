@@ -14,12 +14,19 @@ export const accounts = pgTable("accounts", {
 
 export const contacts = pgTable("contacts", {
   id: serial("id").primaryKey(),
-  accountId: integer("account_id"),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   email: text("email").notNull().unique(),
   phone: text("phone"),
   title: text("title"), // job title
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Junction table for many-to-many relationship between accounts and contacts
+export const accountContacts = pgTable("account_contacts", {
+  id: serial("id").primaryKey(),
+  accountId: integer("account_id").notNull(),
+  contactId: integer("contact_id").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -76,6 +83,11 @@ export const insertContactSchema = createInsertSchema(contacts).omit({
   createdAt: true,
 });
 
+export const insertAccountContactSchema = createInsertSchema(accountContacts).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertLeadSchema = createInsertSchema(leads).omit({
   id: true,
   createdAt: true,
@@ -100,6 +112,8 @@ export type Account = typeof accounts.$inferSelect;
 export type InsertAccount = z.infer<typeof insertAccountSchema>;
 export type Contact = typeof contacts.$inferSelect;
 export type InsertContact = z.infer<typeof insertContactSchema>;
+export type AccountContact = typeof accountContacts.$inferSelect;
+export type InsertAccountContact = z.infer<typeof insertAccountContactSchema>;
 export type Lead = typeof leads.$inferSelect;
 export type InsertLead = z.infer<typeof insertLeadSchema>;
 export type Opportunity = typeof opportunities.$inferSelect;
@@ -120,8 +134,12 @@ export type ActivityWithRelations = Activity & {
   opportunity?: Opportunity;
 };
 
-export type ContactWithAccount = Contact & {
-  account?: Account;
+export type ContactWithAccounts = Contact & {
+  accounts?: Account[];
+};
+
+export type AccountWithContacts = Account & {
+  contacts?: Contact[];
 };
 
 export type DashboardMetrics = {
