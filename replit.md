@@ -26,22 +26,28 @@ Preferred communication style: Simple, everyday language.
 - **Error Handling**: Centralized error handling middleware
 
 ### Database Architecture
-- **Database**: PostgreSQL with Neon Database integration
+- **Database**: PostgreSQL with Neon Database integration (currently using in-memory storage for development)
 - **ORM**: Drizzle ORM for type-safe database operations
 - **Schema Management**: Drizzle Kit for migrations and schema management
 - **Validation**: Zod schemas for runtime type validation
+- **Relationships**: Many-to-many relationship between Accounts and Contacts via junction table
 
 ## Key Components
 
 ### Database Schema
-- **Customers Table**: Stores company information, contact details, and industry data
-- **Deals Table**: Manages sales opportunities with stages, values, and close dates
+- **Accounts Table**: Stores company information, contact details, and industry data
+- **Contacts Table**: Individual contact information (shared across multiple accounts)
+- **AccountContacts Table**: Junction table for many-to-many Account-Contact relationships
+- **Leads Table**: Potential customers not yet converted to accounts
+- **Opportunities Table**: Sales opportunities with stages, values, and close dates
 - **Activities Table**: Tracks customer interactions (calls, emails, meetings, notes)
 
 ### Frontend Pages
 - **Dashboard**: Overview with metrics, recent deals, and activities
-- **Customers**: Customer management with search functionality
-- **Deals**: Deal pipeline management with stage tracking
+- **Accounts**: Account management with many-to-many contact relationships
+- **Contacts**: Contact management showing all associated accounts
+- **Leads**: Lead management and conversion to accounts
+- **Opportunities**: Deal pipeline management with stage tracking
 - **Activities**: Activity logging and history tracking
 
 ### UI Components
@@ -101,3 +107,12 @@ Preferred communication style: Simple, everyday language.
 - **Build Scripts**: Separate development and production workflows
 
 The application follows modern web development practices with strong typing, component reusability, and scalable architecture patterns. The current implementation uses in-memory storage for development but is designed to easily integrate with the PostgreSQL database through the defined storage interface.
+
+## Recent Changes
+
+### January 2025 - Many-to-Many Account-Contact Relationships
+- **Implemented**: Junction table (AccountContacts) for shared contact relationships
+- **Updated**: Storage layer with new relationship management methods
+- **Added**: API endpoints for adding/removing contact-account associations
+- **Enhanced**: Frontend to display multiple accounts per contact as badges
+- **Benefit**: Contacts can now be shared between multiple accounts, supporting real-world business scenarios
