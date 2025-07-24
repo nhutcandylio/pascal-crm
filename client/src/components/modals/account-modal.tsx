@@ -14,9 +14,10 @@ import { insertAccountSchema, type InsertAccount } from "@shared/schema";
 interface AccountModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onAccountCreated?: (account: any) => void;
 }
 
-export default function AccountModal({ open, onOpenChange }: AccountModalProps) {
+export default function AccountModal({ open, onOpenChange, onAccountCreated }: AccountModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -36,14 +37,18 @@ export default function AccountModal({ open, onOpenChange }: AccountModalProps) 
       const response = await apiRequest("POST", "/api/accounts", data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (newAccount) => {
       queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
       toast({
         title: "Success",
         description: "Account created successfully.",
       });
       form.reset();
-      onOpenChange(false);
+      if (onAccountCreated) {
+        onAccountCreated(newAccount);
+      } else {
+        onOpenChange(false);
+      }
     },
     onError: (error: any) => {
       toast({

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TopBar from "@/components/layout/top-bar";
 import OpportunityModal from "../components/modals/opportunity-modal";
+import AccountModal from "../components/modals/account-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Handshake, DollarSign, Calendar, Building, User, Edit2, Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { OpportunityWithRelations, Opportunity, InsertOpportunity } from "@shared/schema";
+import type { OpportunityWithRelations, Opportunity, InsertOpportunity, Account } from "@shared/schema";
 
 const getStageColor = (stage: string) => {
   switch (stage) {
@@ -47,9 +48,16 @@ export default function Opportunities() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState<string>("");
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+  const [newAccountMode, setNewAccountMode] = useState(false);
+  const [pendingOpportunityId, setPendingOpportunityId] = useState<number | null>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const { data: accounts = [] } = useQuery<Account[]>({
+    queryKey: ["/api/accounts"],
+  });
 
   const { data: opportunities = [], isLoading } = useQuery<OpportunityWithRelations[]>({
     queryKey: ['/api/opportunities'],
@@ -109,6 +117,16 @@ export default function Opportunities() {
       }
     } else if (field === 'closeDate') {
       value = editingValue ? editingValue : null;
+    } else if (field === 'accountId') {
+      value = editingValue ? parseInt(editingValue) : null;
+      if (editingValue && isNaN(value)) {
+        toast({
+          title: "Error",
+          description: "Invalid account selection.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     updateOpportunityMutation.mutate({
@@ -188,13 +206,55 @@ export default function Opportunities() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {opportunity.account ? (
-                          <div className="flex items-center text-sm">
-                            <Building className="h-3 w-3 mr-1 text-slate-400" />
-                            {opportunity.account.companyName}
+                        {editingField === `accountId-${opportunity.id}` ? (
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={editingValue}
+                              onValueChange={setEditingValue}
+                            >
+                              <SelectTrigger className="w-40 h-8">
+                                <SelectValue placeholder="Select account" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">No Account</SelectItem>
+                                {accounts.map((account) => (
+                                  <SelectItem key={account.id} value={account.id.toString()}>
+                                    {account.companyName}
+                                  </SelectItem>
+                                ))}
+                                <SelectItem value="new">+ Create New Account</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button size="sm" variant="ghost" onClick={() => {
+                              if (editingValue === "new") {
+                                // Open account creation modal
+                                setPendingOpportunityId(opportunity.id);
+                                setNewAccountMode(true);
+                                setIsAccountModalOpen(true);
+                              } else {
+                                handleFieldSave(opportunity.id, 'accountId');
+                              }
+                            }}>
+                              <Check className="h-3 w-3" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
+                              <X className="h-3 w-3" />
+                            </Button>
                           </div>
                         ) : (
-                          <span className="text-slate-400">-</span>
+                          <div 
+                            className="flex items-center text-sm cursor-pointer hover:bg-slate-50 p-1 rounded"
+                            onClick={() => handleFieldEdit('accountId', opportunity.id, opportunity.accountId?.toString() || '')}
+                          >
+                            {opportunity.account ? (
+                              <>
+                                <Building className="h-3 w-3 mr-1 text-slate-400" />
+                                {opportunity.account.companyName}
+                              </>
+                            ) : (
+                              <span className="text-slate-400">Click to assign account</span>
+                            )}
+                          </div>
                         )}
                       </TableCell>
                       <TableCell>
@@ -379,6 +439,29 @@ export default function Opportunities() {
           }
         }}
         opportunity={editingOpportunity}
+      />
+
+      <AccountModal 
+        open={isAccountModalOpen} 
+        onOpenChange={(open) => {
+          setIsAccountModalOpen(open);
+          if (!open) {
+            setNewAccountMode(false);
+            setPendingOpportunityId(null);
+          }
+        }}
+        onAccountCreated={(newAccount) => {
+          if (pendingOpportunityId && newAccountMode) {
+            updateOpportunityMutation.mutate({
+              id: pendingOpportunityId,
+              data: { accountId: newAccount.id }
+            });
+          }
+          setIsAccountModalOpen(false);
+          setNewAccountMode(false);
+          setPendingOpportunityId(null);
+          setEditingField(null);
+        }}
       />
     </div>
   );
