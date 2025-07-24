@@ -2,11 +2,12 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import TopBar from "@/components/layout/top-bar";
 import LeadModal from "../components/modals/lead-modal";
+import ConvertToOpportunityModal from "../components/modals/convert-to-opportunity-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, UserPlus, Phone, Mail, Building } from "lucide-react";
+import { Plus, UserPlus, Phone, Mail, Building, ArrowRight } from "lucide-react";
 import type { Lead } from "@shared/schema";
 
 const getStatusColor = (status: string) => {
@@ -46,6 +47,8 @@ const getSourceColor = (source: string) => {
 export default function Leads() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [convertModalOpen, setConvertModalOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   const { data: leads = [], isLoading } = useQuery<Lead[]>({
     queryKey: ['/api/leads'],
@@ -100,6 +103,7 @@ export default function Leads() {
                     <TableHead>Source</TableHead>
                     <TableHead>Contact Info</TableHead>
                     <TableHead>Created</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -159,6 +163,30 @@ export default function Leads() {
                       <TableCell className="text-slate-500">
                         {new Date(lead.createdAt).toLocaleDateString()}
                       </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          {lead.status !== 'converted' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedLead(lead);
+                                setConvertModalOpen(true);
+                              }}
+                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                            >
+                              <ArrowRight className="h-3 w-3 mr-1" />
+                              Convert
+                            </Button>
+                          )}
+                          {lead.status === 'converted' && (
+                            <Badge variant="outline" className="bg-green-50 text-green-700">
+                              Converted
+                            </Badge>
+                          )}
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -171,6 +199,12 @@ export default function Leads() {
       <LeadModal 
         open={isModalOpen} 
         onOpenChange={setIsModalOpen}
+      />
+      
+      <ConvertToOpportunityModal
+        lead={selectedLead}
+        open={convertModalOpen}
+        onOpenChange={setConvertModalOpen}
       />
     </div>
   );
