@@ -27,7 +27,7 @@ export default function ConvertToOpportunityModal({
   const [probability, setProbability] = useState("25");
   const [closeDate, setCloseDate] = useState("");
   const [description, setDescription] = useState("");
-  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("none");
   const [selectedContactId, setSelectedContactId] = useState<string>("");
   const [createNewAccount, setCreateNewAccount] = useState(false);
   const [newAccountName, setNewAccountName] = useState("");
@@ -130,7 +130,7 @@ export default function ConvertToOpportunityModal({
       setProbability("25");
       setCloseDate("");
       setDescription("");
-      setSelectedAccountId("");
+      setSelectedAccountId("none");
       setSelectedContactId("");
       setCreateNewAccount(false);
       setNewAccountName("");
@@ -151,7 +151,13 @@ export default function ConvertToOpportunityModal({
     if (lead && open) {
       setOpportunityName(`${lead.company || 'Opportunity'} - ${lead.firstName} ${lead.lastName}`);
       setNewAccountName(lead.company || "");
-      setCreateNewAccount(!lead.company || accounts.length === 0);
+      // Default to "No account" unless lead has company info
+      if (lead.company && accounts.length > 0) {
+        setCreateNewAccount(true);
+      } else {
+        setSelectedAccountId("none");
+        setCreateNewAccount(false);
+      }
       
       // Set close date to 3 months from now
       const futureDate = new Date();
