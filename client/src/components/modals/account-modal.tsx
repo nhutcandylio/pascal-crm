@@ -31,9 +31,9 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated, acc
     queryKey: ["/api/contacts"],
   });
 
-  // Get contacts for current account and unassigned contacts
+  // Get contacts for current account and available contacts (all contacts not assigned to this account)
   const accountContacts = account ? contacts.filter(contact => contact.accountId === account.id) : [];
-  const unassignedContacts = contacts.filter(contact => !contact.accountId);
+  const availableContacts = account ? contacts.filter(contact => contact.accountId !== account.id) : contacts;
 
   const form = useForm<InsertAccount>({
     resolver: zodResolver(insertAccountSchema),
@@ -151,6 +151,7 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated, acc
 
   const handleAssignContact = (contactId: number) => {
     if (account) {
+      // If contact is already assigned to another account, we're reassigning it
       assignContactMutation.mutate({ contactId, accountId: account.id });
     }
   };
@@ -298,14 +299,21 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated, acc
                       </SelectItem>
                       
                       {/* Existing Contacts */}
-                      {unassignedContacts.length > 0 && (
+                      {availableContacts.length > 0 && (
                         <>
                           <div className="px-2 py-1 text-xs font-medium text-slate-500 border-t">
                             Existing Contacts:
                           </div>
-                          {unassignedContacts.map(contact => (
+                          {availableContacts.map(contact => (
                             <SelectItem key={contact.id} value={contact.id.toString()}>
-                              {contact.firstName} {contact.lastName} - {contact.email}
+                              <div className="flex items-center justify-between w-full">
+                                <span>{contact.firstName} {contact.lastName} - {contact.email}</span>
+                                {contact.accountId && (
+                                  <span className="text-xs text-slate-400 ml-2">
+                                    (Currently assigned)
+                                  </span>
+                                )}
+                              </div>
                             </SelectItem>
                           ))}
                         </>
