@@ -136,6 +136,8 @@ export default function Opportunities() {
           return;
         }
       }
+    } else if (field === 'leadSource') {
+      value = editingValue === 'none' ? null : editingValue;
     }
 
     const updateData: any = { [field]: value };
@@ -296,7 +298,7 @@ export default function Opportunities() {
                                 <SelectValue placeholder="Select source" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">No Source</SelectItem>
+                                <SelectItem value="none">No Source</SelectItem>
                                 <SelectItem value="website">Website</SelectItem>
                                 <SelectItem value="referral">Referral</SelectItem>
                                 <SelectItem value="cold-call">Cold Call</SelectItem>
@@ -316,9 +318,9 @@ export default function Opportunities() {
                         ) : (
                           <div 
                             className="flex items-center text-sm cursor-pointer hover:bg-slate-50 p-1 rounded"
-                            onClick={() => handleFieldEdit('leadSource', opportunity.id, opportunity.leadSource || '')}
+                            onClick={() => handleFieldEdit('leadSource', opportunity.id, opportunity.leadSource || 'none')}
                           >
-                            {opportunity.leadSource ? (
+                            {opportunity.leadSource && opportunity.leadSource !== 'none' ? (
                               <Badge variant="outline" className="text-xs">
                                 {opportunity.leadSource.charAt(0).toUpperCase() + opportunity.leadSource.slice(1).replace('-', ' ')}
                               </Badge>
