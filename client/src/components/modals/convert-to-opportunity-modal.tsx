@@ -150,6 +150,16 @@ export default function ConvertToOpportunityModal({
       return;
     }
     
+    // Validate account selection
+    if (selectedAccountId !== "none" && !selectedAccountId) {
+      toast({
+        title: "Error",
+        description: "Please select an account or choose 'No account'",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     convertMutation.mutate();
   };
 
@@ -260,9 +270,9 @@ export default function ConvertToOpportunityModal({
               </div>
               
               {selectedAccountId !== "none" && (
-                <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select an account" />
+                <Select value={selectedAccountId} onValueChange={setSelectedAccountId} required>
+                  <SelectTrigger className={!selectedAccountId || selectedAccountId === "" ? "border-red-500" : ""}>
+                    <SelectValue placeholder="Select an account *" />
                   </SelectTrigger>
                   <SelectContent>
                     {accounts.map((account) => (
