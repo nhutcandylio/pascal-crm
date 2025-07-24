@@ -172,61 +172,16 @@ export default function Accounts() {
                         {(() => {
                           const accountContacts = contacts.filter(contact => contact.accountId === account.id);
                           return (
-                            <div className="space-y-2">
-                              {/* Existing Contacts */}
-                              {accountContacts.length > 0 && (
+                            <div className="space-y-1">
+                              {accountContacts.length > 0 ? (
                                 <div className="flex flex-wrap gap-1">
                                   {accountContacts.map(contact => (
-                                    <Badge key={contact.id} variant="outline" className="text-xs group relative">
+                                    <Badge key={contact.id} variant="outline" className="text-xs">
                                       {contact.firstName} {contact.lastName}
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleRemoveContact(contact.id);
-                                        }}
-                                        className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                                      >
-                                        <X className="h-3 w-3 text-red-500 hover:text-red-700" />
-                                      </button>
                                     </Badge>
                                   ))}
                                 </div>
-                              )}
-                              
-                              {/* Add Contact Actions */}
-                              <div className="flex items-center gap-2">
-                                {/* Assign Existing Contact */}
-                                {unassignedContacts.length > 0 && (
-                                  <Select onValueChange={(value) => handleAssignContact(parseInt(value), account.id)}>
-                                    <SelectTrigger className="h-6 w-auto text-xs">
-                                      <SelectValue placeholder="+ Assign" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      {unassignedContacts.map(contact => (
-                                        <SelectItem key={contact.id} value={contact.id.toString()}>
-                                          {contact.firstName} {contact.lastName}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
-                                )}
-                                
-                                {/* Add New Contact */}
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-6 px-2 text-xs"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleAddNewContact(account.id);
-                                  }}
-                                >
-                                  <UserPlus className="h-3 w-3 mr-1" />
-                                  New
-                                </Button>
-                              </div>
-                              
-                              {accountContacts.length === 0 && (
+                              ) : (
                                 <span className="text-slate-400 text-xs">No contacts</span>
                               )}
                             </div>
