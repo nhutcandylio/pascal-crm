@@ -59,6 +59,7 @@ export default function Opportunities() {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isLeadDetailsModalOpen, setIsLeadDetailsModalOpen] = useState(false);
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
+  const [selectedOpportunityForContact, setSelectedOpportunityForContact] = useState<OpportunityWithRelations | null>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -69,6 +70,12 @@ export default function Opportunities() {
 
   const { data: opportunities = [], isLoading } = useQuery<OpportunityWithRelations[]>({
     queryKey: ['/api/opportunities'],
+  });
+
+  // Fetch lead data for selected opportunity when creating contact
+  const { data: leadForContact } = useQuery({
+    queryKey: ['/api/leads', selectedOpportunityForContact?.leadId],
+    enabled: !!selectedOpportunityForContact?.leadId,
   });
 
   const updateOpportunityMutation = useMutation({
@@ -509,7 +516,10 @@ export default function Opportunities() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setIsContactModalOpen(true)}
+                            onClick={() => {
+                              setSelectedOpportunityForContact(opportunity);
+                              setIsContactModalOpen(true);
+                            }}
                             title="Create new contact"
                           >
                             <UserPlus className="h-4 w-4" />
@@ -571,7 +581,13 @@ export default function Opportunities() {
 
       <ContactModal 
         open={isContactModalOpen} 
-        onOpenChange={setIsContactModalOpen}
+        onOpenChange={(open) => {
+          setIsContactModalOpen(open);
+          if (!open) {
+            setSelectedOpportunityForContact(null);
+          }
+        }}
+        leadData={leadForContact}
       />
 
       <DescriptionModal

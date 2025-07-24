@@ -9,15 +9,16 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { insertContactSchema, type InsertContact, type Account } from "@shared/schema";
+import { insertContactSchema, type InsertContact, type Account, type Lead } from "@shared/schema";
 
 interface ContactModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   preselectedAccountId?: number | null;
+  leadData?: Lead | null;
 }
 
-export default function ContactModal({ open, onOpenChange, preselectedAccountId }: ContactModalProps) {
+export default function ContactModal({ open, onOpenChange, preselectedAccountId, leadData }: ContactModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -33,23 +34,33 @@ export default function ContactModal({ open, onOpenChange, preselectedAccountId 
       email: "",
       phone: null,
       title: null,
-      accountId: preselectedAccountId || null,
     },
   });
 
-  // Reset form when modal opens with preselected account
+  // Reset form when modal opens with preselected account or lead data
   useEffect(() => {
-    if (open && preselectedAccountId) {
-      form.reset({
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: null,
-        title: null,
-        accountId: preselectedAccountId,
-      });
+    if (open) {
+      if (leadData) {
+        // Pre-fill with lead data
+        form.reset({
+          firstName: leadData.firstName,
+          lastName: leadData.lastName,
+          email: leadData.email,
+          phone: leadData.phone || null,
+          title: leadData.title || null,
+        });
+      } else {
+        // Reset to empty form
+        form.reset({
+          firstName: "",
+          lastName: "",
+          email: "",
+          phone: null,
+          title: null,
+        });
+      }
     }
-  }, [open, preselectedAccountId, form]);
+  }, [open, leadData, form]);
 
   const createContactMutation = useMutation({
     mutationFn: async (data: InsertContact) => {
