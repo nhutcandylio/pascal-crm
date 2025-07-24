@@ -59,21 +59,29 @@ export default function Leads() {
   );
 
   return (
-    <div className="flex-1 flex flex-col h-full">
-      <TopBar 
-        title="Leads"
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder="Search leads..."
-        action={
-          <Button onClick={() => setIsModalOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Lead
-          </Button>
-        }
-      />
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Leads</h1>
+          <p className="text-slate-600">Manage potential customers and prospects</p>
+        </div>
+        <Button onClick={() => setIsModalOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Lead
+        </Button>
+      </div>
       
-      <div className="flex-1 overflow-auto p-6">
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder="Search leads..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </div>
+      
+      <div>
         <Card>
           <CardContent className="p-0">
             {isLoading ? (

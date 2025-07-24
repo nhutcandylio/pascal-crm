@@ -45,10 +45,7 @@ export default function Activities() {
   };
 
   return (
-    <>
-      <TopBar title="Activities" subtitle="Track all customer interactions and activities" />
-      
-      <main className="flex-1 overflow-y-auto p-6">
+    <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             <h2 className="text-lg font-semibold text-slate-900">Recent Activities</h2>
@@ -143,12 +140,11 @@ export default function Activities() {
             })}
           </div>
         )}
-      </main>
 
-      {/* <ActivityModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-      /> */}
-    </>
+        {/* <ActivityModal 
+          isOpen={isModalOpen} 
+          onClose={() => setIsModalOpen(false)} 
+        /> */}
+    </div>
   );
 }

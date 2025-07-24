@@ -25,21 +25,29 @@ export default function Contacts() {
   );
 
   return (
-    <div className="flex-1 flex flex-col h-full">
-      <TopBar 
-        title="Contacts"
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder="Search contacts..."
-        action={
-          <Button onClick={() => setIsModalOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Contact
-          </Button>
-        }
-      />
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Contacts</h1>
+          <p className="text-slate-600">Manage your contacts and relationships</p>
+        </div>
+        <Button onClick={() => setIsModalOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Contact
+        </Button>
+      </div>
       
-      <div className="flex-1 overflow-auto p-6">
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder="Search contacts..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+      </div>
+      
+      <div>
         <Card>
           <CardContent className="p-0">
             {isLoading ? (

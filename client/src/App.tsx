@@ -10,13 +10,13 @@ import Leads from "@/pages/leads";
 import Opportunities from "@/pages/opportunities";
 import Activities from "@/pages/activities";
 import NotFound from "@/pages/not-found";
-import Sidebar from "@/components/layout/sidebar";
+import TopNav from "@/components/layout/top-nav";
 
 function Router() {
   return (
-    <div className="flex h-screen bg-slate-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-slate-50">
+      <TopNav />
+      <div className="flex-1">
         <Switch>
           <Route path="/" component={Dashboard} />
           <Route path="/accounts" component={Accounts} />

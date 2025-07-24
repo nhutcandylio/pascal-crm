@@ -93,13 +93,7 @@ export default function Dashboard() {
   };
 
   return (
-    <>
-      <TopBar 
-        title="Dashboard" 
-        subtitle="Welcome back! Here's what's happening with your CRM today." 
-      />
-      
-      <main className="flex-1 overflow-y-auto p-6 space-y-6">
+    <main className="p-6 space-y-6">
         {/* Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <Card>
@@ -377,6 +371,5 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </main>
-    </>
   );
 }
