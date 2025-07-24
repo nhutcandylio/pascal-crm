@@ -299,7 +299,7 @@ export default function Opportunities() {
                             )
                           ) : (
                             // If created directly as opportunity
-                            <span className="text-slate-500 text-xs">Opportunity được tạo</span>
+                            <span className="text-slate-500 text-xs">Opportunity created</span>
                           )}
                         </div>
                       </TableCell>
