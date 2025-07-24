@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Handshake, DollarSign, Calendar, Building, User, Edit2, Check, X } from "lucide-react";
+import { Plus, Handshake, DollarSign, Calendar, Building, FileText, Edit2, Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { OpportunityWithRelations, Opportunity, InsertOpportunity, Account } from "@shared/schema";
@@ -188,7 +188,7 @@ export default function Opportunities() {
                   <TableRow>
                     <TableHead>Opportunity</TableHead>
                     <TableHead>Account</TableHead>
-                    <TableHead>Description</TableHead>
+
                     <TableHead>Value</TableHead>
                     <TableHead>Stage</TableHead>
                     <TableHead>Probability</TableHead>
@@ -261,39 +261,7 @@ export default function Opportunities() {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell>
-                        {editingField === `description-${opportunity.id}` ? (
-                          <div className="flex items-center gap-2">
-                            <Input
-                              value={editingValue}
-                              onChange={(e) => setEditingValue(e.target.value)}
-                              className="w-48 h-8"
-                              placeholder="Enter description"
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleFieldSave(opportunity.id, 'description');
-                                if (e.key === 'Escape') handleFieldCancel();
-                              }}
-                              autoFocus
-                            />
-                            <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'description')}>
-                              <Check className="h-3 w-3" />
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div 
-                            className="text-sm cursor-pointer hover:bg-slate-50 p-1 rounded max-w-48 truncate"
-                            onClick={() => handleFieldEdit('description', opportunity.id, opportunity.description || '')}
-                            title={opportunity.description || 'Click to add description'}
-                          >
-                            {opportunity.description || (
-                              <span className="text-slate-400">Click to add description</span>
-                            )}
-                          </div>
-                        )}
-                      </TableCell>
+
                       <TableCell>
                         {editingField === `value-${opportunity.id}` ? (
                           <div className="flex items-center gap-2">
@@ -437,16 +405,50 @@ export default function Opportunities() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setEditingOpportunity(opportunity);
-                            setIsModalOpen(true);
-                          }}
-                        >
-                          <Edit2 className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          {editingField === `description-${opportunity.id}` ? (
+                            <div className="flex items-center gap-2">
+                              <Input
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.target.value)}
+                                className="w-48 h-8"
+                                placeholder="Enter description"
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleFieldSave(opportunity.id, 'description');
+                                  if (e.key === 'Escape') handleFieldCancel();
+                                }}
+                                autoFocus
+                              />
+                              <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'description')}>
+                                <Check className="h-3 w-3" />
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleFieldEdit('description', opportunity.id, opportunity.description || '')}
+                                title={opportunity.description || 'Add description'}
+                              >
+                                <FileText className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setEditingOpportunity(opportunity);
+                                  setIsModalOpen(true);
+                                }}
+                              >
+                                <Edit2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
