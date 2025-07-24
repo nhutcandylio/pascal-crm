@@ -83,6 +83,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/leads/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const leadData = insertLeadSchema.partial().parse(req.body);
+      const lead = await storage.updateLead(id, leadData);
+      if (lead) {
+        res.json(lead);
+      } else {
+        res.status(404).json({ error: "Lead not found" });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid lead data", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to update lead" });
+      }
+    }
+  });
+
   // Opportunity routes
   app.get("/api/opportunities", async (req, res) => {
     try {
