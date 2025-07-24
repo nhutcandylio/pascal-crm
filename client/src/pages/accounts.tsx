@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { Plus, Building, Phone, Globe, MapPin, X, UserPlus, Edit } from "lucide-react";
-import type { Account, Contact } from "@shared/schema";
+import type { Account, Contact, AccountWithContacts } from "@shared/schema";
 
 export default function Accounts() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,7 +22,7 @@ export default function Accounts() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: accounts = [], isLoading } = useQuery<Account[]>({
+  const { data: accounts = [], isLoading } = useQuery<AccountWithContacts[]>({
     queryKey: ['/api/accounts/with-contacts'],
   });
 
@@ -170,12 +170,12 @@ export default function Accounts() {
                       </TableCell>
                       <TableCell>
                         {(() => {
-                          const accountContacts = (account as any).contacts || [];
+                          const accountContacts = account.contacts || [];
                           return (
                             <div className="space-y-1">
                               {accountContacts.length > 0 ? (
                                 <div className="flex flex-wrap gap-1">
-                                  {accountContacts.map((contact: any) => (
+                                  {accountContacts.map((contact) => (
                                     <Badge key={contact.id} variant="outline" className="text-xs">
                                       {contact.firstName} {contact.lastName}
                                     </Badge>
