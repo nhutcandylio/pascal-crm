@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Building, Phone, Globe, MapPin } from "lucide-react";
-import type { Account } from "@shared/schema";
+import type { Account, Contact } from "@shared/schema";
 
 export default function Accounts() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -15,6 +15,10 @@ export default function Accounts() {
 
   const { data: accounts = [], isLoading } = useQuery<Account[]>({
     queryKey: ['/api/accounts'],
+  });
+
+  const { data: contacts = [] } = useQuery<Contact[]>({
+    queryKey: ['/api/contacts'],
   });
 
   const filteredAccounts = accounts.filter(account =>
@@ -92,14 +96,20 @@ export default function Accounts() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {account.phone ? (
-                          <div className="flex items-center text-sm">
-                            <Phone className="h-3 w-3 mr-1 text-slate-400" />
-                            {account.phone}
-                          </div>
-                        ) : (
-                          <span className="text-slate-400">-</span>
-                        )}
+                        {(() => {
+                          const accountContacts = contacts.filter(contact => contact.accountId === account.id);
+                          return accountContacts.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {accountContacts.map(contact => (
+                                <Badge key={contact.id} variant="outline" className="text-xs">
+                                  {contact.firstName} {contact.lastName}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-slate-400">No contacts</span>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell>
                         {account.address ? (
