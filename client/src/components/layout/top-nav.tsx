@@ -35,16 +35,7 @@ export default function TopNav() {
             <span className="ml-3 text-xl font-semibold text-slate-900">CRM </span>
           </div>
 
-          {/* User Profile */}
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-slate-300 rounded-full flex items-center justify-center">
-              <User className="h-4 w-4 text-slate-600" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-slate-900">John Smith</p>
-              <p className="text-xs text-slate-500">Sales Manager</p>
-            </div>
-          </div>
+          
         </div>
 
         {/* Navigation Tabs */}
