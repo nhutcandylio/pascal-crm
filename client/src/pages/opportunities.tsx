@@ -188,7 +188,7 @@ export default function Opportunities() {
                   <TableRow>
                     <TableHead>Opportunity</TableHead>
                     <TableHead>Account</TableHead>
-                    <TableHead>Contact</TableHead>
+                    <TableHead>Description</TableHead>
                     <TableHead>Value</TableHead>
                     <TableHead>Stage</TableHead>
                     <TableHead>Probability</TableHead>
@@ -262,13 +262,36 @@ export default function Opportunities() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {opportunity.contact ? (
-                          <div className="flex items-center text-sm">
-                            <User className="h-3 w-3 mr-1 text-slate-400" />
-                            {opportunity.contact.firstName} {opportunity.contact.lastName}
+                        {editingField === `description-${opportunity.id}` ? (
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              className="w-48 h-8"
+                              placeholder="Enter description"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleFieldSave(opportunity.id, 'description');
+                                if (e.key === 'Escape') handleFieldCancel();
+                              }}
+                              autoFocus
+                            />
+                            <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'description')}>
+                              <Check className="h-3 w-3" />
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
+                              <X className="h-3 w-3" />
+                            </Button>
                           </div>
                         ) : (
-                          <span className="text-slate-400">-</span>
+                          <div 
+                            className="text-sm cursor-pointer hover:bg-slate-50 p-1 rounded max-w-48 truncate"
+                            onClick={() => handleFieldEdit('description', opportunity.id, opportunity.description || '')}
+                            title={opportunity.description || 'Click to add description'}
+                          >
+                            {opportunity.description || (
+                              <span className="text-slate-400">Click to add description</span>
+                            )}
+                          </div>
                         )}
                       </TableCell>
                       <TableCell>
