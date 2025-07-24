@@ -1,21 +1,72 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TopBar from "@/components/layout/top-bar";
 import ContactModal from "../components/modals/contact-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, User, Phone, Mail, Building } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { Plus, User, Phone, Mail, Building, Trash2 } from "lucide-react";
 import type { ContactWithAccount } from "@shared/schema";
 
 export default function Contacts() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [contactToDelete, setContactToDelete] = useState<ContactWithAccount | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: contacts = [], isLoading } = useQuery<ContactWithAccount[]>({
     queryKey: ['/api/contacts'],
   });
+
+  const deleteContactMutation = useMutation({
+    mutationFn: async (contactId: number) => {
+      const response = await apiRequest("DELETE", `/api/contacts/${contactId}`);
+      if (!response.ok) {
+        throw new Error("Failed to delete contact");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      toast({
+        title: "Success",
+        description: "Contact deleted successfully.",
+      });
+      setContactToDelete(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete contact.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDeleteContact = (contact: ContactWithAccount) => {
+    setContactToDelete(contact);
+  };
+
+  const confirmDelete = () => {
+    if (contactToDelete) {
+      deleteContactMutation.mutate(contactToDelete.id);
+    }
+  };
 
   const filteredContacts = contacts.filter(contact =>
     contact.firstName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -65,6 +116,7 @@ export default function Contacts() {
                     <TableHead>Account</TableHead>
                     <TableHead>Contact Info</TableHead>
                     <TableHead>Created</TableHead>
+                    <TableHead className="w-20">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -117,6 +169,19 @@ export default function Contacts() {
                       <TableCell className="text-slate-500">
                         {new Date(contact.createdAt).toLocaleDateString()}
                       </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteContact(contact);
+                          }}
+                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -130,6 +195,28 @@ export default function Contacts() {
         open={isModalOpen} 
         onOpenChange={setIsModalOpen}
       />
+
+      <AlertDialog open={!!contactToDelete} onOpenChange={() => setContactToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Contact</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {contactToDelete?.firstName} {contactToDelete?.lastName}? 
+              This action cannot be undone and will remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={deleteContactMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteContactMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

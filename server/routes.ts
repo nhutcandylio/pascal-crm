@@ -98,6 +98,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/contacts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteContact(id);
+      if (success) {
+        res.json({ message: "Contact deleted successfully" });
+      } else {
+        res.status(404).json({ error: "Contact not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete contact" });
+    }
+  });
+
   // Lead routes
   app.get("/api/leads", async (req, res) => {
     try {
