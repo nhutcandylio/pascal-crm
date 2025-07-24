@@ -288,46 +288,61 @@ export default function Opportunities() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {editingField === `leadSource-${opportunity.id}` ? (
-                          <div className="flex items-center gap-2">
-                            <Select
-                              value={editingValue}
-                              onValueChange={setEditingValue}
-                            >
-                              <SelectTrigger className="w-32 h-8">
-                                <SelectValue placeholder="Select source" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="none">No Source</SelectItem>
-                                <SelectItem value="website">Website</SelectItem>
-                                <SelectItem value="referral">Referral</SelectItem>
-                                <SelectItem value="cold-call">Cold Call</SelectItem>
-                                <SelectItem value="social-media">Social Media</SelectItem>
-                                <SelectItem value="email-campaign">Email Campaign</SelectItem>
-                                <SelectItem value="trade-show">Trade Show</SelectItem>
-                                <SelectItem value="partner">Partner</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'leadSource')}>
-                              <Check className="h-3 w-3" />
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div 
-                            className="flex items-center text-sm cursor-pointer hover:bg-slate-50 p-1 rounded"
-                            onClick={() => handleFieldEdit('leadSource', opportunity.id, opportunity.leadSource || 'none')}
-                          >
-                            {opportunity.leadSource && opportunity.leadSource !== 'none' ? (
-                              <Badge variant="outline" className="text-xs">
+                        {opportunity.leadId ? (
+                          // Read-only display for opportunities converted from leads
+                          <div className="flex items-center text-sm">
+                            {opportunity.leadSource ? (
+                              <Badge variant="secondary" className="text-xs">
                                 {opportunity.leadSource.charAt(0).toUpperCase() + opportunity.leadSource.slice(1).replace('-', ' ')}
+                                <span className="ml-1 text-xs opacity-70">(từ lead)</span>
                               </Badge>
                             ) : (
-                              <span className="text-slate-400">Click to set source</span>
+                              <span className="text-slate-400 text-xs">No source (từ lead)</span>
                             )}
                           </div>
+                        ) : (
+                          // Editable for direct opportunities
+                          editingField === `leadSource-${opportunity.id}` ? (
+                            <div className="flex items-center gap-2">
+                              <Select
+                                value={editingValue}
+                                onValueChange={setEditingValue}
+                              >
+                                <SelectTrigger className="w-32 h-8">
+                                  <SelectValue placeholder="Select source" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">No Source</SelectItem>
+                                  <SelectItem value="website">Website</SelectItem>
+                                  <SelectItem value="referral">Referral</SelectItem>
+                                  <SelectItem value="cold-call">Cold Call</SelectItem>
+                                  <SelectItem value="social-media">Social Media</SelectItem>
+                                  <SelectItem value="email-campaign">Email Campaign</SelectItem>
+                                  <SelectItem value="trade-show">Trade Show</SelectItem>
+                                  <SelectItem value="partner">Partner</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'leadSource')}>
+                                <Check className="h-3 w-3" />
+                              </Button>
+                              <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div 
+                              className="flex items-center text-sm cursor-pointer hover:bg-slate-50 p-1 rounded"
+                              onClick={() => handleFieldEdit('leadSource', opportunity.id, opportunity.leadSource || 'none')}
+                            >
+                              {opportunity.leadSource && opportunity.leadSource !== 'none' ? (
+                                <Badge variant="outline" className="text-xs">
+                                  {opportunity.leadSource.charAt(0).toUpperCase() + opportunity.leadSource.slice(1).replace('-', ' ')}
+                                </Badge>
+                              ) : (
+                                <span className="text-slate-400">Click to set source</span>
+                              )}
+                            </div>
+                          )
                         )}
                       </TableCell>
                       <TableCell>

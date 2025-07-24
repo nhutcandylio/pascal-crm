@@ -175,7 +175,7 @@ export class MemStorage implements IStorage {
         company: "StartupCo",
         title: "CEO",
         source: "website",
-        status: "new"
+        status: "converted" // This lead was converted to opportunity
       },
       {
         firstName: "Emily",
@@ -185,7 +185,7 @@ export class MemStorage implements IStorage {
         company: "RetailCo",
         title: "Marketing Director",
         source: "referral",
-        status: "contacted"
+        status: "converted" // This lead was converted to opportunity
       },
       {
         firstName: "David",
@@ -233,11 +233,12 @@ export class MemStorage implements IStorage {
       this.createLead(lead);
     });
 
-    // Add sample opportunities
+    // Add sample opportunities (some converted from leads, some direct)
     const sampleOpportunities: InsertOpportunity[] = [
       {
         accountId: 1,
         contactId: 1,
+        leadId: 1, // Converted from Alex Chen lead
         name: "Software License Renewal",
         value: "63650.00",
         grossProfit: "41150.00",
@@ -245,12 +246,13 @@ export class MemStorage implements IStorage {
         stage: "proposal",
         probability: 75,
         closeDate: new Date("2024-03-15"),
-        leadSource: "website",
+        leadSource: "website", // Inherited from lead
         description: "Annual software license renewal for enterprise package including premium support"
       },
       {
         accountId: 2,
         contactId: 2,
+        leadId: 2, // Converted from Emily Davis lead
         name: "Enterprise Solution Implementation",
         value: "9105.00",
         grossProfit: "2745.00",
@@ -258,12 +260,13 @@ export class MemStorage implements IStorage {
         stage: "negotiation",
         probability: 60,
         closeDate: new Date("2024-03-22"),
-        leadSource: "referral",
+        leadSource: "referral", // Inherited from lead
         description: "Full enterprise solution deployment with custom integrations and training"
       },
       {
         accountId: 3,
         contactId: 3,
+        leadId: null, // Direct opportunity, not from lead conversion
         name: "Financial Consulting Services",
         value: "1512.00",
         grossProfit: "252.00",
@@ -271,7 +274,7 @@ export class MemStorage implements IStorage {
         stage: "closed-won",
         probability: 100,
         closeDate: new Date("2024-03-10"),
-        leadSource: "trade-show",
+        leadSource: null, // No lead source since not converted from lead
         description: "Strategic financial consulting for Q2 business expansion planning"
       }
     ];
@@ -612,6 +615,7 @@ export class MemStorage implements IStorage {
       ...insertOpportunity,
       accountId: insertOpportunity.accountId || null,
       contactId: insertOpportunity.contactId || null,
+      leadId: insertOpportunity.leadId || null,
       closeDate: insertOpportunity.closeDate || null,
       leadSource: insertOpportunity.leadSource || null,
       grossProfit: insertOpportunity.grossProfit || null,

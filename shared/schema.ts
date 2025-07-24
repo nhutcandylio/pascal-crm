@@ -47,6 +47,7 @@ export const opportunities = pgTable("opportunities", {
   id: serial("id").primaryKey(),
   accountId: integer("account_id"),
   contactId: integer("contact_id"),
+  leadId: integer("lead_id"), // Reference to the original lead that was converted
   name: text("name").notNull(),
   value: decimal("value", { precision: 12, scale: 2 }).notNull(),
   grossProfit: decimal("gross_profit", { precision: 12, scale: 2 }),
@@ -54,7 +55,7 @@ export const opportunities = pgTable("opportunities", {
   stage: text("stage").notNull(), // 'prospecting', 'qualification', 'proposal', 'negotiation', 'closed-won', 'closed-lost'
   probability: integer("probability").default(0), // 0-100%
   closeDate: timestamp("close_date"),
-  leadSource: text("lead_source"), // 'website', 'referral', 'cold-call', 'social-media', 'email-campaign', 'trade-show', 'partner'
+  leadSource: text("lead_source"), // Inherited from the converted lead's source
   description: text("description"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
