@@ -1,17 +1,25 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TopBar from "@/components/layout/top-bar";
 import AccountModal from "../components/modals/account-modal";
+import ContactModal from "../components/modals/contact-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Building, Phone, Globe, MapPin } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { Plus, Building, Phone, Globe, MapPin, X, UserPlus } from "lucide-react";
 import type { Account, Contact } from "@shared/schema";
 
 export default function Accounts() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: accounts = [], isLoading } = useQuery<Account[]>({
     queryKey: ['/api/accounts'],
@@ -20,6 +28,64 @@ export default function Accounts() {
   const { data: contacts = [] } = useQuery<Contact[]>({
     queryKey: ['/api/contacts'],
   });
+
+  // Get all contacts not assigned to any account (for adding to accounts)
+  const unassignedContacts = contacts.filter(contact => !contact.accountId);
+
+  const removeContactMutation = useMutation({
+    mutationFn: async ({ contactId }: { contactId: number }) => {
+      const response = await apiRequest("PATCH", `/api/contacts/${contactId}`, { accountId: null });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      toast({
+        title: "Success",
+        description: "Contact removed from account successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove contact.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const assignContactMutation = useMutation({
+    mutationFn: async ({ contactId, accountId }: { contactId: number; accountId: number }) => {
+      const response = await apiRequest("PATCH", `/api/contacts/${contactId}`, { accountId });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      toast({
+        title: "Success", 
+        description: "Contact assigned to account successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to assign contact.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleRemoveContact = (contactId: number) => {
+    removeContactMutation.mutate({ contactId });
+  };
+
+  const handleAssignContact = (contactId: number, accountId: number) => {
+    assignContactMutation.mutate({ contactId, accountId });
+  };
+
+  const handleAddNewContact = (accountId: number) => {
+    setSelectedAccountId(accountId);
+    setIsContactModalOpen(true);
+  };
 
   const filteredAccounts = accounts.filter(account =>
     account.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -98,16 +164,65 @@ export default function Accounts() {
                       <TableCell>
                         {(() => {
                           const accountContacts = contacts.filter(contact => contact.accountId === account.id);
-                          return accountContacts.length > 0 ? (
-                            <div className="flex flex-wrap gap-1">
-                              {accountContacts.map(contact => (
-                                <Badge key={contact.id} variant="outline" className="text-xs">
-                                  {contact.firstName} {contact.lastName}
-                                </Badge>
-                              ))}
+                          return (
+                            <div className="space-y-2">
+                              {/* Existing Contacts */}
+                              {accountContacts.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {accountContacts.map(contact => (
+                                    <Badge key={contact.id} variant="outline" className="text-xs group relative">
+                                      {contact.firstName} {contact.lastName}
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleRemoveContact(contact.id);
+                                        }}
+                                        className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                      >
+                                        <X className="h-3 w-3 text-red-500 hover:text-red-700" />
+                                      </button>
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                              
+                              {/* Add Contact Actions */}
+                              <div className="flex items-center gap-2">
+                                {/* Assign Existing Contact */}
+                                {unassignedContacts.length > 0 && (
+                                  <Select onValueChange={(value) => handleAssignContact(parseInt(value), account.id)}>
+                                    <SelectTrigger className="h-6 w-auto text-xs">
+                                      <SelectValue placeholder="+ Assign" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {unassignedContacts.map(contact => (
+                                        <SelectItem key={contact.id} value={contact.id.toString()}>
+                                          {contact.firstName} {contact.lastName}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                                
+                                {/* Add New Contact */}
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-xs"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleAddNewContact(account.id);
+                                  }}
+                                >
+                                  <UserPlus className="h-3 w-3 mr-1" />
+                                  New
+                                </Button>
+                              </div>
+                              
+                              {accountContacts.length === 0 && (
+                                <span className="text-slate-400 text-xs">No contacts</span>
+                              )}
                             </div>
-                          ) : (
-                            <span className="text-slate-400">No contacts</span>
                           );
                         })()}
                       </TableCell>
@@ -136,6 +251,12 @@ export default function Accounts() {
       <AccountModal 
         open={isModalOpen} 
         onOpenChange={setIsModalOpen}
+      />
+      
+      <ContactModal
+        open={isContactModalOpen}
+        onOpenChange={setIsContactModalOpen}
+        preselectedAccountId={selectedAccountId}
       />
     </div>
   );

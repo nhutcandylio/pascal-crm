@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,9 +14,10 @@ import { insertContactSchema, type InsertContact, type Account } from "@shared/s
 interface ContactModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  preselectedAccountId?: number | null;
 }
 
-export default function ContactModal({ open, onOpenChange }: ContactModalProps) {
+export default function ContactModal({ open, onOpenChange, preselectedAccountId }: ContactModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -32,9 +33,23 @@ export default function ContactModal({ open, onOpenChange }: ContactModalProps) 
       email: "",
       phone: null,
       title: null,
-      accountId: null,
+      accountId: preselectedAccountId || null,
     },
   });
+
+  // Reset form when modal opens with preselected account
+  useEffect(() => {
+    if (open && preselectedAccountId) {
+      form.reset({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: null,
+        title: null,
+        accountId: preselectedAccountId,
+      });
+    }
+  }, [open, preselectedAccountId, form]);
 
   const createContactMutation = useMutation({
     mutationFn: async (data: InsertContact) => {
