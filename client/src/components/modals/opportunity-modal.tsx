@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,6 +11,7 @@ import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertOpportunitySchema, type InsertOpportunity, type Account, type Contact, type Opportunity } from "@shared/schema";
+import { z } from "zod";
 
 interface OpportunityModalProps {
   open: boolean;
@@ -39,20 +40,43 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
     queryKey: ["/api/contacts"],
   });
 
-  const form = useForm<InsertOpportunity & { probability: number }>({
-    resolver: zodResolver(insertOpportunitySchema.extend({
-      probability: insertOpportunitySchema.shape.probability.default(50)
-    })),
+  const form = useForm({
+    resolver: zodResolver(insertOpportunitySchema),
     defaultValues: {
-      name: opportunity?.name || "",
-      value: opportunity?.value || "",
-      stage: opportunity?.stage || "prospecting",
-      probability: opportunity?.probability || 50,
-      closeDate: opportunity?.closeDate ? new Date(opportunity.closeDate).toISOString().split('T')[0] : "",
-      accountId: opportunity?.accountId || null,
-      contactId: opportunity?.contactId || null,
+      name: "",
+      value: "",
+      stage: "prospecting",
+      probability: 50,
+      closeDate: "",
+      accountId: null,
+      contactId: null,
     },
   });
+
+  // Reset form values when opportunity changes
+  useEffect(() => {
+    if (opportunity) {
+      form.reset({
+        name: opportunity.name || "",
+        value: opportunity.value?.toString() || "",
+        stage: opportunity.stage || "prospecting",
+        probability: opportunity.probability || 50,
+        closeDate: opportunity.closeDate ? new Date(opportunity.closeDate).toISOString().split('T')[0] : "",
+        accountId: opportunity.accountId || null,
+        contactId: opportunity.contactId || null,
+      });
+    } else {
+      form.reset({
+        name: "",
+        value: "",
+        stage: "prospecting",
+        probability: 50,
+        closeDate: "",
+        accountId: null,
+        contactId: null,
+      });
+    }
+  }, [opportunity, form]);
 
   const selectedAccountId = form.watch("accountId");
   const filteredContacts = selectedAccountId 
@@ -88,7 +112,7 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
     },
   });
 
-  const handleSubmit = (data: InsertOpportunity & { probability: number }) => {
+  const handleSubmit = (data: any) => {
     const opportunityData: InsertOpportunity = {
       ...data,
       closeDate: data.closeDate ? data.closeDate : null,
