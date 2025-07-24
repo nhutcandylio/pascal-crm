@@ -109,7 +109,7 @@ export default function Opportunities() {
         });
         return;
       }
-    } else if (field === 'value') {
+    } else if (field === 'value' || field === 'grossProfit') {
       if (!editingValue || isNaN(parseFloat(editingValue))) {
         toast({
           title: "Error",
@@ -136,9 +136,24 @@ export default function Opportunities() {
       }
     }
 
+    const updateData: any = { [field]: value };
+    
+    // Auto-calculate gross profit margin if updating value or grossProfit
+    if (field === 'value' || field === 'grossProfit') {
+      const opportunity = opportunities.find(opp => opp.id === opportunityId);
+      if (opportunity) {
+        const newValue = field === 'value' ? parseFloat(editingValue) : parseFloat(opportunity.value);
+        const newGrossProfit = field === 'grossProfit' ? parseFloat(editingValue) : parseFloat(opportunity.grossProfit || '0');
+        
+        if (newValue > 0) {
+          updateData.grossProfitMargin = Math.round((newGrossProfit / newValue) * 100);
+        }
+      }
+    }
+
     updateOpportunityMutation.mutate({
       id: opportunityId,
-      data: { [field]: value }
+      data: updateData
     });
   };
 
@@ -330,37 +345,10 @@ export default function Opportunities() {
                         )}
                       </TableCell>
                       <TableCell>
-                        {editingField === `grossProfitMargin-${opportunity.id}` ? (
-                          <div className="flex items-center gap-2">
-                            <Input
-                              type="number"
-                              min="0"
-                              max="100"
-                              value={editingValue}
-                              onChange={(e) => setEditingValue(e.target.value)}
-                              className="w-16 h-8"
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') handleFieldSave(opportunity.id, 'grossProfitMargin');
-                                if (e.key === 'Escape') handleFieldCancel();
-                              }}
-                              autoFocus
-                            />
-                            <span className="text-sm">%</span>
-                            <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'grossProfitMargin')}>
-                              <Check className="h-3 w-3" />
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div 
-                            className="flex items-center text-sm font-medium cursor-pointer hover:bg-slate-50 p-1 rounded"
-                            onClick={() => handleFieldEdit('grossProfitMargin', opportunity.id, (opportunity.grossProfitMargin || 0).toString())}
-                          >
-                            {opportunity.grossProfitMargin || 0}%
-                          </div>
-                        )}
+                        <div className="flex items-center text-sm font-medium text-slate-600 bg-slate-50 p-1 rounded">
+                          {opportunity.grossProfitMargin || 0}%
+                          <span className="text-xs text-slate-400 ml-1">(auto)</span>
+                        </div>
                       </TableCell>
                       <TableCell>
                         {editingField === `stage-${opportunity.id}` ? (

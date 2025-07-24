@@ -89,6 +89,21 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
     ? contacts.filter(contact => contact.accountId === selectedAccountId)
     : contacts;
 
+  // Auto-calculate gross profit margin
+  const opportunityValue = form.watch("value");
+  const grossProfit = form.watch("grossProfit");
+  
+  useEffect(() => {
+    if (opportunityValue && grossProfit) {
+      const value = parseFloat(opportunityValue);
+      const profit = parseFloat(grossProfit);
+      if (value > 0) {
+        const margin = Math.round((profit / value) * 100);
+        form.setValue("grossProfitMargin", margin);
+      }
+    }
+  }, [opportunityValue, grossProfit, form]);
+
   const saveOpportunityMutation = useMutation({
     mutationFn: async (data: InsertOpportunity) => {
       if (opportunity) {
@@ -202,9 +217,10 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
                         type="number" 
                         min="0"
                         max="100"
-                        placeholder="65" 
+                        placeholder="Auto-calculated" 
                         {...field} 
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                        disabled
+                        className="bg-gray-50"
                       />
                     </FormControl>
                     <FormMessage />
