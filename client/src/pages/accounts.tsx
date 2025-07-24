@@ -112,7 +112,6 @@ export default function Accounts() {
           New Account
         </Button>
       </div>
-      
       <div className="mb-6">
         <input
           type="text"
@@ -122,7 +121,6 @@ export default function Accounts() {
           className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
         />
       </div>
-      
       <div>
         <Card>
           <CardContent className="p-0">
@@ -138,7 +136,7 @@ export default function Accounts() {
                   <TableRow>
                     <TableHead>Company</TableHead>
                     <TableHead>Industry</TableHead>
-                    <TableHead>Contact Info</TableHead>
+                    <TableHead>Contacts</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Actions</TableHead>
@@ -224,7 +222,6 @@ export default function Accounts() {
           </CardContent>
         </Card>
       </div>
-
       <AccountModal 
         open={isModalOpen} 
         onOpenChange={(open) => {
@@ -235,7 +232,6 @@ export default function Accounts() {
         }}
         account={editingAccount}
       />
-      
       <ContactModal
         open={isContactModalOpen}
         onOpenChange={setIsContactModalOpen}
