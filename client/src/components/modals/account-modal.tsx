@@ -278,39 +278,40 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated, acc
                 {/* Add Contact Actions */}
                 <div className="space-y-2">
                   <div className="text-sm font-medium text-slate-700">Add Contact:</div>
-                  <div className="flex items-center gap-2">
-                    {/* Select Existing Contact */}
-                    {unassignedContacts.length > 0 && (
-                      <Select onValueChange={(value) => handleAssignContact(parseInt(value))}>
-                        <SelectTrigger className="h-8 flex-1 text-xs">
-                          <SelectValue placeholder="Select existing contact" />
-                        </SelectTrigger>
-                        <SelectContent>
+                  <Select onValueChange={(value) => {
+                    if (value === "create-new") {
+                      handleAddNewContact();
+                    } else {
+                      handleAssignContact(parseInt(value));
+                    }
+                  }}>
+                    <SelectTrigger className="h-8 w-full text-xs">
+                      <SelectValue placeholder="Select existing contact or create new" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {/* Create New Contact Option */}
+                      <SelectItem value="create-new">
+                        <div className="flex items-center">
+                          <UserPlus className="h-3 w-3 mr-2" />
+                          Create New Contact
+                        </div>
+                      </SelectItem>
+                      
+                      {/* Existing Contacts */}
+                      {unassignedContacts.length > 0 && (
+                        <>
+                          <div className="px-2 py-1 text-xs font-medium text-slate-500 border-t">
+                            Existing Contacts:
+                          </div>
                           {unassignedContacts.map(contact => (
                             <SelectItem key={contact.id} value={contact.id.toString()}>
                               {contact.firstName} {contact.lastName} - {contact.email}
                             </SelectItem>
                           ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                    
-                    {/* Create New Contact */}
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      className="h-8 px-3 text-xs"
-                      onClick={handleAddNewContact}
-                    >
-                      <UserPlus className="h-3 w-3 mr-1" />
-                      Create New Contact
-                    </Button>
-                  </div>
-                  
-                  {unassignedContacts.length === 0 && (
-                    <div className="text-xs text-slate-500">No unassigned contacts available. Create a new contact to assign.</div>
-                  )}
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {accountContacts.length === 0 && (
