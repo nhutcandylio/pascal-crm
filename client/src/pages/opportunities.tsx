@@ -5,6 +5,7 @@ import OpportunityModal from "../components/modals/opportunity-modal";
 import AccountModal from "../components/modals/account-modal";
 import ContactModal from "../components/modals/contact-modal";
 import DescriptionModal from "../components/modals/description-modal";
+import { LeadDetailsModal } from "../components/modals/lead-details-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +57,8 @@ export default function Opportunities() {
   const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
   const [selectedOpportunityForDescription, setSelectedOpportunityForDescription] = useState<Opportunity | null>(null);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
+  const [isLeadDetailsModalOpen, setIsLeadDetailsModalOpen] = useState(false);
+  const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -289,14 +292,23 @@ export default function Opportunities() {
                       <TableCell>
                         <div className="flex items-center text-sm">
                           {opportunity.leadId ? (
-                            // If converted from lead, show the lead's source or a default message
-                            opportunity.leadSource ? (
-                              <Badge variant="secondary" className="text-xs">
-                                {opportunity.leadSource.charAt(0).toUpperCase() + opportunity.leadSource.slice(1).replace('-', ' ')}
-                              </Badge>
-                            ) : (
-                              <span className="text-slate-500 text-xs">Lead converted</span>
-                            )
+                            // If converted from lead, make it clickable to show lead details
+                            <div 
+                              className="cursor-pointer hover:bg-slate-50 p-1 rounded"
+                              onClick={() => {
+                                setSelectedLeadId(opportunity.leadId);
+                                setIsLeadDetailsModalOpen(true);
+                              }}
+                              title="Click to view lead details"
+                            >
+                              {opportunity.leadSource ? (
+                                <Badge variant="secondary" className="text-xs hover:opacity-80">
+                                  {opportunity.leadSource.charAt(0).toUpperCase() + opportunity.leadSource.slice(1).replace('-', ' ')}
+                                </Badge>
+                              ) : (
+                                <span className="text-slate-500 text-xs underline">Lead converted</span>
+                              )}
+                            </div>
                           ) : (
                             // If created directly as opportunity
                             <span className="text-slate-500 text-xs">Opportunity created</span>
@@ -569,6 +581,17 @@ export default function Opportunities() {
           setIsDescriptionModalOpen(open);
           if (!open) {
             setSelectedOpportunityForDescription(null);
+          }
+        }}
+      />
+
+      <LeadDetailsModal
+        leadId={selectedLeadId}
+        open={isLeadDetailsModalOpen}
+        onOpenChange={(open) => {
+          setIsLeadDetailsModalOpen(open);
+          if (!open) {
+            setSelectedLeadId(null);
           }
         }}
       />
