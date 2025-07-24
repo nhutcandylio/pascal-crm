@@ -29,8 +29,6 @@ export default function ConvertToOpportunityModal({
   const [description, setDescription] = useState("");
   const [selectedAccountId, setSelectedAccountId] = useState<string>("none");
   const [selectedContactId, setSelectedContactId] = useState<string>("");
-  const [createNewAccount, setCreateNewAccount] = useState(false);
-  const [newAccountName, setNewAccountName] = useState("");
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -54,27 +52,10 @@ export default function ConvertToOpportunityModal({
       let accountId = selectedAccountId;
       let contactId = selectedContactId;
 
-      // Create new account if needed
-      if (createNewAccount && newAccountName.trim()) {
-        const accountData = {
-          companyName: newAccountName.trim(),
-          industry: lead?.company ? "Technology" : "Other",
-          website: "",
-          phone: lead?.phone || "",
-          email: lead?.email || "",
-          address: ""
-        };
-
-        const accountResponse = await apiRequest('POST', '/api/accounts', accountData);
-        const newAccount = await accountResponse.json();
-        
-        accountId = newAccount.id.toString();
-      }
-
-      // Create contact if lead info exists and no contact selected
+      // Create contact if lead info exists and account is selected
       if (!contactId && lead && selectedAccountId !== "none") {
         const contactData = {
-          accountId: (accountId && accountId !== "none") ? parseInt(accountId) : null,
+          accountId: parseInt(selectedAccountId),
           firstName: lead.firstName,
           lastName: lead.lastName,
           email: lead.email,
@@ -132,8 +113,6 @@ export default function ConvertToOpportunityModal({
       setDescription("");
       setSelectedAccountId("none");
       setSelectedContactId("");
-      setCreateNewAccount(false);
-      setNewAccountName("");
       
       onOpenChange(false);
     },
@@ -150,21 +129,15 @@ export default function ConvertToOpportunityModal({
   React.useEffect(() => {
     if (lead && open) {
       setOpportunityName(`${lead.company || 'Opportunity'} - ${lead.firstName} ${lead.lastName}`);
-      setNewAccountName(lead.company || "");
-      // Default to "No account" unless lead has company info
-      if (lead.company && accounts.length > 0) {
-        setCreateNewAccount(true);
-      } else {
-        setSelectedAccountId("none");
-        setCreateNewAccount(false);
-      }
+      // Default to "No account"
+      setSelectedAccountId("none");
       
       // Set close date to 3 months from now
       const futureDate = new Date();
       futureDate.setMonth(futureDate.getMonth() + 3);
       setCloseDate(futureDate.toISOString().split('T')[0]);
     }
-  }, [lead, open, accounts.length]);
+  }, [lead, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -278,16 +251,15 @@ export default function ConvertToOpportunityModal({
                   type="radio"
                   id="existing-account"
                   name="account-choice"
-                  checked={!createNewAccount && selectedAccountId !== "none"}
+                  checked={selectedAccountId !== "none"}
                   onChange={() => {
-                    setCreateNewAccount(false);
                     setSelectedAccountId("");
                   }}
                 />
                 <label htmlFor="existing-account" className="text-sm">Use existing account</label>
               </div>
               
-              {!createNewAccount && selectedAccountId !== "none" && (
+              {selectedAccountId !== "none" && (
                 <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select an account" />
@@ -307,42 +279,19 @@ export default function ConvertToOpportunityModal({
                   type="radio"
                   id="no-account"
                   name="account-choice"
-                  checked={selectedAccountId === "none" && !createNewAccount}
+                  checked={selectedAccountId === "none"}
                   onChange={() => {
-                    setCreateNewAccount(false);
                     setSelectedAccountId("none");
                     setSelectedContactId("");
                   }}
                 />
                 <label htmlFor="no-account" className="text-sm">No account</label>
               </div>
-
-              <div className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  id="new-account"
-                  name="account-choice"
-                  checked={createNewAccount}
-                  onChange={() => {
-                    setCreateNewAccount(true);
-                    setSelectedAccountId("");
-                  }}
-                />
-                <label htmlFor="new-account" className="text-sm">Create new account</label>
-              </div>
-              
-              {createNewAccount && (
-                <Input
-                  value={newAccountName}
-                  onChange={(e) => setNewAccountName(e.target.value)}
-                  placeholder="Enter company name"
-                />
-              )}
             </div>
           </div>
 
           {/* Contact Selection */}
-          {!createNewAccount && selectedAccountId && selectedAccountId !== "none" && (
+          {selectedAccountId && selectedAccountId !== "none" && (
             <div>
               <Label htmlFor="contact">Contact</Label>
               <Select value={selectedContactId} onValueChange={setSelectedContactId}>
