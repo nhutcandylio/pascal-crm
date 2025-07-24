@@ -53,11 +53,10 @@ export default function LeadModal({ open, onOpenChange }: LeadModalProps) {
   });
 
   const createLeadMutation = useMutation({
-    mutationFn: (data: InsertLead) => apiRequest("/api/leads", { 
-      method: "POST", 
-      body: JSON.stringify(data),
-      headers: { "Content-Type": "application/json" }
-    }),
+    mutationFn: async (data: InsertLead) => {
+      const response = await apiRequest("POST", "/api/leads", data);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/leads"] });
       toast({

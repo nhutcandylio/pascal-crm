@@ -32,11 +32,10 @@ export default function AccountModal({ open, onOpenChange }: AccountModalProps) 
   });
 
   const createAccountMutation = useMutation({
-    mutationFn: (data: InsertAccount) => apiRequest("/api/accounts", { 
-      method: "POST", 
-      body: JSON.stringify(data),
-      headers: { "Content-Type": "application/json" }
-    }),
+    mutationFn: async (data: InsertAccount) => {
+      const response = await apiRequest("POST", "/api/accounts", data);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
       toast({

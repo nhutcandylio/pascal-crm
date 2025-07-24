@@ -59,11 +59,10 @@ export default function OpportunityModal({ open, onOpenChange }: OpportunityModa
     : contacts;
 
   const createOpportunityMutation = useMutation({
-    mutationFn: (data: InsertOpportunity) => apiRequest("/api/opportunities", { 
-      method: "POST", 
-      body: JSON.stringify(data),
-      headers: { "Content-Type": "application/json" }
-    }),
+    mutationFn: async (data: InsertOpportunity) => {
+      const response = await apiRequest("POST", "/api/opportunities", data);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
       toast({

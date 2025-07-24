@@ -37,11 +37,10 @@ export default function ContactModal({ open, onOpenChange }: ContactModalProps) 
   });
 
   const createContactMutation = useMutation({
-    mutationFn: (data: InsertContact) => apiRequest("/api/contacts", { 
-      method: "POST", 
-      body: JSON.stringify(data),
-      headers: { "Content-Type": "application/json" }
-    }),
+    mutationFn: async (data: InsertContact) => {
+      const response = await apiRequest("POST", "/api/contacts", data);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
       toast({
