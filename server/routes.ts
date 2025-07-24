@@ -114,13 +114,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/opportunities", async (req, res) => {
     try {
+      console.log("Opportunity request body:", JSON.stringify(req.body, null, 2));
       const opportunityData = insertOpportunitySchema.parse(req.body);
       const opportunity = await storage.createOpportunity(opportunityData);
       res.status(201).json(opportunity);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.log("Validation error:", error.errors);
         res.status(400).json({ error: "Invalid opportunity data", details: error.errors });
       } else {
+        console.log("Other error:", error);
         res.status(500).json({ error: "Failed to create opportunity" });
       }
     }

@@ -97,7 +97,7 @@ export default function ConvertToOpportunityModal({
         value: value,
         stage: stage,
         probability: parseInt(probability),
-        closeDate: closeDate ? new Date(closeDate) : null,
+        closeDate: closeDate || null,
         description: description.trim()
       };
 
