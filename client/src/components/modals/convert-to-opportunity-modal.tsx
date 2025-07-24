@@ -65,7 +65,8 @@ export default function ConvertToOpportunityModal({
           address: ""
         };
 
-        const newAccount = await apiRequest('/api/accounts', 'POST', accountData);
+        const accountResponse = await apiRequest('POST', '/api/accounts', accountData);
+        const newAccount = await accountResponse.json();
         
         accountId = newAccount.id.toString();
       }
@@ -82,7 +83,8 @@ export default function ConvertToOpportunityModal({
           department: ""
         };
 
-        const newContact = await apiRequest('/api/contacts', 'POST', contactData);
+        const contactResponse = await apiRequest('POST', '/api/contacts', contactData);
+        const newContact = await contactResponse.json();
         
         contactId = newContact.id.toString();
       }
@@ -99,11 +101,12 @@ export default function ConvertToOpportunityModal({
         description: description.trim()
       };
 
-      const opportunity = await apiRequest('/api/opportunities', 'POST', opportunityData);
+      const opportunityResponse = await apiRequest('POST', '/api/opportunities', opportunityData);
+      const opportunity = await opportunityResponse.json();
 
       // Update lead status to converted
       if (lead) {
-        await apiRequest(`/api/leads/${lead.id}`, 'PATCH', { status: 'converted' });
+        await apiRequest('PATCH', `/api/leads/${lead.id}`, { status: 'converted' });
       }
 
       return opportunity;
