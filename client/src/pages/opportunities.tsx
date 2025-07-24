@@ -142,11 +142,13 @@ export default function Opportunities() {
     if (field === 'value' || field === 'grossProfit') {
       const opportunity = opportunities.find(opp => opp.id === opportunityId);
       if (opportunity) {
-        const newValue = field === 'value' ? parseFloat(editingValue) : parseFloat(opportunity.value);
-        const newGrossProfit = field === 'grossProfit' ? parseFloat(editingValue) : parseFloat(opportunity.grossProfit || '0');
+        const newValue = field === 'value' ? parseFloat(editingValue) || 0 : parseFloat(opportunity.value) || 0;
+        const newGrossProfit = field === 'grossProfit' ? parseFloat(editingValue) || 0 : parseFloat(opportunity.grossProfit || '0') || 0;
         
         if (newValue > 0) {
           updateData.grossProfitMargin = Math.round((newGrossProfit / newValue) * 100);
+        } else {
+          updateData.grossProfitMargin = 0;
         }
       }
     }
@@ -309,7 +311,7 @@ export default function Opportunities() {
                             className="flex items-center text-sm font-medium cursor-pointer hover:bg-slate-50 p-1 rounded"
                             onClick={() => handleFieldEdit('value', opportunity.id, opportunity.value)}
                           >
-                            ${parseFloat(opportunity.value).toLocaleString()}
+                            ${opportunity.value ? parseFloat(opportunity.value).toLocaleString() : '0'}
                           </div>
                         )}
                       </TableCell>
@@ -340,7 +342,7 @@ export default function Opportunities() {
                             className="flex items-center text-sm font-medium cursor-pointer hover:bg-slate-50 p-1 rounded"
                             onClick={() => handleFieldEdit('grossProfit', opportunity.id, opportunity.grossProfit || '0')}
                           >
-                            ${parseFloat(opportunity.grossProfit || '0').toLocaleString()}
+                            ${opportunity.grossProfit ? parseFloat(opportunity.grossProfit).toLocaleString() : '0'}
                           </div>
                         )}
                       </TableCell>

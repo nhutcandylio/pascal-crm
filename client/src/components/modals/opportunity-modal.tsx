@@ -94,12 +94,14 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
   const grossProfit = form.watch("grossProfit");
   
   useEffect(() => {
-    if (opportunityValue && grossProfit) {
-      const value = parseFloat(opportunityValue);
-      const profit = parseFloat(grossProfit);
+    if (opportunityValue || grossProfit) {
+      const value = parseFloat(opportunityValue) || 0;
+      const profit = parseFloat(grossProfit) || 0;
       if (value > 0) {
         const margin = Math.round((profit / value) * 100);
         form.setValue("grossProfitMargin", margin);
+      } else {
+        form.setValue("grossProfitMargin", 0);
       }
     }
   }, [opportunityValue, grossProfit, form]);
