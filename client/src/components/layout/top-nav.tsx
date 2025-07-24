@@ -24,16 +24,12 @@ export default function TopNav() {
   return (
     <div className="w-full bg-white shadow-sm border-b border-slate-200">
       <div className="px-6 py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo and Brand */}
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <TrendingUp className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <span className="ml-3 text-xl font-semibold text-slate-900">CRM </span>
+        {/* Logo and Brand */}
+        <div className="flex items-center">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <TrendingUp className="h-4 w-4 text-primary-foreground" />
           </div>
-
-          
+          <span className="ml-3 text-xl font-semibold text-slate-900">CRM </span>
         </div>
 
         {/* Navigation Tabs */}
