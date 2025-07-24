@@ -74,6 +74,8 @@ export default function ConvertToOpportunityModal({
       const opportunityData = {
         accountId: (accountId && accountId !== "none") ? parseInt(accountId) : null,
         contactId: (contactId && selectedAccountId !== "none") ? parseInt(contactId) : null,
+        leadId: lead ? lead.id : null,
+        leadSource: lead ? lead.source : null,
         name: opportunityName.trim(),
         value: value,
         stage: stage,
