@@ -5,7 +5,8 @@ import {
   insertAccountSchema, 
   insertContactSchema, 
   insertLeadSchema, 
-  insertOpportunitySchema, 
+  insertOpportunitySchema,
+  updateOpportunitySchema,
   insertActivitySchema 
 } from "@shared/schema";
 import { z } from "zod";
@@ -129,11 +130,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/opportunities/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const opportunityData = insertOpportunitySchema.parse(req.body);
+      const opportunityData = updateOpportunitySchema.parse(req.body);
       const opportunity = await storage.updateOpportunity(id, opportunityData);
       res.json(opportunity);
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.log("Update validation error:", error.errors);
         res.status(400).json({ error: "Invalid opportunity data", details: error.errors });
       } else {
         res.status(500).json({ error: "Failed to update opportunity" });

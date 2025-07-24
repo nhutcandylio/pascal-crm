@@ -86,6 +86,8 @@ export const insertOpportunitySchema = createInsertSchema(opportunities).omit({
   closeDate: z.union([z.date(), z.string().transform(str => str ? new Date(str) : null), z.null()]).optional(),
 });
 
+export const updateOpportunitySchema = insertOpportunitySchema.partial();
+
 export const insertActivitySchema = createInsertSchema(activities).omit({
   id: true,
   createdAt: true,
