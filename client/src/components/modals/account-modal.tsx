@@ -31,9 +31,17 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated, acc
     queryKey: ["/api/contacts"],
   });
 
-  // Get contacts for current account and available contacts (all contacts not assigned to this account)
-  const accountContacts = account ? contacts.filter(contact => contact.accountId === account.id) : [];
-  const availableContacts = account ? contacts.filter(contact => contact.accountId !== account.id) : contacts;
+  const { data: accountsWithContacts = [] } = useQuery<any[]>({
+    queryKey: ["/api/accounts/with-contacts"],
+  });
+
+  // Get contacts for current account
+  const currentAccountData = account ? accountsWithContacts.find((acc: any) => acc.id === account.id) : null;
+  const accountContacts = currentAccountData?.contacts || [];
+  
+  // Get all contacts that are NOT currently associated with this account
+  const assignedContactIds = new Set(accountContacts.map((contact: any) => contact.id));
+  const availableContacts = contacts.filter(contact => !assignedContactIds.has(contact.id));
 
   const form = useForm<InsertAccount>({
     resolver: zodResolver(insertAccountSchema),
@@ -83,6 +91,7 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated, acc
     },
     onSuccess: (updatedAccount) => {
       queryClient.invalidateQueries({ queryKey: ["/api/accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/accounts/with-contacts"] });
       toast({
         title: "Success",
         description: account ? "Account updated successfully." : "Account created successfully.",
@@ -104,12 +113,13 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated, acc
   });
 
   const removeContactMutation = useMutation({
-    mutationFn: async ({ contactId }: { contactId: number }) => {
-      const response = await apiRequest("PATCH", `/api/contacts/${contactId}`, { accountId: null });
+    mutationFn: async ({ contactId, accountId }: { contactId: number; accountId: number }) => {
+      const response = await apiRequest("DELETE", `/api/accounts/${accountId}/contacts/${contactId}`);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/accounts/with-contacts"] });
       toast({
         title: "Success",
         description: "Contact removed successfully.",
@@ -126,11 +136,12 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated, acc
 
   const assignContactMutation = useMutation({
     mutationFn: async ({ contactId, accountId }: { contactId: number; accountId: number }) => {
-      const response = await apiRequest("PATCH", `/api/contacts/${contactId}`, { accountId });
+      const response = await apiRequest("POST", `/api/accounts/${accountId}/contacts/${contactId}`);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/accounts/with-contacts"] });
       toast({
         title: "Success",
         description: "Contact assigned successfully.",
@@ -146,7 +157,9 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated, acc
   });
 
   const handleRemoveContact = (contactId: number) => {
-    removeContactMutation.mutate({ contactId });
+    if (account) {
+      removeContactMutation.mutate({ contactId, accountId: account.id });
+    }
   };
 
   const handleAssignContact = (contactId: number) => {
@@ -261,7 +274,7 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated, acc
                   <div className="space-y-2">
                     <div className="text-sm font-medium text-slate-700">Current Contacts:</div>
                     <div className="flex flex-wrap gap-2">
-                      {accountContacts.map(contact => (
+                      {accountContacts.map((contact: any) => (
                         <Badge key={contact.id} variant="outline" className="text-xs group relative">
                           {contact.firstName} {contact.lastName}
                           <button
@@ -308,11 +321,6 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated, acc
                             <SelectItem key={contact.id} value={contact.id.toString()}>
                               <div className="flex items-center justify-between w-full">
                                 <span>{contact.firstName} {contact.lastName} - {contact.email}</span>
-                                {contact.accountId && (
-                                  <span className="text-xs text-slate-400 ml-2">
-                                    (Currently assigned)
-                                  </span>
-                                )}
                               </div>
                             </SelectItem>
                           ))}
