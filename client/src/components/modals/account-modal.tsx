@@ -1,15 +1,18 @@
 import { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { insertAccountSchema, type InsertAccount, type Account } from "@shared/schema";
+import { X, UserPlus } from "lucide-react";
+import { insertAccountSchema, type InsertAccount, type Account, type Contact } from "@shared/schema";
 
 interface AccountModalProps {
   open: boolean;
@@ -21,6 +24,14 @@ interface AccountModalProps {
 export default function AccountModal({ open, onOpenChange, onAccountCreated, account }: AccountModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const { data: contacts = [] } = useQuery<Contact[]>({
+    queryKey: ["/api/contacts"],
+  });
+
+  // Get contacts for current account and unassigned contacts
+  const accountContacts = account ? contacts.filter(contact => contact.accountId === account.id) : [];
+  const unassignedContacts = contacts.filter(contact => !contact.accountId);
 
   const form = useForm<InsertAccount>({
     resolver: zodResolver(insertAccountSchema),
@@ -89,6 +100,58 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated, acc
       });
     },
   });
+
+  const removeContactMutation = useMutation({
+    mutationFn: async ({ contactId }: { contactId: number }) => {
+      const response = await apiRequest("PATCH", `/api/contacts/${contactId}`, { accountId: null });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      toast({
+        title: "Success",
+        description: "Contact removed successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove contact.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const assignContactMutation = useMutation({
+    mutationFn: async ({ contactId, accountId }: { contactId: number; accountId: number }) => {
+      const response = await apiRequest("PATCH", `/api/contacts/${contactId}`, { accountId });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      toast({
+        title: "Success",
+        description: "Contact assigned successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to assign contact.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleRemoveContact = (contactId: number) => {
+    removeContactMutation.mutate({ contactId });
+  };
+
+  const handleAssignContact = (contactId: number) => {
+    if (account) {
+      assignContactMutation.mutate({ contactId, accountId: account.id });
+    }
+  };
 
   const handleSubmit = (data: InsertAccount) => {
     createAccountMutation.mutate(data);
@@ -180,6 +243,56 @@ export default function AccountModal({ open, onOpenChange, onAccountCreated, acc
                 </FormItem>
               )}
             />
+
+            {/* Contact Info Section - Only show when editing existing account */}
+            {account && (
+              <div className="space-y-3 pt-4 border-t">
+                <FormLabel>Contact Info</FormLabel>
+                
+                {/* Existing Contacts */}
+                {accountContacts.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-slate-700">Current Contacts:</div>
+                    <div className="flex flex-wrap gap-2">
+                      {accountContacts.map(contact => (
+                        <Badge key={contact.id} variant="outline" className="text-xs group relative">
+                          {contact.firstName} {contact.lastName}
+                          <button
+                            onClick={() => handleRemoveContact(contact.id)}
+                            className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-3 w-3 text-red-500 hover:text-red-700" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Assign Existing Contact */}
+                {unassignedContacts.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-slate-700">Assign Existing Contact:</div>
+                    <Select onValueChange={(value) => handleAssignContact(parseInt(value))}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a contact to assign" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {unassignedContacts.map(contact => (
+                          <SelectItem key={contact.id} value={contact.id.toString()}>
+                            {contact.firstName} {contact.lastName} - {contact.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {accountContacts.length === 0 && unassignedContacts.length === 0 && (
+                  <div className="text-sm text-slate-500">No contacts available. Create contacts first to assign them to this account.</div>
+                )}
+              </div>
+            )}
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button
