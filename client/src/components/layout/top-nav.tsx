@@ -4,7 +4,6 @@ import {
   Home, 
   Users, 
   Handshake, 
-  Calendar, 
   TrendingUp,
   User,
   Building,
@@ -17,7 +16,6 @@ const navigation = [
   { name: "Contacts", href: "/contacts", icon: Users },
   { name: "Leads", href: "/leads", icon: UserPlus },
   { name: "Opportunities", href: "/opportunities", icon: Handshake },
-  { name: "Activities", href: "/activities", icon: Calendar },
 ];
 
 export default function TopNav() {
