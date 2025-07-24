@@ -210,6 +210,7 @@ export default function Opportunities() {
                   <TableRow>
                     <TableHead>Opportunity</TableHead>
                     <TableHead>Account</TableHead>
+                    <TableHead>Source</TableHead>
                     <TableHead>Opportunity Value</TableHead>
                     <TableHead>Gross Profit</TableHead>
                     <TableHead>Gross Profit Margin</TableHead>
@@ -283,6 +284,24 @@ export default function Opportunities() {
                             )}
                           </div>
                         )}
+                      </TableCell>
+
+                      <TableCell>
+                        <div className="flex items-center text-sm">
+                          {opportunity.leadId ? (
+                            // If converted from lead, show the lead's source or a default message
+                            opportunity.leadSource ? (
+                              <Badge variant="secondary" className="text-xs">
+                                {opportunity.leadSource.charAt(0).toUpperCase() + opportunity.leadSource.slice(1).replace('-', ' ')}
+                              </Badge>
+                            ) : (
+                              <span className="text-slate-500 text-xs">Lead converted</span>
+                            )
+                          ) : (
+                            // If created directly as opportunity
+                            <span className="text-slate-500 text-xs">Opportunity được tạo</span>
+                          )}
+                        </div>
                       </TableCell>
 
                       <TableCell>
