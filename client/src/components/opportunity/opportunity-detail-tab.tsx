@@ -24,6 +24,8 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
     name: opportunity.name,
     description: opportunity.description || "",
     probability: opportunity.probability || 0,
+    closeDate: opportunity.closeDate || '',
+    value: opportunity.value,
   });
 
   const value = parseFloat(opportunity.value) || 0;
@@ -63,6 +65,8 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
       ...prev,
       [field]: field === 'name' ? opportunity.name : 
                field === 'description' ? (opportunity.description || "") :
+               field === 'closeDate' ? (opportunity.closeDate || '') :
+               field === 'value' ? opportunity.value :
                field === 'probability' ? (opportunity.probability || 0) : prev[field as keyof typeof prev]
     }));
     setEditingField(null);
@@ -203,15 +207,42 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
 
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Close Date</label>
-                <p className="text-base font-medium flex items-center space-x-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span>
-                    {opportunity.closeDate 
-                      ? format(new Date(opportunity.closeDate), 'MMM dd, yyyy')
-                      : 'Not set'
-                    }
-                  </span>
-                </p>
+                {editingField === 'closeDate' ? (
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Input
+                      type="date"
+                      value={editValues.closeDate ? editValues.closeDate.split('T')[0] : ''}
+                      onChange={(e) => setEditValues(prev => ({ ...prev, closeDate: e.target.value ? new Date(e.target.value).toISOString() : '' }))}
+                      className="flex-1"
+                    />
+                    <Button size="sm" onClick={() => handleSave('closeDate')}>
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleCancel('closeDate')}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2 group">
+                    <p className="text-base font-medium flex items-center space-x-2 flex-1">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span>
+                        {opportunity.closeDate 
+                          ? format(new Date(opportunity.closeDate), 'MMM dd, yyyy')
+                          : 'Not set'
+                        }
+                      </span>
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="opacity-0 group-hover:opacity-100"
+                      onClick={() => setEditingField('closeDate')}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -237,12 +268,44 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground">Opportunity Value</label>
-              <div className="flex items-center space-x-2">
-                <DollarSign className="h-4 w-4 text-green-600" />
-                <span className="text-2xl font-bold text-green-600">
-                  ${value.toLocaleString()}
-                </span>
-              </div>
+              {editingField === 'value' ? (
+                <div className="flex items-center space-x-2">
+                  <DollarSign className="h-4 w-4 text-green-600" />
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editValues.value}
+                    onChange={(e) => setEditValues(prev => ({ ...prev, value: e.target.value }))}
+                    className="text-xl font-bold"
+                  />
+                  <Button size="sm" onClick={() => handleSave('value')}>
+                    <Check className="h-4 w-4" />
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleCancel('value')}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="group">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <DollarSign className="h-4 w-4 text-green-600" />
+                      <span className="text-2xl font-bold text-green-600">
+                        ${value.toLocaleString()}
+                      </span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="opacity-0 group-hover:opacity-100"
+                      onClick={() => setEditingField('value')}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

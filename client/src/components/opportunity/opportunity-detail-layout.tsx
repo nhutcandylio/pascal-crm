@@ -172,59 +172,102 @@ export default function OpportunityDetailLayout({
           </div>
           <Dialog open={stageChangeOpen} onOpenChange={setStageChangeOpen}>
             <DialogTrigger asChild>
-              <Button>
-                <GitBranch className="h-4 w-4 mr-2" />
-                Change Stage
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                Change Closed Stage
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-4xl">
               <DialogHeader>
                 <DialogTitle>Change Opportunity Stage</DialogTitle>
                 <DialogDescription>
-                  Move this opportunity to a different stage in the sales pipeline.
+                  Select the stage to move this opportunity through the sales pipeline.
                 </DialogDescription>
               </DialogHeader>
+              
+              {/* Visual Pipeline Selector */}
+              <div className="my-6">
+                <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
+                  {stageOptions.map((stage, index) => {
+                    const isActive = stage.value === opportunity?.stage;
+                    const isSelected = stageForm.watch('stage') === stage.value;
+                    const isCompleted = stageOptions.findIndex(s => s.value === opportunity?.stage) > index;
+                    
+                    return (
+                      <div key={stage.value} className="flex items-center">
+                        <div 
+                          className={`relative cursor-pointer transition-all duration-200 ${
+                            isSelected ? 'transform scale-110' : ''
+                          }`}
+                          onClick={() => stageForm.setValue('stage', stage.value)}
+                        >
+                          {/* Stage Circle */}
+                          <div className={`
+                            w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-2 transition-all
+                            ${isActive ? 'bg-blue-600 text-white border-blue-600' : 
+                              isCompleted ? 'bg-green-600 text-white border-green-600' :
+                              isSelected ? 'bg-blue-100 text-blue-600 border-blue-600' :
+                              'bg-white text-gray-400 border-gray-300'}
+                          `}>
+                            {index + 1}
+                          </div>
+                          
+                          {/* Stage Label */}
+                          <div className="mt-2 text-center">
+                            <div className={`text-sm font-medium ${
+                              isActive || isSelected ? 'text-blue-600' : 
+                              isCompleted ? 'text-green-600' : 'text-gray-500'
+                            }`}>
+                              {stage.label}
+                            </div>
+                          </div>
+                          
+                          {/* Current Stage Indicator */}
+                          {isActive && (
+                            <div className="absolute -top-2 -right-2 w-4 h-4 bg-orange-500 rounded-full border-2 border-white"></div>
+                          )}
+                        </div>
+                        
+                        {/* Arrow between stages */}
+                        {index < stageOptions.length - 1 && (
+                          <div className={`flex-1 h-1 mx-2 rounded ${
+                            isCompleted ? 'bg-green-600' : 'bg-gray-300'
+                          }`}></div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                {/* Stage Information */}
+                {stageForm.watch('stage') && (
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                    <div className="font-medium text-blue-900">
+                      Selected: {stageOptions.find(s => s.value === stageForm.watch('stage'))?.label}
+                    </div>
+                    <div className="text-sm text-blue-700 mt-1">
+                      {stageForm.watch('stage') === 'prospecting' && 'Initial contact and research phase'}
+                      {stageForm.watch('stage') === 'qualification' && 'Qualifying the lead and understanding needs'}
+                      {stageForm.watch('stage') === 'proposal' && 'Preparing and presenting proposal'}
+                      {stageForm.watch('stage') === 'negotiation' && 'Negotiating terms and pricing'}
+                      {stageForm.watch('stage') === 'closed-won' && 'Deal successfully closed'}
+                      {stageForm.watch('stage') === 'closed-lost' && 'Deal lost or abandoned'}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <Form {...stageForm}>
                 <form onSubmit={stageForm.handleSubmit(handleStageChange)} className="space-y-4">
-                  <FormField
-                    control={stageForm.control}
-                    name="stage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>New Stage</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select stage" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {stageOptions.map((stage) => (
-                              <SelectItem key={stage.value} value={stage.value}>
-                                <div className="flex items-center space-x-2">
-                                  <Badge className={stage.color} variant="secondary">
-                                    {stage.label}
-                                  </Badge>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
                   <FormField
                     control={stageForm.control}
                     name="reason"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Reason (Optional)</FormLabel>
+                        <FormLabel>Reason for Stage Change (Optional)</FormLabel>
                         <FormControl>
                           <Textarea
                             {...field}
-                            placeholder="Why is this stage change happening?"
+                            placeholder="Why is this stage change happening? (e.g., 'Client signed contract', 'Budget approved', 'Competitor chosen')"
                             rows={3}
                           />
                         </FormControl>
@@ -243,7 +286,8 @@ export default function OpportunityDetailLayout({
                     </Button>
                     <Button
                       type="submit"
-                      disabled={changeStageMutation.isPending}
+                      disabled={changeStageMutation.isPending || !stageForm.watch('stage')}
+                      className="bg-blue-600 hover:bg-blue-700"
                     >
                       {changeStageMutation.isPending ? "Updating..." : "Update Stage"}
                     </Button>
