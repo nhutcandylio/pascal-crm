@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TopBar from "@/components/layout/top-bar";
 import OpportunityModal from "../components/modals/opportunity-modal";
+import OpportunityDetailLayout from "../components/opportunity/opportunity-detail-layout";
 import AccountModal from "../components/modals/account-modal";
 import ContactModal from "../components/modals/contact-modal";
 import DescriptionModal from "../components/modals/description-modal";
@@ -12,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Handshake, DollarSign, Calendar, Building, FileText, Edit2, Check, X, UserPlus } from "lucide-react";
+import { Plus, Handshake, DollarSign, Calendar, Building, FileText, Edit2, Check, X, UserPlus, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { OpportunityWithRelations, Opportunity, InsertOpportunity, Account } from "@shared/schema";
@@ -48,6 +49,7 @@ const stageOptions = [
 export default function Opportunities() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
+  const [viewingOpportunityId, setViewingOpportunityId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [editingField, setEditingField] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState<string>("");
@@ -182,18 +184,51 @@ export default function Opportunities() {
     (opp.contact && `${opp.contact.firstName} ${opp.contact.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Opportunities</h1>
-          <p className="text-slate-600">Manage your sales pipeline and deals</p>
+  // Show detail view if viewing a specific opportunity
+  if (viewingOpportunityId) {
+    return (
+      <div className="flex flex-col h-screen">
+        <TopBar title="Opportunity Details" />
+        <div className="flex-1 overflow-hidden">
+          <OpportunityDetailLayout
+            opportunityId={viewingOpportunityId}
+            onBack={() => setViewingOpportunityId(null)}
+            onEdit={(opportunity) => {
+              setEditingOpportunity(opportunity);
+              setIsModalOpen(true);
+            }}
+          />
         </div>
-        <Button onClick={() => setIsModalOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Opportunity
-        </Button>
+        
+        <OpportunityModal 
+          open={isModalOpen} 
+          onOpenChange={(open) => {
+            setIsModalOpen(open);
+            if (!open) {
+              setEditingOpportunity(null);
+            }
+          }}
+          opportunity={editingOpportunity}
+        />
       </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col h-screen">
+      <TopBar title="Opportunities" />
+      
+      <div className="flex-1 p-6 overflow-auto">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Opportunities</h1>
+            <p className="text-slate-600">Manage your sales pipeline and deals</p>
+          </div>
+          <Button onClick={() => setIsModalOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Opportunity
+          </Button>
+        </div>
       
       <div className="mb-6">
         <input
@@ -505,6 +540,14 @@ export default function Opportunities() {
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => setViewingOpportunityId(opportunity.id)}
+                            title="View details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => {
                               setSelectedOpportunityForDescription(opportunity);
                               setIsDescriptionModalOpen(true);
@@ -587,7 +630,7 @@ export default function Opportunities() {
             setSelectedOpportunityForContact(null);
           }
         }}
-        leadData={leadForContact}
+        leadData={leadForContact as any}
       />
 
       <DescriptionModal
@@ -611,6 +654,7 @@ export default function Opportunities() {
           }
         }}
       />
+      </div>
     </div>
   );
 }

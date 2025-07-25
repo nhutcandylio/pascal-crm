@@ -1,6 +1,17 @@
-import { pgTable, text, serial, integer, boolean, timestamp, decimal } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, decimal, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Users table for owners
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull().unique(),
+  role: text("role").notNull().default('sales_rep'), // 'admin', 'sales_manager', 'sales_rep'
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
 
 export const accounts = pgTable("accounts", {
   id: serial("id").primaryKey(),
@@ -9,6 +20,7 @@ export const accounts = pgTable("accounts", {
   website: text("website"),
   phone: text("phone"),
   address: text("address"),
+  ownerId: integer("owner_id"), // Reference to users table
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -40,6 +52,7 @@ export const leads = pgTable("leads", {
   title: text("title"), // job title
   source: text("source"), // 'website', 'referral', 'cold-call', 'social-media', 'email-campaign'
   status: text("status").notNull().default('new'), // 'new', 'contacted', 'qualified', 'converted', 'lost'
+  ownerId: integer("owner_id"), // Reference to users table
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -57,8 +70,53 @@ export const opportunities = pgTable("opportunities", {
   closeDate: timestamp("close_date"),
   leadSource: text("lead_source"), // Inherited from the converted lead's source
   description: text("description"),
+  ownerId: integer("owner_id"), // Reference to users table
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Products table
+export const products = pgTable("products", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // 'onetime', 'subscription', 'service'
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Orders table
+export const orders = pgTable("orders", {
+  id: serial("id").primaryKey(),
+  opportunityId: integer("opportunity_id").notNull(),
+  orderNumber: text("order_number").notNull().unique(),
+  totalAmount: decimal("total_amount", { precision: 12, scale: 2 }).notNull(),
+  status: text("status").notNull().default('draft'), // 'draft', 'confirmed', 'delivered', 'cancelled'
+  orderDate: timestamp("order_date").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Order Items table (many-to-many between orders and products)
+export const orderItems = pgTable("order_items", {
+  id: serial("id").primaryKey(),
+  orderId: integer("order_id").notNull(),
+  productId: integer("product_id").notNull(),
+  quantity: integer("quantity").notNull().default(1),
+  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  totalPrice: decimal("total_price", { precision: 12, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Stage Change Logs for opportunities
+export const stageChangeLogs = pgTable("stage_change_logs", {
+  id: serial("id").primaryKey(),
+  opportunityId: integer("opportunity_id").notNull(),
+  fromStage: text("from_stage"),
+  toStage: text("to_stage").notNull(),
+  changedBy: integer("changed_by"), // Reference to users table
+  reason: text("reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export const activities = pgTable("activities", {
@@ -70,9 +128,16 @@ export const activities = pgTable("activities", {
   type: text("type").notNull(), // 'call', 'email', 'meeting', 'note', 'task'
   subject: text("subject").notNull(),
   description: text("description"),
+  richTextContent: json("rich_text_content"), // For rich text activities
   dueDate: timestamp("due_date"),
   completed: boolean("completed").default(false),
+  createdBy: integer("created_by"), // Reference to users table
   createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
 });
 
 export const insertAccountSchema = createInsertSchema(accounts).omit({
@@ -105,11 +170,33 @@ export const insertOpportunitySchema = createInsertSchema(opportunities).omit({
 
 export const updateOpportunitySchema = insertOpportunitySchema.partial();
 
+export const insertProductSchema = createInsertSchema(products).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertOrderSchema = createInsertSchema(orders).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertOrderItemSchema = createInsertSchema(orderItems).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertStageChangeLogSchema = createInsertSchema(stageChangeLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertActivitySchema = createInsertSchema(activities).omit({
   id: true,
   createdAt: true,
 });
 
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Account = typeof accounts.$inferSelect;
 export type InsertAccount = z.infer<typeof insertAccountSchema>;
 export type Contact = typeof contacts.$inferSelect;
@@ -120,6 +207,14 @@ export type Lead = typeof leads.$inferSelect;
 export type InsertLead = z.infer<typeof insertLeadSchema>;
 export type Opportunity = typeof opportunities.$inferSelect;
 export type InsertOpportunity = z.infer<typeof insertOpportunitySchema>;
+export type Product = typeof products.$inferSelect;
+export type InsertProduct = z.infer<typeof insertProductSchema>;
+export type Order = typeof orders.$inferSelect;
+export type InsertOrder = z.infer<typeof insertOrderSchema>;
+export type OrderItem = typeof orderItems.$inferSelect;
+export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;
+export type StageChangeLog = typeof stageChangeLogs.$inferSelect;
+export type InsertStageChangeLog = z.infer<typeof insertStageChangeLogSchema>;
 export type Activity = typeof activities.$inferSelect;
 export type InsertActivity = z.infer<typeof insertActivitySchema>;
 
@@ -127,6 +222,22 @@ export type InsertActivity = z.infer<typeof insertActivitySchema>;
 export type OpportunityWithRelations = Opportunity & {
   account?: Account;
   contact?: Contact;
+  owner?: User;
+  orders?: OrderWithItems[];
+  stageLogs?: StageChangeLogWithUser[];
+  activities?: ActivityWithRelations[];
+};
+
+export type OrderWithItems = Order & {
+  items?: OrderItemWithProduct[];
+};
+
+export type OrderItemWithProduct = OrderItem & {
+  product?: Product;
+};
+
+export type StageChangeLogWithUser = StageChangeLog & {
+  user?: User;
 };
 
 export type ActivityWithRelations = Activity & {
@@ -134,6 +245,12 @@ export type ActivityWithRelations = Activity & {
   contact?: Contact;
   lead?: Lead;
   opportunity?: Opportunity;
+  createdBy?: User;
+};
+
+export type LeadWithRelations = Lead & {
+  owner?: User;
+  activities?: ActivityWithRelations[];
 };
 
 export type ContactWithAccounts = Contact & {
@@ -142,6 +259,7 @@ export type ContactWithAccounts = Contact & {
 
 export type AccountWithContacts = Account & {
   contacts?: Contact[];
+  owner?: User;
 };
 
 export type DashboardMetrics = {

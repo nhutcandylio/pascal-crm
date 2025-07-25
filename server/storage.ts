@@ -4,7 +4,14 @@ import {
   accountContacts,
   leads,
   opportunities,
-  activities, 
+  activities,
+  users,
+  products,
+  orders,
+  orderItems,
+  stageChangeLogs,
+  type User,
+  type InsertUser,
   type Account, 
   type InsertAccount,
   type Contact,
@@ -15,16 +22,35 @@ import {
   type InsertLead,
   type Opportunity,
   type InsertOpportunity,
+  type Product,
+  type InsertProduct,
+  type Order,
+  type InsertOrder,
+  type OrderItem,
+  type InsertOrderItem,
+  type StageChangeLog,
+  type InsertStageChangeLog,
   type Activity,
   type InsertActivity,
   type OpportunityWithRelations,
   type ActivityWithRelations,
+  type LeadWithRelations,
+  type OrderWithItems,
+  type OrderItemWithProduct,
+  type StageChangeLogWithUser,
   type ContactWithAccounts,
   type AccountWithContacts,
   type DashboardMetrics
 } from "@shared/schema";
 
 export interface IStorage {
+  // User operations
+  getUser(id: number): Promise<User | undefined>;
+  getUsers(): Promise<User[]>;
+  createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined>;
+  deleteUser(id: number): Promise<boolean>;
+
   // Account operations
   getAccount(id: number): Promise<Account | undefined>;
   getAccounts(): Promise<Account[]>;
@@ -51,6 +77,7 @@ export interface IStorage {
   // Lead operations
   getLead(id: number): Promise<Lead | undefined>;
   getLeads(): Promise<Lead[]>;
+  getLeadsWithRelations(): Promise<LeadWithRelations[]>;
   createLead(lead: InsertLead): Promise<Lead>;
   updateLead(id: number, lead: Partial<InsertLead>): Promise<Lead | undefined>;
   deleteLead(id: number): Promise<boolean>;
@@ -65,6 +92,36 @@ export interface IStorage {
   createOpportunity(opportunity: InsertOpportunity): Promise<Opportunity>;
   updateOpportunity(id: number, opportunity: Partial<InsertOpportunity>): Promise<Opportunity | undefined>;
   deleteOpportunity(id: number): Promise<boolean>;
+
+  // Product operations
+  getProduct(id: number): Promise<Product | undefined>;
+  getProducts(): Promise<Product[]>;
+  createProduct(product: InsertProduct): Promise<Product>;
+  updateProduct(id: number, product: Partial<InsertProduct>): Promise<Product | undefined>;
+  deleteProduct(id: number): Promise<boolean>;
+
+  // Order operations
+  getOrder(id: number): Promise<Order | undefined>;
+  getOrders(): Promise<Order[]>;
+  getOrdersWithItems(): Promise<OrderWithItems[]>;
+  getOrdersByOpportunity(opportunityId: number): Promise<OrderWithItems[]>;
+  createOrder(order: InsertOrder): Promise<Order>;
+  updateOrder(id: number, order: Partial<InsertOrder>): Promise<Order | undefined>;
+  deleteOrder(id: number): Promise<boolean>;
+
+  // Order Item operations
+  getOrderItem(id: number): Promise<OrderItem | undefined>;
+  getOrderItems(): Promise<OrderItem[]>;
+  getOrderItemsByOrder(orderId: number): Promise<OrderItemWithProduct[]>;
+  createOrderItem(orderItem: InsertOrderItem): Promise<OrderItem>;
+  updateOrderItem(id: number, orderItem: Partial<InsertOrderItem>): Promise<OrderItem | undefined>;
+  deleteOrderItem(id: number): Promise<boolean>;
+
+  // Stage Change Log operations
+  getStageChangeLog(id: number): Promise<StageChangeLog | undefined>;
+  getStageChangeLogs(): Promise<StageChangeLog[]>;
+  getStageChangeLogsByOpportunity(opportunityId: number): Promise<StageChangeLogWithUser[]>;
+  createStageChangeLog(log: InsertStageChangeLog): Promise<StageChangeLog>;
 
   // Activity operations
   getActivity(id: number): Promise<Activity | undefined>;
@@ -83,17 +140,27 @@ export interface IStorage {
 }
 
 export class MemStorage implements IStorage {
+  private users: Map<number, User> = new Map();
   private accounts: Map<number, Account> = new Map();
   private contacts: Map<number, Contact> = new Map();
   private accountContacts: Map<number, AccountContact> = new Map();
   private leads: Map<number, Lead> = new Map();
   private opportunities: Map<number, Opportunity> = new Map();
+  private products: Map<number, Product> = new Map();
+  private orders: Map<number, Order> = new Map();
+  private orderItems: Map<number, OrderItem> = new Map();
+  private stageChangeLogs: Map<number, StageChangeLog> = new Map();
   private activities: Map<number, Activity> = new Map();
+  private currentUserId = 1;
   private currentAccountId = 1;
   private currentContactId = 1;
   private currentAccountContactId = 1;
   private currentLeadId = 1;
   private currentOpportunityId = 1;
+  private currentProductId = 1;
+  private currentOrderId = 1;
+  private currentOrderItemId = 1;
+  private currentStageChangeLogId = 1;
   private currentActivityId = 1;
 
   constructor() {
@@ -102,6 +169,64 @@ export class MemStorage implements IStorage {
   }
 
   private initializeData() {
+    // Add sample users
+    const sampleUsers: InsertUser[] = [
+      {
+        firstName: "Alice",
+        lastName: "Johnson",
+        email: "alice@crm.com",
+        role: "sales_manager",
+        isActive: true
+      },
+      {
+        firstName: "Bob",
+        lastName: "Smith",
+        email: "bob@crm.com", 
+        role: "sales_rep",
+        isActive: true
+      },
+      {
+        firstName: "Carol",
+        lastName: "Davis",
+        email: "carol@crm.com",
+        role: "sales_rep", 
+        isActive: true
+      }
+    ];
+
+    sampleUsers.forEach(user => {
+      this.createUser(user);
+    });
+
+    // Add sample products
+    const sampleProducts: InsertProduct[] = [
+      {
+        name: "CRM Software License",
+        type: "subscription",
+        unitPrice: "99.99",
+        description: "Monthly subscription to our CRM platform",
+        isActive: true
+      },
+      {
+        name: "Implementation Service",
+        type: "service",
+        unitPrice: "2500.00",
+        description: "One-time setup and configuration service",
+        isActive: true
+      },
+      {
+        name: "Training Package",
+        type: "onetime",
+        unitPrice: "500.00",
+        description: "User training and documentation package",
+        isActive: true
+      }
+    ];
+
+    sampleProducts.forEach(product => {
+      this.createProduct(product);
+    });
+
     // Add sample accounts
     const sampleAccounts: InsertAccount[] = [
       {
@@ -109,21 +234,24 @@ export class MemStorage implements IStorage {
         industry: "Technology",
         website: "https://acme.com",
         phone: "(555) 123-4567",
-        address: "123 Tech Street, San Francisco, CA"
+        address: "123 Tech Street, San Francisco, CA",
+        ownerId: 1 // Alice Johnson
       },
       {
         companyName: "TechInnovate Solutions",
         industry: "Software",
         website: "https://techinnovate.com",
         phone: "(555) 234-5678",
-        address: "456 Innovation Ave, Austin, TX"
+        address: "456 Innovation Ave, Austin, TX",
+        ownerId: 2 // Bob Smith
       },
       {
         companyName: "Global Enterprises",
         industry: "Finance",
         website: "https://globalent.com",
         phone: "(555) 345-6789",
-        address: "789 Business Blvd, New York, NY"
+        address: "789 Business Blvd, New York, NY",
+        ownerId: 3 // Carol Davis
       }
     ];
 
@@ -175,7 +303,8 @@ export class MemStorage implements IStorage {
         company: "StartupCo",
         title: "CEO",
         source: "website",
-        status: "converted" // This lead was converted to opportunity
+        status: "converted", // This lead was converted to opportunity
+        ownerId: 1 // Alice Johnson
       },
       {
         firstName: "Emily",
@@ -185,7 +314,8 @@ export class MemStorage implements IStorage {
         company: "RetailCo",
         title: "Marketing Director",
         source: "referral",
-        status: "converted" // This lead was converted to opportunity
+        status: "converted", // This lead was converted to opportunity
+        ownerId: 2 // Bob Smith
       },
       {
         firstName: "David",
@@ -195,7 +325,8 @@ export class MemStorage implements IStorage {
         company: "HealthTech Solutions",
         title: "VP of Sales",
         source: "trade-show",
-        status: "qualified"
+        status: "qualified",
+        ownerId: 1 // Alice Johnson
       },
       {
         firstName: "Lisa",
@@ -205,7 +336,8 @@ export class MemStorage implements IStorage {
         company: "E-Commerce Plus",
         title: "COO",
         source: "social-media",
-        status: "new"
+        status: "new",
+        ownerId: 3 // Carol Davis
       },
       {
         firstName: "Robert",
@@ -215,7 +347,8 @@ export class MemStorage implements IStorage {
         company: "Manufacturing Co",
         title: "Plant Manager",
         source: "cold-call",
-        status: "contacted"
+        status: "contacted",
+        ownerId: 2 // Bob Smith
       },
       {
         firstName: "Jennifer",
@@ -225,7 +358,8 @@ export class MemStorage implements IStorage {
         company: "Consulting Partners",
         title: "Partner",
         source: "referral",
-        status: "qualified"
+        status: "qualified",
+        ownerId: 3 // Carol Davis
       }
     ];
 
@@ -247,7 +381,8 @@ export class MemStorage implements IStorage {
         probability: 75,
         closeDate: new Date("2024-03-15"),
         leadSource: "website", // Inherited from lead
-        description: "Annual software license renewal for enterprise package including premium support"
+        description: "Annual software license renewal for enterprise package including premium support",
+        ownerId: 1 // Alice Johnson
       },
       {
         accountId: 2,
@@ -261,7 +396,8 @@ export class MemStorage implements IStorage {
         probability: 60,
         closeDate: new Date("2024-03-22"),
         leadSource: "referral", // Inherited from lead
-        description: "Full enterprise solution deployment with custom integrations and training"
+        description: "Full enterprise solution deployment with custom integrations and training",
+        ownerId: 2 // Bob Smith
       },
       {
         accountId: 3,
@@ -275,7 +411,8 @@ export class MemStorage implements IStorage {
         probability: 100,
         closeDate: new Date("2024-03-10"),
         leadSource: null, // No lead source since not converted from lead
-        description: "Strategic financial consulting for Q2 business expansion planning"
+        description: "Strategic financial consulting for Q2 business expansion planning",
+        ownerId: 3 // Carol Davis
       }
     ];
 
@@ -344,6 +481,7 @@ export class MemStorage implements IStorage {
       website: insertAccount.website || null,
       phone: insertAccount.phone || null,
       address: insertAccount.address || null,
+      ownerId: insertAccount.ownerId || null,
       id,
       createdAt: new Date()
     };
@@ -532,6 +670,7 @@ export class MemStorage implements IStorage {
       title: insertLead.title || null,
       source: insertLead.source || null,
       status: insertLead.status || 'new',
+      ownerId: insertLead.ownerId || null,
       id,
       createdAt: new Date()
     };
@@ -622,6 +761,7 @@ export class MemStorage implements IStorage {
       grossProfitMargin: insertOpportunity.grossProfitMargin || null,
       probability: insertOpportunity.probability || null,
       description: insertOpportunity.description || null,
+      ownerId: insertOpportunity.ownerId || null,
       id,
       createdAt: now,
       updatedAt: now
@@ -663,7 +803,16 @@ export class MemStorage implements IStorage {
     const activitiesWithRelations: ActivityWithRelations[] = [];
 
     for (const activity of activities) {
-      const result: ActivityWithRelations = { ...activity };
+      const result: ActivityWithRelations = {
+        id: activity.id,
+        type: activity.type,
+        description: activity.description,
+        accountId: activity.accountId,
+        contactId: activity.contactId,
+        leadId: activity.leadId,
+        opportunityId: activity.opportunityId,
+        createdAt: activity.createdAt
+      };
       
       if (activity.accountId) {
         result.account = await this.getAccount(activity.accountId);
@@ -679,6 +828,13 @@ export class MemStorage implements IStorage {
       
       if (activity.opportunityId) {
         result.opportunity = await this.getOpportunity(activity.opportunityId);
+      }
+      
+      if (activity.createdBy) {
+        const user = await this.getUser(activity.createdBy);
+        if (user) {
+          result.createdBy = user;
+        }
       }
       
       activitiesWithRelations.push(result);
@@ -716,8 +872,10 @@ export class MemStorage implements IStorage {
       leadId: insertActivity.leadId || null,
       opportunityId: insertActivity.opportunityId || null,
       description: insertActivity.description || null,
+      richTextContent: insertActivity.richTextContent || null,
       dueDate: insertActivity.dueDate || null,
-      completed: insertActivity.completed || null,
+      completed: insertActivity.completed || false,
+      createdBy: insertActivity.createdBy || null,
       id,
       createdAt: new Date()
     };
@@ -739,6 +897,321 @@ export class MemStorage implements IStorage {
 
   async deleteActivity(id: number): Promise<boolean> {
     return this.activities.delete(id);
+  }
+
+  // User operations
+  async getUser(id: number): Promise<User | undefined> {
+    return this.users.get(id);
+  }
+
+  async getUsers(): Promise<User[]> {
+    return Array.from(this.users.values()).sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const id = this.currentUserId++;
+    const now = new Date();
+    const user: User = {
+      ...insertUser,
+      role: insertUser.role || 'sales_rep',
+      isActive: insertUser.isActive ?? true,
+      id,
+      createdAt: now
+    };
+    this.users.set(id, user);
+    return user;
+  }
+
+  async updateUser(id: number, userUpdate: Partial<InsertUser>): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+
+    const updatedUser: User = {
+      ...user,
+      ...userUpdate
+    };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+
+  async deleteUser(id: number): Promise<boolean> {
+    return this.users.delete(id);
+  }
+
+  // Product operations
+  async getProduct(id: number): Promise<Product | undefined> {
+    return this.products.get(id);
+  }
+
+  async getProducts(): Promise<Product[]> {
+    return Array.from(this.products.values()).sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  async createProduct(insertProduct: InsertProduct): Promise<Product> {
+    const id = this.currentProductId++;
+    const now = new Date();
+    const product: Product = {
+      ...insertProduct,
+      description: insertProduct.description || null,
+      isActive: insertProduct.isActive ?? true,
+      id,
+      createdAt: now
+    };
+    this.products.set(id, product);
+    return product;
+  }
+
+  async updateProduct(id: number, productUpdate: Partial<InsertProduct>): Promise<Product | undefined> {
+    const product = this.products.get(id);
+    if (!product) return undefined;
+
+    const updatedProduct: Product = {
+      ...product,
+      ...productUpdate
+    };
+    this.products.set(id, updatedProduct);
+    return updatedProduct;
+  }
+
+  async deleteProduct(id: number): Promise<boolean> {
+    return this.products.delete(id);
+  }
+
+  // Order operations
+  async getOrder(id: number): Promise<Order | undefined> {
+    return this.orders.get(id);
+  }
+
+  async getOrders(): Promise<Order[]> {
+    return Array.from(this.orders.values()).sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  async getOrdersWithItems(): Promise<OrderWithItems[]> {
+    const orders = await this.getOrders();
+    const ordersWithItems: OrderWithItems[] = [];
+
+    for (const order of orders) {
+      const result: OrderWithItems = { ...order };
+      result.items = await this.getOrderItemsByOrder(order.id);
+      ordersWithItems.push(result);
+    }
+
+    return ordersWithItems;
+  }
+
+  async getOrdersByOpportunity(opportunityId: number): Promise<OrderWithItems[]> {
+    const orders = Array.from(this.orders.values()).filter(order => order.opportunityId === opportunityId);
+    const ordersWithItems: OrderWithItems[] = [];
+
+    for (const order of orders) {
+      const result: OrderWithItems = { ...order };
+      result.items = await this.getOrderItemsByOrder(order.id);
+      ordersWithItems.push(result);
+    }
+
+    return ordersWithItems;
+  }
+
+  async createOrder(insertOrder: InsertOrder): Promise<Order> {
+    const id = this.currentOrderId++;
+    const now = new Date();
+    const order: Order = {
+      ...insertOrder,
+      status: insertOrder.status || 'draft',
+      orderDate: insertOrder.orderDate || now,
+      id,
+      createdAt: now
+    };
+    this.orders.set(id, order);
+    return order;
+  }
+
+  async updateOrder(id: number, orderUpdate: Partial<InsertOrder>): Promise<Order | undefined> {
+    const order = this.orders.get(id);
+    if (!order) return undefined;
+
+    const updatedOrder: Order = {
+      ...order,
+      ...orderUpdate
+    };
+    this.orders.set(id, updatedOrder);
+    return updatedOrder;
+  }
+
+  async deleteOrder(id: number): Promise<boolean> {
+    return this.orders.delete(id);
+  }
+
+  // Order Item operations
+  async getOrderItem(id: number): Promise<OrderItem | undefined> {
+    return this.orderItems.get(id);
+  }
+
+  async getOrderItems(): Promise<OrderItem[]> {
+    return Array.from(this.orderItems.values()).sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  async getOrderItemsByOrder(orderId: number): Promise<OrderItemWithProduct[]> {
+    const orderItems = Array.from(this.orderItems.values()).filter(item => item.orderId === orderId);
+    const orderItemsWithProducts: OrderItemWithProduct[] = [];
+
+    for (const orderItem of orderItems) {
+      const result: OrderItemWithProduct = { ...orderItem };
+      if (orderItem.productId) {
+        result.product = await this.getProduct(orderItem.productId);
+      }
+      orderItemsWithProducts.push(result);
+    }
+
+    return orderItemsWithProducts;
+  }
+
+  async createOrderItem(insertOrderItem: InsertOrderItem): Promise<OrderItem> {
+    const id = this.currentOrderItemId++;
+    const now = new Date();
+    const orderItem: OrderItem = {
+      ...insertOrderItem,
+      quantity: insertOrderItem.quantity || 1,
+      id,
+      createdAt: now
+    };
+    this.orderItems.set(id, orderItem);
+    return orderItem;
+  }
+
+  async updateOrderItem(id: number, orderItemUpdate: Partial<InsertOrderItem>): Promise<OrderItem | undefined> {
+    const orderItem = this.orderItems.get(id);
+    if (!orderItem) return undefined;
+
+    const updatedOrderItem: OrderItem = {
+      ...orderItem,
+      ...orderItemUpdate
+    };
+    this.orderItems.set(id, updatedOrderItem);
+    return updatedOrderItem;
+  }
+
+  async deleteOrderItem(id: number): Promise<boolean> {
+    return this.orderItems.delete(id);
+  }
+
+  // Stage Change Log operations
+  async getStageChangeLog(id: number): Promise<StageChangeLog | undefined> {
+    return this.stageChangeLogs.get(id);
+  }
+
+  async getStageChangeLogs(): Promise<StageChangeLog[]> {
+    return Array.from(this.stageChangeLogs.values()).sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  async getStageChangeLogsByOpportunity(opportunityId: number): Promise<StageChangeLogWithUser[]> {
+    const stageLogs = Array.from(this.stageChangeLogs.values()).filter(log => log.opportunityId === opportunityId);
+    const stageLogsWithUsers: StageChangeLogWithUser[] = [];
+
+    for (const stageLog of stageLogs) {
+      const result: StageChangeLogWithUser = { ...stageLog };
+      if (stageLog.changedBy) {
+        result.user = await this.getUser(stageLog.changedBy);
+      }
+      stageLogsWithUsers.push(result);
+    }
+
+    return stageLogsWithUsers.sort((a, b) => 
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }
+
+  async createStageChangeLog(insertStageChangeLog: InsertStageChangeLog): Promise<StageChangeLog> {
+    const id = this.currentStageChangeLogId++;
+    const now = new Date();
+    const stageChangeLog: StageChangeLog = {
+      ...insertStageChangeLog,
+      fromStage: insertStageChangeLog.fromStage || null,
+      changedBy: insertStageChangeLog.changedBy || null,
+      reason: insertStageChangeLog.reason || null,
+      id,
+      createdAt: now
+    };
+    this.stageChangeLogs.set(id, stageChangeLog);
+    return stageChangeLog;
+  }
+
+  // Enhanced Opportunity operations with relations
+  async getOpportunityWithRelations(id: number): Promise<OpportunityWithRelations | undefined> {
+    const opportunity = await this.getOpportunity(id);
+    if (!opportunity) return undefined;
+
+    const result: OpportunityWithRelations = { ...opportunity };
+    
+    if (opportunity.accountId) {
+      result.account = await this.getAccount(opportunity.accountId);
+    }
+    
+    if (opportunity.contactId) {
+      result.contact = await this.getContact(opportunity.contactId);
+    }
+    
+    if (opportunity.ownerId) {
+      result.owner = await this.getUser(opportunity.ownerId);
+    }
+    
+    // Get orders with items for this opportunity
+    result.orders = await this.getOrdersByOpportunity(opportunity.id);
+    
+    // Get stage change logs for this opportunity
+    result.stageLogs = await this.getStageChangeLogsByOpportunity(opportunity.id);
+    
+    // Get activities for this opportunity
+    const allActivitiesWithRelations = await this.getActivitiesWithRelations();
+    result.activities = allActivitiesWithRelations.filter(activity => activity.opportunityId === opportunity.id);
+    
+    return result;
+  }
+
+  async getOpportunitiesWithRelations(): Promise<OpportunityWithRelations[]> {
+    const opportunities = await this.getOpportunities();
+    const opportunitiesWithRelations: OpportunityWithRelations[] = [];
+
+    for (const opportunity of opportunities) {
+      const opportunityWithRelations = await this.getOpportunityWithRelations(opportunity.id);
+      if (opportunityWithRelations) {
+        opportunitiesWithRelations.push(opportunityWithRelations);
+      }
+    }
+
+    return opportunitiesWithRelations;
+  }
+
+  // Enhanced Lead operations with relations
+  async getLeadsWithRelations(): Promise<LeadWithRelations[]> {
+    const leads = await this.getLeads();
+    const leadsWithRelations: LeadWithRelations[] = [];
+
+    for (const lead of leads) {
+      const result: LeadWithRelations = { ...lead };
+      
+      if (lead.ownerId) {
+        result.owner = await this.getUser(lead.ownerId);
+      }
+      
+      // Get activities with relations and filter for this lead
+      const allActivitiesWithRelations = await this.getActivitiesWithRelations();
+      result.activities = allActivitiesWithRelations.filter(activity => activity.leadId === lead.id);
+      
+      leadsWithRelations.push(result);
+    }
+
+    return leadsWithRelations;
   }
 
   // Dashboard operations

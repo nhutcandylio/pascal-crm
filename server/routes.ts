@@ -7,7 +7,12 @@ import {
   insertLeadSchema, 
   insertOpportunitySchema,
   updateOpportunitySchema,
-  insertActivitySchema 
+  insertActivitySchema,
+  insertUserSchema,
+  insertProductSchema,
+  insertOrderSchema,
+  insertOrderItemSchema,
+  insertStageChangeLogSchema
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -268,6 +273,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         res.status(500).json({ error: "Failed to create activity" });
       }
+    }
+  });
+
+  // User routes
+  app.get("/api/users", async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/users", async (req, res) => {
+    try {
+      const userData = insertUserSchema.parse(req.body);
+      const user = await storage.createUser(userData);
+      res.status(201).json(user);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid user data", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to create user" });
+      }
+    }
+  });
+
+  // Product routes
+  app.get("/api/products", async (req, res) => {
+    try {
+      const products = await storage.getProducts();
+      res.json(products);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch products" });
+    }
+  });
+
+  app.post("/api/products", async (req, res) => {
+    try {
+      const productData = insertProductSchema.parse(req.body);
+      const product = await storage.createProduct(productData);
+      res.status(201).json(product);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid product data", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to create product" });
+      }
+    }
+  });
+
+  // Order routes
+  app.get("/api/orders", async (req, res) => {
+    try {
+      const orders = await storage.getOrdersWithItems();
+      res.json(orders);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch orders" });
+    }
+  });
+
+  app.get("/api/orders/by-opportunity/:opportunityId", async (req, res) => {
+    try {
+      const opportunityId = parseInt(req.params.opportunityId);
+      const orders = await storage.getOrdersByOpportunity(opportunityId);
+      res.json(orders);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch orders by opportunity" });
+    }
+  });
+
+  app.post("/api/orders", async (req, res) => {
+    try {
+      const orderData = insertOrderSchema.parse(req.body);
+      const order = await storage.createOrder(orderData);
+      res.status(201).json(order);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid order data", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to create order" });
+      }
+    }
+  });
+
+  // Order Item routes
+  app.get("/api/order-items/by-order/:orderId", async (req, res) => {
+    try {
+      const orderId = parseInt(req.params.orderId);
+      const orderItems = await storage.getOrderItemsByOrder(orderId);
+      res.json(orderItems);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch order items" });
+    }
+  });
+
+  app.post("/api/order-items", async (req, res) => {
+    try {
+      const orderItemData = insertOrderItemSchema.parse(req.body);
+      const orderItem = await storage.createOrderItem(orderItemData);
+      res.status(201).json(orderItem);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid order item data", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to create order item" });
+      }
+    }
+  });
+
+  // Stage Change Log routes
+  app.get("/api/stage-logs/by-opportunity/:opportunityId", async (req, res) => {
+    try {
+      const opportunityId = parseInt(req.params.opportunityId);
+      const stageLogs = await storage.getStageChangeLogsByOpportunity(opportunityId);
+      res.json(stageLogs);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch stage change logs" });
+    }
+  });
+
+  app.post("/api/stage-logs", async (req, res) => {
+    try {
+      const stageLogData = insertStageChangeLogSchema.parse(req.body);
+      const stageLog = await storage.createStageChangeLog(stageLogData);
+      res.status(201).json(stageLog);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid stage log data", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to create stage log" });
+      }
+    }
+  });
+
+  // Enhanced Opportunity routes with relations
+  app.get("/api/opportunities/with-relations", async (req, res) => {
+    try {
+      const opportunities = await storage.getOpportunitiesWithRelations();
+      res.json(opportunities);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch opportunities with relations" });
+    }
+  });
+
+  app.get("/api/opportunities/:id/with-relations", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const opportunity = await storage.getOpportunityWithRelations(id);
+      if (opportunity) {
+        res.json(opportunity);
+      } else {
+        res.status(404).json({ error: "Opportunity not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch opportunity with relations" });
+    }
+  });
+
+  // Enhanced Lead routes with relations
+  app.get("/api/leads/with-relations", async (req, res) => {
+    try {
+      const leads = await storage.getLeadsWithRelations();
+      res.json(leads);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch leads with relations" });
     }
   });
 
