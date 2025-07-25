@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, TrendingUp, DollarSign, Calendar, Users, Building, Package, FileText } from "lucide-react";
+import { ArrowLeft, TrendingUp, DollarSign, Calendar, Users, Building, Package, FileText, ShoppingCart } from "lucide-react";
 import { format } from "date-fns";
 import type { OpportunityWithRelations } from "@shared/schema";
 import OpportunityDetailTab from "./opportunity-detail-tab";
 import OpportunityRelatedTab from "./opportunity-related-tab";
+import OpportunityOrdersTab from "./opportunity-orders-tab";
 import OpportunityActivityTab from "./opportunity-activity-tab";
 
 interface OpportunityDetailLayoutProps {
@@ -275,7 +276,7 @@ export default function OpportunityDetailLayout({
       {/* Tabs Section */}
       <div className="flex-1 p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="detail" className="flex items-center space-x-2">
               <FileText className="h-4 w-4" />
               <span>Detail</span>
@@ -283,6 +284,10 @@ export default function OpportunityDetailLayout({
             <TabsTrigger value="related" className="flex items-center space-x-2">
               <Package className="h-4 w-4" />
               <span>Related</span>
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="flex items-center space-x-2">
+              <ShoppingCart className="h-4 w-4" />
+              <span>Orders</span>
               {opportunity.orders && opportunity.orders.length > 0 && (
                 <Badge variant="secondary" className="ml-1">
                   {opportunity.orders.length}
@@ -307,6 +312,10 @@ export default function OpportunityDetailLayout({
 
             <TabsContent value="related" className="h-full">
               <OpportunityRelatedTab opportunity={opportunity} />
+            </TabsContent>
+
+            <TabsContent value="orders" className="h-full">
+              <OpportunityOrdersTab opportunity={opportunity} />
             </TabsContent>
 
             <TabsContent value="activity" className="h-full">
