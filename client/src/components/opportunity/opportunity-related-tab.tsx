@@ -69,25 +69,18 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
                   <p className="text-base">{opportunity.account.industry || 'Not specified'}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Email</p>
-                  <p className="text-base">{opportunity.account.email || 'Not provided'}</p>
+                  <p className="text-sm font-medium text-muted-foreground">Website</p>
+                  <p className="text-base">{opportunity.account.website || 'Not provided'}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Phone</p>
                   <p className="text-base">{opportunity.account.phone || 'Not provided'}</p>
                 </div>
               </div>
-              {opportunity.account.website && (
+              {opportunity.account.address && (
                 <div className="mt-4">
-                  <p className="text-sm font-medium text-muted-foreground">Website</p>
-                  <a 
-                    href={opportunity.account.website} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
-                    {opportunity.account.website}
-                  </a>
+                  <p className="text-sm font-medium text-muted-foreground">Address</p>
+                  <p className="text-base">{opportunity.account.address}</p>
                 </div>
               )}
             </div>
@@ -160,7 +153,10 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
                     )}
                   </div>
                   <div className="text-right text-sm text-muted-foreground">
-                    {format(new Date(activity.activityDate), 'MMM dd')}
+                    {activity.createdAt && !isNaN(new Date(activity.createdAt).getTime()) 
+                      ? format(new Date(activity.createdAt), 'MMM dd') 
+                      : 'No date'
+                    }
                   </div>
                 </div>
               ))}
@@ -174,35 +170,7 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
         </Card>
       )}
 
-      {/* Lead Information (if originated from lead) */}
-      {opportunity.lead && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5" />
-              <span>Lead Source</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Original Lead</p>
-                <p className="text-base">
-                  {opportunity.lead.firstName} {opportunity.lead.lastName}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Lead Source</p>
-                <p className="text-base">{opportunity.lead.source || 'Not specified'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Lead Status</p>
-                <Badge variant="outline">{opportunity.lead.status}</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Lead Information (if originated from lead) - Hidden for now as lead is not in current schema */}
     </div>
   );
 }
