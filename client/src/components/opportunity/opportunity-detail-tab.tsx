@@ -72,39 +72,7 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
     setEditingField(null);
   };
 
-  const handleStageChange = async (newStage: string) => {
-    if (newStage === opportunity.stage) return;
-    
-    try {
-      // Update opportunity stage
-      await apiRequest("PATCH", `/api/opportunities/${opportunity.id}`, {
-        stage: newStage,
-      });
 
-      // Create stage change log
-      await apiRequest("POST", "/api/stage-logs", {
-        opportunityId: opportunity.id,
-        fromStage: opportunity.stage,
-        toStage: newStage,
-        reason: `Stage changed to ${newStage}`,
-        userId: 1, // Default user for now
-      });
-
-      queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
-      
-      toast({
-        title: "Success",
-        description: "Opportunity stage updated successfully.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update stage.",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -419,98 +387,7 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
         </Card>
       )}
 
-      {/* Pipeline Stage Selector */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <TrendingUp className="h-5 w-5" />
-            <span>Sales Pipeline</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {/* Visual Pipeline */}
-            <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
-              {[
-                { value: "prospecting", label: "Prospecting" },
-                { value: "qualification", label: "Qualification" },
-                { value: "proposal", label: "Proposal" },
-                { value: "negotiation", label: "Negotiation" },
-                { value: "closed-won", label: "Closed Won" },
-                { value: "closed-lost", label: "Closed Lost" },
-              ].map((stage, index) => {
-                const isActive = stage.value === opportunity?.stage;
-                const isCompleted = [
-                  "prospecting", "qualification", "proposal", "negotiation", "closed-won", "closed-lost"
-                ].findIndex(s => s === opportunity?.stage) > index;
-                
-                return (
-                  <div key={stage.value} className="flex items-center">
-                    <div 
-                      className={`relative cursor-pointer transition-all duration-200 ${
-                        isActive ? 'transform scale-110' : ''
-                      }`}
-                      onClick={() => handleStageChange(stage.value)}
-                    >
-                      {/* Stage Circle */}
-                      <div className={`
-                        w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-2 transition-all
-                        ${isActive ? 'bg-blue-600 text-white border-blue-600' : 
-                          isCompleted ? 'bg-green-600 text-white border-green-600' :
-                          'bg-white text-gray-400 border-gray-300 hover:border-blue-400'}
-                      `}>
-                        {index + 1}
-                      </div>
-                      
-                      {/* Stage Label */}
-                      <div className="mt-2 text-center">
-                        <div className={`text-sm font-medium ${
-                          isActive ? 'text-blue-600' : 
-                          isCompleted ? 'text-green-600' : 'text-gray-500'
-                        }`}>
-                          {stage.label}
-                        </div>
-                      </div>
-                      
-                      {/* Current Stage Indicator */}
-                      {isActive && (
-                        <div className="absolute -top-2 -right-2 w-4 h-4 bg-orange-500 rounded-full border-2 border-white"></div>
-                      )}
-                    </div>
-                    
-                    {/* Arrow between stages */}
-                    {index < 5 && (
-                      <div className={`flex-1 h-1 mx-2 rounded ${
-                        isCompleted ? 'bg-green-600' : 'bg-gray-300'
-                      }`}></div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            
-            {/* Stage Description */}
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <div className="font-medium text-blue-900">
-                Current Stage: {opportunity.stage === 'prospecting' ? 'Prospecting' :
-                              opportunity.stage === 'qualification' ? 'Qualification' :
-                              opportunity.stage === 'proposal' ? 'Proposal' :
-                              opportunity.stage === 'negotiation' ? 'Negotiation' :
-                              opportunity.stage === 'closed-won' ? 'Closed Won' :
-                              opportunity.stage === 'closed-lost' ? 'Closed Lost' : 'Unknown'}
-              </div>
-              <div className="text-sm text-blue-700 mt-1">
-                {opportunity.stage === 'prospecting' && 'Initial contact and research phase'}
-                {opportunity.stage === 'qualification' && 'Qualifying the lead and understanding needs'}
-                {opportunity.stage === 'proposal' && 'Preparing and presenting proposal'}
-                {opportunity.stage === 'negotiation' && 'Negotiating terms and pricing'}
-                {opportunity.stage === 'closed-won' && 'Deal successfully closed'}
-                {opportunity.stage === 'closed-lost' && 'Deal lost or abandoned'}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+
 
       {/* Description Section */}
       <Card>
