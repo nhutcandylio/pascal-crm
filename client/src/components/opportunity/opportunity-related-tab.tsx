@@ -27,11 +27,16 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
   const [newOrderOpen, setNewOrderOpen] = useState(false);
 
   const orderForm = useForm({
-    resolver: zodResolver(insertOrderSchema),
+    resolver: zodResolver(insertOrderSchema.extend({
+      orderNumber: insertOrderSchema.shape.orderNumber.optional(),
+      totalAmount: insertOrderSchema.shape.totalAmount.optional(),
+    })),
     defaultValues: {
       opportunityId: opportunity.id,
       status: "draft",
       orderDate: new Date().toISOString().split('T')[0],
+      orderNumber: `ORD-${Date.now()}`, // Auto-generate order number
+      totalAmount: "0.00", // Will be calculated from items
     },
   });
 
@@ -63,6 +68,8 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
       ...data,
       opportunityId: opportunity.id,
       orderDate: new Date(data.orderDate),
+      orderNumber: `ORD-${Date.now()}`, // Auto-generate unique order number
+      totalAmount: "0.00", // Initial amount, will be updated when items are added
     });
   };
 
@@ -105,6 +112,20 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
                   <form onSubmit={orderForm.handleSubmit(handleCreateOrder)} className="space-y-4">
                     <FormField
                       control={orderForm.control}
+                      name="orderNumber"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Order Number</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Auto-generated" disabled />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={orderForm.control}
                       name="status"
                       render={({ field }) => (
                         <FormItem>
@@ -140,6 +161,11 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
                         </FormItem>
                       )}
                     />
+
+                    <div className="text-sm text-muted-foreground p-3 bg-gray-50 rounded-md">
+                      <p className="font-medium mb-1">Note:</p>
+                      <p>This will create an empty order. You can add products to it after creation by managing order items.</p>
+                    </div>
 
                     <div className="flex justify-end space-x-2 pt-4">
                       <Button
