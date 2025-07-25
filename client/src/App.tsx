@@ -9,6 +9,7 @@ import Contacts from "@/pages/contacts";
 import Leads from "@/pages/leads";
 import Opportunities from "@/pages/opportunities";
 import Activities from "@/pages/activities";
+import { ProductsPage } from "@/pages/products";
 import NotFound from "@/pages/not-found";
 import TopNav from "@/components/layout/top-nav";
 
@@ -24,6 +25,7 @@ function Router() {
           <Route path="/leads" component={Leads} />
           <Route path="/opportunities" component={Opportunities} />
           <Route path="/activities" component={Activities} />
+          <Route path="/products" component={ProductsPage} />
           <Route component={NotFound} />
         </Switch>
       </div>

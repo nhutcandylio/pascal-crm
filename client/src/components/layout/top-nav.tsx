@@ -7,7 +7,8 @@ import {
   TrendingUp,
   User,
   Building,
-  UserPlus
+  UserPlus,
+  Package
 } from "lucide-react";
 
 const navigation = [
@@ -16,6 +17,7 @@ const navigation = [
   { name: "Contacts", href: "/contacts", icon: Users },
   { name: "Leads", href: "/leads", icon: UserPlus },
   { name: "Opportunities", href: "/opportunities", icon: Handshake },
+  { name: "Products", href: "/products", icon: Package },
 ];
 
 export default function TopNav() {

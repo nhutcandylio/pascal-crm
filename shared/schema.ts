@@ -79,9 +79,11 @@ export const opportunities = pgTable("opportunities", {
 export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  type: text("type").notNull(), // 'onetime', 'subscription', 'service'
-  unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
+  type: text("type").notNull(), // 'onetime', 'subscription', 'service-based'
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   description: text("description"),
+  category: text("category"),
+  sku: text("sku"),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

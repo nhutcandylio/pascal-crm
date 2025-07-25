@@ -12,7 +12,7 @@ interface TopBarProps {
   action?: React.ReactNode;
 }
 
-export default function TopBar({ 
+function TopBar({ 
   title, 
   subtitle, 
   searchQuery = "", 
@@ -56,3 +56,6 @@ export default function TopBar({
     </header>
   );
 }
+
+export { TopBar };
+export default TopBar;
