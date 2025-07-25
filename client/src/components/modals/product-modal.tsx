@@ -18,11 +18,19 @@ interface ProductModalProps {
 }
 
 export function ProductModal({ product, open, onOpenChange }: ProductModalProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    description: string;
+    price: string;
+    type: "onetime" | "subscription" | "service-based";
+    category: string;
+    sku: string;
+    isActive: boolean;
+  }>({
     name: "",
     description: "",
     price: "",
-    type: "onetime" as const,
+    type: "onetime",
     category: "",
     sku: "",
     isActive: true,
@@ -37,10 +45,10 @@ export function ProductModal({ product, open, onOpenChange }: ProductModalProps)
         name: product.name || "",
         description: product.description || "",
         price: product.price.toString(),
-        type: product.type,
+        type: product.type as "onetime" | "subscription" | "service-based",
         category: product.category || "",
         sku: product.sku || "",
-        isActive: product.isActive,
+        isActive: product.isActive ?? true,
       });
     } else {
       setFormData({
@@ -115,7 +123,7 @@ export function ProductModal({ product, open, onOpenChange }: ProductModalProps)
     const productData: InsertProduct = {
       name: formData.name.trim(),
       description: formData.description.trim() || null,
-      price,
+      price: price.toString(),
       type: formData.type,
       category: formData.category.trim() || null,
       sku: formData.sku.trim() || null,
@@ -234,12 +242,12 @@ export function ProductModal({ product, open, onOpenChange }: ProductModalProps)
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isLoading}
+              disabled={createProductMutation.isPending || updateProductMutation.isPending}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Saving..." : product ? "Update Product" : "Create Product"}
+            <Button type="submit" disabled={createProductMutation.isPending || updateProductMutation.isPending}>
+              {(createProductMutation.isPending || updateProductMutation.isPending) ? "Saving..." : product ? "Update Product" : "Create Product"}
             </Button>
           </div>
         </form>

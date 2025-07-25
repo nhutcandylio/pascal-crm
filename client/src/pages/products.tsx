@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Search, Plus, Edit2, Trash2, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { TopBar } from "@/components/layout/top-bar";
-// import { ProductModal } from "@/components/modals/product-modal";
+import { ProductModal } from "@/components/modals/product-modal";
 import { apiRequest } from "@/lib/queryClient";
 import type { Product, InsertProduct } from "@shared/schema";
 
@@ -115,8 +115,8 @@ export function ProductsPage() {
           
           <Button 
             onClick={() => {
-              // TODO: Re-enable when modal is fixed
-              console.log("Add product clicked");
+              setEditingProduct(null);
+              setIsModalOpen(true);
             }} 
             className="gap-2"
           >
@@ -137,8 +137,8 @@ export function ProductsPage() {
                 {!searchQuery && (
                   <Button 
                     onClick={() => {
-                      // TODO: Re-enable when modal is fixed
-                      console.log("Add product clicked");
+                      setEditingProduct(null);
+                      setIsModalOpen(true);
                     }}
                     className="gap-2"
                   >
@@ -177,7 +177,7 @@ export function ProductsPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => console.log("Edit product", product.id)}
+                        onClick={() => handleEditProduct(product)}
                         className="h-8 w-8 p-0"
                       >
                         <Edit2 className="h-4 w-4" />
@@ -225,7 +225,7 @@ export function ProductsPage() {
           </div>
         )}
 
-        {/* <ProductModal
+        <ProductModal
           product={editingProduct}
           open={isModalOpen}
           onOpenChange={(open: boolean) => {
@@ -234,7 +234,7 @@ export function ProductsPage() {
               setEditingProduct(null);
             }
           }}
-        /> */}
+        />
       </div>
     </div>
   );
