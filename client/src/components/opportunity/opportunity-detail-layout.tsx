@@ -1,12 +1,21 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Edit, DollarSign, Calendar, TrendingUp, Users, Building, Package, FileText } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, TrendingUp, DollarSign, Calendar, Users, Building, Package, FileText, GitBranch } from "lucide-react";
 import { format } from "date-fns";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { z } from "zod";
 import type { OpportunityWithRelations } from "@shared/schema";
 import OpportunityDetailTab from "./opportunity-detail-tab";
 import OpportunityRelatedTab from "./opportunity-related-tab";
@@ -17,6 +26,21 @@ interface OpportunityDetailLayoutProps {
   onBack: () => void;
   onEdit: (opportunity: OpportunityWithRelations) => void;
 }
+
+// Schema for stage change
+const stageChangeSchema = z.object({
+  stage: z.string(),
+  reason: z.string().optional(),
+});
+
+const stageOptions = [
+  { value: "prospecting", label: "Prospecting", color: "bg-blue-100 text-blue-800" },
+  { value: "qualification", label: "Qualification", color: "bg-yellow-100 text-yellow-800" },
+  { value: "proposal", label: "Proposal", color: "bg-orange-100 text-orange-800" },
+  { value: "negotiation", label: "Negotiation", color: "bg-purple-100 text-purple-800" },
+  { value: "closed-won", label: "Closed Won", color: "bg-green-100 text-green-800" },
+  { value: "closed-lost", label: "Closed Lost", color: "bg-red-100 text-red-800" },
+];
 
 const stageColors = {
   "prospecting": "bg-blue-100 text-blue-800",
@@ -41,7 +65,59 @@ export default function OpportunityDetailLayout({
   onBack, 
   onEdit 
 }: OpportunityDetailLayoutProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("detail");
+  const [stageChangeOpen, setStageChangeOpen] = useState(false);
+
+  const stageForm = useForm({
+    resolver: zodResolver(stageChangeSchema),
+    defaultValues: {
+      stage: "",
+      reason: "",
+    },
+  });
+
+  const changeStageMutation = useMutation({
+    mutationFn: async (data: any) => {
+      // Update opportunity stage
+      const stageUpdateResponse = await apiRequest("PATCH", `/api/opportunities/${opportunityId}`, {
+        stage: data.stage,
+      });
+
+      // Create stage change log
+      await apiRequest("POST", "/api/stage-logs", {
+        opportunityId: opportunityId,
+        fromStage: opportunity?.stage,
+        toStage: data.stage,
+        reason: data.reason || null,
+        userId: 1, // Default user for now
+      });
+
+      return stageUpdateResponse.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunityId, "with-relations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+      toast({
+        title: "Success",
+        description: "Opportunity stage updated successfully.",
+      });
+      setStageChangeOpen(false);
+      stageForm.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update stage.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleStageChange = (data: any) => {
+    changeStageMutation.mutate(data);
+  };
 
   const { data: opportunity, isLoading } = useQuery<OpportunityWithRelations>({
     queryKey: ["/api/opportunities", opportunityId, "with-relations"],
@@ -94,10 +170,88 @@ export default function OpportunityDetailLayout({
               </div>
             </div>
           </div>
-          <Button onClick={() => onEdit(opportunity)}>
-            <Edit className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
+          <Dialog open={stageChangeOpen} onOpenChange={setStageChangeOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <GitBranch className="h-4 w-4 mr-2" />
+                Change Stage
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Change Opportunity Stage</DialogTitle>
+                <DialogDescription>
+                  Move this opportunity to a different stage in the sales pipeline.
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...stageForm}>
+                <form onSubmit={stageForm.handleSubmit(handleStageChange)} className="space-y-4">
+                  <FormField
+                    control={stageForm.control}
+                    name="stage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>New Stage</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select stage" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {stageOptions.map((stage) => (
+                              <SelectItem key={stage.value} value={stage.value}>
+                                <div className="flex items-center space-x-2">
+                                  <Badge className={stage.color} variant="secondary">
+                                    {stage.label}
+                                  </Badge>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={stageForm.control}
+                    name="reason"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Reason (Optional)</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="Why is this stage change happening?"
+                            rows={3}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setStageChangeOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={changeStageMutation.isPending}
+                    >
+                      {changeStageMutation.isPending ? "Updating..." : "Update Stage"}
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Key Metrics Bar */}

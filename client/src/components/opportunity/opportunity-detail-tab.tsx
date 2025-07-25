@@ -1,8 +1,15 @@
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Building, User, DollarSign, Calendar, TrendingUp, Percent } from "lucide-react";
+import { Building, User, DollarSign, Calendar, TrendingUp, Percent, Edit2, Check, X, FileText } from "lucide-react";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import type { OpportunityWithRelations } from "@shared/schema";
 
 interface OpportunityDetailTabProps {
@@ -10,9 +17,56 @@ interface OpportunityDetailTabProps {
 }
 
 export default function OpportunityDetailTab({ opportunity }: OpportunityDetailTabProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [editValues, setEditValues] = useState({
+    name: opportunity.name,
+    description: opportunity.description || "",
+    probability: opportunity.probability || 0,
+  });
+
   const value = parseFloat(opportunity.value) || 0;
   const grossProfit = parseFloat(opportunity.grossProfit || "0") || 0;
   const grossProfitMargin = opportunity.grossProfitMargin || 0;
+
+  const updateOpportunityMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("PATCH", `/api/opportunities/${opportunity.id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+      toast({
+        title: "Success",
+        description: "Opportunity updated successfully.",
+      });
+      setEditingField(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update opportunity.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSave = (field: string) => {
+    const updateData = { [field]: editValues[field as keyof typeof editValues] };
+    updateOpportunityMutation.mutate(updateData);
+  };
+
+  const handleCancel = (field: string) => {
+    setEditValues(prev => ({
+      ...prev,
+      [field]: field === 'name' ? opportunity.name : 
+               field === 'description' ? (opportunity.description || "") :
+               field === 'probability' ? (opportunity.probability || 0) : prev[field as keyof typeof prev]
+    }));
+    setEditingField(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -29,7 +83,33 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Opportunity Name</label>
-                <p className="text-base font-medium">{opportunity.name}</p>
+                {editingField === 'name' ? (
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Input
+                      value={editValues.name}
+                      onChange={(e) => setEditValues(prev => ({ ...prev, name: e.target.value }))}
+                      className="flex-1"
+                    />
+                    <Button size="sm" onClick={() => handleSave('name')}>
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleCancel('name')}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2 group">
+                    <p className="text-base font-medium flex-1">{opportunity.name}</p>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="opacity-0 group-hover:opacity-100"
+                      onClick={() => setEditingField('name')}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -85,11 +165,40 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
               </div>
 
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Probability</label>
-                <p className="text-base font-medium flex items-center space-x-2">
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                  <span>{opportunity.probability || 0}%</span>
-                </p>
+                <label className="text-sm font-medium text-muted-foreground">Probability (%)</label>
+                {editingField === 'probability' ? (
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={editValues.probability}
+                      onChange={(e) => setEditValues(prev => ({ ...prev, probability: parseInt(e.target.value) || 0 }))}
+                      className="flex-1"
+                    />
+                    <Button size="sm" onClick={() => handleSave('probability')}>
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleCancel('probability')}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2 group">
+                    <p className="text-base font-medium flex items-center space-x-2 flex-1">
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                      <span>{opportunity.probability || 0}%</span>
+                    </p>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="opacity-0 group-hover:opacity-100"
+                      onClick={() => setEditingField('probability')}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -212,6 +321,59 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
           </CardContent>
         </Card>
       )}
+
+      {/* Description Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <FileText className="h-5 w-5" />
+            <span>Description</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {editingField === 'description' ? (
+            <div className="space-y-3">
+              <Textarea
+                value={editValues.description}
+                onChange={(e) => setEditValues(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Enter opportunity description..."
+                rows={4}
+                className="w-full"
+              />
+              <div className="flex justify-end space-x-2">
+                <Button size="sm" onClick={() => handleSave('description')}>
+                  <Check className="h-4 w-4 mr-2" />
+                  Save
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => handleCancel('description')}>
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="group">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  {opportunity.description ? (
+                    <p className="text-base leading-relaxed">{opportunity.description}</p>
+                  ) : (
+                    <p className="text-muted-foreground italic">No description provided</p>
+                  )}
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="opacity-0 group-hover:opacity-100 ml-2"
+                  onClick={() => setEditingField('description')}
+                >
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
