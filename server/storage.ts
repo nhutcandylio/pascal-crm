@@ -203,22 +203,28 @@ export class MemStorage implements IStorage {
       {
         name: "CRM Software License",
         type: "subscription",
-        unitPrice: "99.99",
+        price: "99.99",
         description: "Monthly subscription to our CRM platform",
+        category: "Software",
+        sku: "CRM-SUB-001",
         isActive: true
       },
       {
         name: "Implementation Service",
-        type: "service",
-        unitPrice: "2500.00",
+        type: "service-based",
+        price: "2500.00",
         description: "One-time setup and configuration service",
+        category: "Services",
+        sku: "IMPL-SRV-001",
         isActive: true
       },
       {
         name: "Training Package",
         type: "onetime",
-        unitPrice: "500.00",
+        price: "500.00",
         description: "User training and documentation package",
+        category: "Training",
+        sku: "TRN-PKG-001",
         isActive: true
       }
     ];
@@ -460,6 +466,101 @@ export class MemStorage implements IStorage {
     sampleActivities.forEach(activity => {
       this.createActivity(activity);
     });
+
+    // Add sample orders with proper date handling
+    const sampleOrders: InsertOrder[] = [
+      {
+        opportunityId: 1,
+        orderNumber: "ORD-2024-001",
+        totalAmount: "63650.00",
+        status: "confirmed",
+        orderDate: new Date("2024-01-15")
+      },
+      {
+        opportunityId: 2,
+        orderNumber: "ORD-2024-002",
+        totalAmount: "9105.00",
+        status: "draft",
+        orderDate: new Date("2024-02-20")
+      },
+      {
+        opportunityId: 3,
+        orderNumber: "ORD-2024-003",
+        totalAmount: "1512.00",
+        status: "delivered",
+        orderDate: new Date("2024-03-05")
+      }
+    ];
+
+    // Create orders synchronously first
+    const createdOrders: Order[] = [];
+    for (const order of sampleOrders) {
+      const id = this.currentOrderId++;
+      const now = new Date();
+      const orderObj: Order = {
+        ...order,
+        status: order.status || 'draft',
+        orderDate: order.orderDate || now,
+        id,
+        createdAt: now
+      };
+      this.orders.set(id, orderObj);
+      createdOrders.push(orderObj);
+    }
+
+    // Add sample order items synchronously
+    const sampleOrderItems: InsertOrderItem[] = [
+      // Order 1 items
+      {
+        orderId: createdOrders[0].id,
+        productId: 1, // CRM Software License
+        quantity: 12,
+        unitPrice: "99.99",
+        totalPrice: "1199.88"
+      },
+      {
+        orderId: createdOrders[0].id,
+        productId: 2, // Implementation Service
+        quantity: 25,
+        unitPrice: "2500.00",
+        totalPrice: "62500.00"
+      },
+      // Order 2 items
+      {
+        orderId: createdOrders[1].id,
+        productId: 2, // Implementation Service
+        quantity: 3,
+        unitPrice: "2500.00",
+        totalPrice: "7500.00"
+      },
+      {
+        orderId: createdOrders[1].id,
+        productId: 3, // Training Package
+        quantity: 5,
+        unitPrice: "500.00",
+        totalPrice: "2500.00"
+      },
+      // Order 3 items
+      {
+        orderId: createdOrders[2].id,
+        productId: 3, // Training Package
+        quantity: 3,
+        unitPrice: "500.00",
+        totalPrice: "1500.00"
+      }
+    ];
+
+    for (const orderItem of sampleOrderItems) {
+      const id = this.currentOrderItemId++;
+      const now = new Date();
+      const orderItemObj: OrderItem = {
+        ...orderItem,
+        quantity: orderItem.quantity || 1,
+        id,
+        createdAt: now
+      };
+      this.orderItems.set(id, orderItemObj);
+    }
   }
 
   // Account operations
@@ -787,6 +888,25 @@ export class MemStorage implements IStorage {
     return this.opportunities.delete(id);
   }
 
+  // Helper method to update opportunity value from order totals
+  private async updateOpportunityValueFromOrders(opportunityId: number): Promise<void> {
+    const orders = await this.getOrdersByOpportunity(opportunityId);
+    const totalValue = orders.reduce((sum, order) => {
+      return sum + parseFloat(order.totalAmount);
+    }, 0);
+
+    // Update the opportunity value
+    const opportunity = this.opportunities.get(opportunityId);
+    if (opportunity) {
+      const updatedOpportunity: Opportunity = {
+        ...opportunity,
+        value: totalValue.toFixed(2),
+        updatedAt: new Date()
+      };
+      this.opportunities.set(opportunityId, updatedOpportunity);
+    }
+  }
+
   // Activity operations
   async getActivity(id: number): Promise<Activity | undefined> {
     return this.activities.get(id);
@@ -1029,6 +1149,10 @@ export class MemStorage implements IStorage {
       createdAt: now
     };
     this.orders.set(id, order);
+    
+    // Update opportunity value based on order totals
+    await this.updateOpportunityValueFromOrders(order.opportunityId);
+    
     return order;
   }
 
@@ -1041,11 +1165,26 @@ export class MemStorage implements IStorage {
       ...orderUpdate
     };
     this.orders.set(id, updatedOrder);
+    
+    // Update opportunity value based on order totals
+    await this.updateOpportunityValueFromOrders(updatedOrder.opportunityId);
+    
     return updatedOrder;
   }
 
   async deleteOrder(id: number): Promise<boolean> {
-    return this.orders.delete(id);
+    const order = this.orders.get(id);
+    if (!order) return false;
+    
+    const opportunityId = order.opportunityId;
+    const deleted = this.orders.delete(id);
+    
+    if (deleted) {
+      // Update opportunity value after order deletion
+      await this.updateOpportunityValueFromOrders(opportunityId);
+    }
+    
+    return deleted;
   }
 
   // Order Item operations
