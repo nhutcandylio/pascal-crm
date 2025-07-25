@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,13 +9,24 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Package, Plus, ShoppingCart, DollarSign, Calendar, User } from "lucide-react";
+import { Package, Plus, ShoppingCart, DollarSign, Calendar, User, Trash2, X } from "lucide-react";
 import { format } from "date-fns";
-import { insertOrderSchema, insertOrderItemSchema, type OpportunityWithRelations, type InsertOrder, type InsertOrderItem } from "@shared/schema";
+import { insertOrderSchema, insertOrderItemSchema, type OpportunityWithRelations, type InsertOrder, type InsertOrderItem, type Product } from "@shared/schema";
+import { z } from "zod";
+
+// Schema for creating order with items
+const createOrderWithItemsSchema = z.object({
+  status: z.string(),
+  orderDate: z.string(),
+  items: z.array(z.object({
+    productId: z.number(),
+    quantity: z.number().min(1),
+  })).min(1, "At least one item is required"),
+});
 
 interface OpportunityRelatedTabProps {
   opportunity: OpportunityWithRelations;
@@ -26,30 +37,74 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
   const queryClient = useQueryClient();
   const [newOrderOpen, setNewOrderOpen] = useState(false);
 
+  // Fetch products for order creation
+  const { data: products = [] } = useQuery<Product[]>({
+    queryKey: ["/api/products"],
+  });
+
   const orderForm = useForm({
-    resolver: zodResolver(insertOrderSchema.extend({
-      orderNumber: insertOrderSchema.shape.orderNumber.optional(),
-      totalAmount: insertOrderSchema.shape.totalAmount.optional(),
-    })),
+    resolver: zodResolver(createOrderWithItemsSchema),
     defaultValues: {
-      opportunityId: opportunity.id,
       status: "draft",
       orderDate: new Date().toISOString().split('T')[0],
-      orderNumber: `ORD-${Date.now()}`, // Auto-generate order number
-      totalAmount: "0.00", // Will be calculated from items
+      items: [{ productId: 0, quantity: 1 }],
     },
   });
 
+  const { fields, append, remove } = useFieldArray({
+    control: orderForm.control,
+    name: "items"
+  });
+
   const createOrderMutation = useMutation({
-    mutationFn: async (data: InsertOrder) => {
-      const response = await apiRequest("POST", "/api/orders", data);
-      return response.json();
+    mutationFn: async (data: any) => {
+      // Calculate total amount from selected products
+      let totalAmount = 0;
+      const orderItems = [];
+
+      for (const item of data.items) {
+        const product = products.find(p => p.id === item.productId);
+        if (product) {
+          const itemTotal = parseFloat(product.price) * item.quantity;
+          totalAmount += itemTotal;
+          orderItems.push({
+            productId: item.productId,
+            quantity: item.quantity,
+            unitPrice: product.price,
+            totalPrice: itemTotal.toFixed(2),
+          });
+        }
+      }
+
+      // Create the order first
+      const orderData: InsertOrder = {
+        opportunityId: opportunity.id,
+        orderNumber: `ORD-${Date.now()}`,
+        totalAmount: totalAmount.toFixed(2),
+        status: data.status,
+        orderDate: new Date(data.orderDate),
+      };
+
+      const orderResponse = await apiRequest("POST", "/api/orders", orderData);
+      const createdOrder = await orderResponse.json();
+
+      // Create order items
+      for (const item of orderItems) {
+        const orderItemData: InsertOrderItem = {
+          orderId: createdOrder.id,
+          ...item,
+        };
+        await apiRequest("POST", "/api/order-items", orderItemData);
+      }
+
+      return createdOrder;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
       toast({
         title: "Success",
-        description: "Order created successfully.",
+        description: "Order created successfully with products.",
       });
       orderForm.reset();
       setNewOrderOpen(false);
@@ -64,13 +119,18 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
   });
 
   const handleCreateOrder = (data: any) => {
-    createOrderMutation.mutate({
-      ...data,
-      opportunityId: opportunity.id,
-      orderDate: new Date(data.orderDate),
-      orderNumber: `ORD-${Date.now()}`, // Auto-generate unique order number
-      totalAmount: "0.00", // Initial amount, will be updated when items are added
-    });
+    createOrderMutation.mutate(data);
+  };
+
+  const calculateOrderTotal = () => {
+    const items = orderForm.watch("items");
+    return items.reduce((total, item) => {
+      const product = products.find(p => p.id === item.productId);
+      if (product) {
+        return total + (parseFloat(product.price) * item.quantity);
+      }
+      return total;
+    }, 0);
   };
 
   const getOrderStatusColor = (status: string) => {
@@ -109,62 +169,129 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
                   </DialogDescription>
                 </DialogHeader>
                 <Form {...orderForm}>
-                  <form onSubmit={orderForm.handleSubmit(handleCreateOrder)} className="space-y-4">
-                    <FormField
-                      control={orderForm.control}
-                      name="orderNumber"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Order Number</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="Auto-generated" disabled />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                  <form onSubmit={orderForm.handleSubmit(handleCreateOrder)} className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={orderForm.control}
+                        name="status"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Status</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select status" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="draft">Draft</SelectItem>
+                                <SelectItem value="confirmed">Confirmed</SelectItem>
+                                <SelectItem value="shipped">Shipped</SelectItem>
+                                <SelectItem value="delivered">Delivered</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                    <FormField
-                      control={orderForm.control}
-                      name="status"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Status</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                      <FormField
+                        control={orderForm.control}
+                        name="orderDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Order Date</FormLabel>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select status" />
-                              </SelectTrigger>
+                              <Input type="date" {...field} />
                             </FormControl>
-                            <SelectContent>
-                              <SelectItem value="draft">Draft</SelectItem>
-                              <SelectItem value="confirmed">Confirmed</SelectItem>
-                              <SelectItem value="shipped">Shipped</SelectItem>
-                              <SelectItem value="delivered">Delivered</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
-                    <FormField
-                      control={orderForm.control}
-                      name="orderDate"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Order Date</FormLabel>
-                          <FormControl>
-                            <Input type="date" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <FormLabel className="text-base font-medium">Order Items</FormLabel>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => append({ productId: 0, quantity: 1 })}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Add Item
+                        </Button>
+                      </div>
 
-                    <div className="text-sm text-muted-foreground p-3 bg-gray-50 rounded-md">
-                      <p className="font-medium mb-1">Note:</p>
-                      <p>This will create an empty order. You can add products to it after creation by managing order items.</p>
+                      {fields.map((field, index) => (
+                        <div key={field.id} className="flex items-end gap-4 p-4 border rounded-lg">
+                          <FormField
+                            control={orderForm.control}
+                            name={`items.${index}.productId`}
+                            render={({ field }) => (
+                              <FormItem className="flex-1">
+                                <FormLabel>Product</FormLabel>
+                                <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select product" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {products.map((product) => (
+                                      <SelectItem key={product.id} value={product.id.toString()}>
+                                        {product.name} - ${parseFloat(product.price).toFixed(2)}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={orderForm.control}
+                            name={`items.${index}.quantity`}
+                            render={({ field }) => (
+                              <FormItem className="w-24">
+                                <FormLabel>Qty</FormLabel>
+                                <FormControl>
+                                  <Input
+                                    type="number"
+                                    min="1"
+                                    {...field}
+                                    onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          {fields.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => remove(index)}
+                              className="mb-2"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Total Amount:</span>
+                        <span className="text-lg font-semibold">
+                          ${calculateOrderTotal().toFixed(2)}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="flex justify-end space-x-2 pt-4">
