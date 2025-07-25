@@ -76,21 +76,23 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
         }
       }
 
-      // Create the order first
-      const orderData: InsertOrder = {
+      // Create the order first with proper data types
+      const orderData = {
         opportunityId: opportunity.id,
         orderNumber: `ORD-${Date.now()}`,
         totalAmount: totalAmount.toFixed(2),
-        status: data.status,
-        orderDate: new Date(data.orderDate),
+        status: data.status || "draft",
+        orderDate: data.orderDate, // Send as string, backend will parse it
       };
+
+      console.log("Sending order data:", orderData);
 
       const orderResponse = await apiRequest("POST", "/api/orders", orderData);
       const createdOrder = await orderResponse.json();
 
       // Create order items
       for (const item of orderItems) {
-        const orderItemData: InsertOrderItem = {
+        const orderItemData = {
           orderId: createdOrder.id,
           ...item,
         };
