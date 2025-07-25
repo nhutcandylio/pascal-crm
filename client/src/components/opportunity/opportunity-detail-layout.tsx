@@ -4,8 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, TrendingUp, DollarSign, Calendar, Users, Building, Package, FileText, ShoppingCart } from "lucide-react";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 import type { OpportunityWithRelations } from "@shared/schema";
 import OpportunityDetailTab from "./opportunity-detail-tab";
 import OpportunityRelatedTab from "./opportunity-related-tab";
@@ -44,36 +49,84 @@ export default function OpportunityDetailLayout({
   onEdit 
 }: OpportunityDetailLayoutProps) {
   const [activeTab, setActiveTab] = useState("detail");
+  const [stageChangeModal, setStageChangeModal] = useState<{
+    isOpen: boolean;
+    targetStage: string;
+    targetStageLabel: string;
+  }>({
+    isOpen: false,
+    targetStage: "",
+    targetStageLabel: "",
+  });
+  const [stageChangeReason, setStageChangeReason] = useState("");
+  const { toast } = useToast();
 
-  const handleStageChange = async (newStage: string) => {
+  const handleStageChangeClick = (newStage: string, stageLabel: string) => {
     if (newStage === opportunity?.stage) return;
+    
+    setStageChangeModal({
+      isOpen: true,
+      targetStage: newStage,
+      targetStageLabel: stageLabel,
+    });
+    setStageChangeReason("");
+  };
+
+  const handleStageChangeConfirm = async () => {
+    if (!stageChangeModal.targetStage || !stageChangeReason.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide a reason for the stage change.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     try {
       // Update opportunity stage
       await fetch(`/api/opportunities/${opportunityId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stage: newStage }),
+        body: JSON.stringify({ stage: stageChangeModal.targetStage }),
       });
 
-      // Create stage change log
+      // Create stage change log with reason
       await fetch('/api/stage-logs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           opportunityId: opportunityId,
           fromStage: opportunity?.stage,
-          toStage: newStage,
-          reason: `Stage changed to ${newStage}`,
+          toStage: stageChangeModal.targetStage,
+          reason: stageChangeReason.trim(),
           userId: 1,
         }),
       });
 
+      toast({
+        title: "Stage Updated",
+        description: `Opportunity moved to ${stageChangeModal.targetStageLabel}`,
+      });
+
+      // Close modal and refresh data
+      setStageChangeModal({ isOpen: false, targetStage: "", targetStageLabel: "" });
+      setStageChangeReason("");
+      
       // Refresh the opportunity data
       window.location.reload();
     } catch (error) {
       console.error('Failed to update stage:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update opportunity stage. Please try again.",
+        variant: "destructive",
+      });
     }
+  };
+
+  const handleStageChangeCancel = () => {
+    setStageChangeModal({ isOpen: false, targetStage: "", targetStageLabel: "" });
+    setStageChangeReason("");
   };
 
   const { data: opportunity, isLoading } = useQuery<OpportunityWithRelations>({
@@ -156,7 +209,7 @@ export default function OpportunityDetailLayout({
                     className={`relative cursor-pointer transition-all duration-200 ${
                       isActive ? 'transform scale-110' : ''
                     }`}
-                    onClick={() => handleStageChange(stage.value)}
+                    onClick={() => handleStageChangeClick(stage.value, stage.label)}
                   >
                     {/* Stage Circle */}
                     <div className={`
@@ -324,6 +377,66 @@ export default function OpportunityDetailLayout({
           </div>
         </Tabs>
       </div>
+
+      {/* Stage Change Modal */}
+      <Dialog open={stageChangeModal.isOpen} onOpenChange={(open) => !open && handleStageChangeCancel()}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Change Opportunity Stage</DialogTitle>
+            <DialogDescription>
+              You are about to move this opportunity to <strong>{stageChangeModal.targetStageLabel}</strong>. 
+              Please provide a reason for this change.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="stage-reason">Reason for Change *</Label>
+              <Textarea
+                id="stage-reason"
+                placeholder="Enter the reason for changing the stage..."
+                value={stageChangeReason}
+                onChange={(e) => setStageChangeReason(e.target.value)}
+                rows={3}
+                className="w-full"
+              />
+            </div>
+            
+            <div className="bg-muted/50 p-3 rounded-lg">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Current Stage:</span>
+                <Badge variant="outline">{
+                  opportunity?.stage === 'prospecting' ? 'Prospecting' :
+                  opportunity?.stage === 'qualification' ? 'Qualification' :
+                  opportunity?.stage === 'proposal' ? 'Proposal' :
+                  opportunity?.stage === 'negotiation' ? 'Negotiation' :
+                  opportunity?.stage === 'closed-won' ? 'Closed Won' :
+                  opportunity?.stage === 'closed-lost' ? 'Closed Lost' : 'Unknown'
+                }</Badge>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-2">
+                <span className="text-muted-foreground">New Stage:</span>
+                <Badge>{stageChangeModal.targetStageLabel}</Badge>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <Button
+              variant="outline"
+              onClick={handleStageChangeCancel}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleStageChangeConfirm}
+              disabled={!stageChangeReason.trim()}
+            >
+              Update Stage
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
