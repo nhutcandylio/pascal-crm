@@ -236,25 +236,16 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
         </Card>
       )}
 
-      {/* DEBUG SECTION - SHOULD BE VERY VISIBLE */}
-      <div className="bg-red-100 border-2 border-red-500 p-4 rounded-lg my-4">
-        <h3 className="text-xl font-bold text-red-800">🔍 DEBUG INFO</h3>
-        <div className="text-black mt-2">
-          <div>Stage Logs Exist: {opportunity.stageLogs ? 'YES' : 'NO'}</div>
-          <div>Stage Logs Count: {opportunity.stageLogs?.length || 'NONE'}</div>
-          <div>Full Data: {JSON.stringify(opportunity.stageLogs, null, 2)}</div>
-        </div>
-      </div>
-      
-      {opportunity.stageLogs && opportunity.stageLogs.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5" />
-              <span>Stage Changes History</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+      {/* Stage Changes History */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <TrendingUp className="h-5 w-5" />
+            <span>Stage Changes History</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {opportunity.stageLogs && opportunity.stageLogs.length > 0 ? (
             <div className="space-y-4">
               {opportunity.stageLogs.map((stageLog) => (
                 <div key={stageLog.id} className="border-l-4 border-blue-200 pl-4 py-3 bg-slate-50 rounded-r-lg">
@@ -318,9 +309,13 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <p className="text-muted-foreground text-center py-4">
+              No stage changes recorded for this opportunity yet.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Lead Information (if originated from lead) - Hidden for now as lead is not in current schema */}
     </div>

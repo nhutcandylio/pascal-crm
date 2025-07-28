@@ -10,6 +10,7 @@ import Leads from "@/pages/leads";
 import Opportunities from "@/pages/opportunities";
 import Activities from "@/pages/activities";
 import { ProductsPage } from "@/pages/products";
+import Users from "@/pages/users";
 import NotFound from "@/pages/not-found";
 import TopNav from "@/components/layout/top-nav";
 import OpportunityDetailLayout from "@/components/opportunity/opportunity-detail-layout";
@@ -49,6 +50,7 @@ function Router() {
           </Route>
           <Route path="/activities" component={Activities} />
           <Route path="/products" component={ProductsPage} />
+          <Route path="/users" component={Users} />
           <Route component={NotFound} />
         </Switch>
       </div>
