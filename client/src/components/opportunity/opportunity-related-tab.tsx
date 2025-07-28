@@ -245,10 +245,6 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 p-2 bg-yellow-50 rounded">
-            <p className="text-sm">Debug: stageLogs count = {opportunity.stageLogs?.length || 0}</p>
-            <p className="text-xs">Data: {JSON.stringify(opportunity.stageLogs, null, 2)}</p>
-          </div>
           {opportunity.stageLogs && opportunity.stageLogs.length > 0 ? (
             <div className="space-y-4">
               {opportunity.stageLogs.map((stageLog) => (

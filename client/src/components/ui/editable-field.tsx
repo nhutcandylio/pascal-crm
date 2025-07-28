@@ -84,7 +84,7 @@ export function EditableField({
             </SelectTrigger>
             <SelectContent>
               {options.map((option) => (
-                <SelectItem key={option.value} value={option.value || "undefined"}>
+                <SelectItem key={option.value || `option-${Math.random()}`} value={option.value || "no-value"}>
                   {option.label}
                 </SelectItem>
               ))}
