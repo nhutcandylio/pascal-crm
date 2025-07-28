@@ -36,15 +36,51 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
   const grossProfitMargin = opportunity.grossProfitMargin || 0;
 
   const handleFieldUpdate = async (field: string, value: string) => {
-    const response = await apiRequest("PATCH", `/api/opportunities/${opportunity.id}`, { [field]: value });
-    if (!response.ok) {
-      throw new Error('Failed to update opportunity');
-    }
-    queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
-    queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
-    // If account was updated, refresh account contacts
-    if (field === 'accountId') {
-      queryClient.invalidateQueries({ queryKey: ["/api/accounts", value, "contacts"] });
+    try {
+      // Convert string values to appropriate types for numeric fields
+      let processedValue: any = value;
+      if (field === 'accountId' || field === 'contactId') {
+        processedValue = value === '' || value === 'none' ? null : parseInt(value);
+      } else if (field === 'probability') {
+        processedValue = parseInt(value);
+      }
+
+      const response = await apiRequest("PATCH", `/api/opportunities/${opportunity.id}`, { [field]: processedValue });
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Failed to update field:', errorData);
+        toast({
+          title: "Update Failed",
+          description: errorData.error || "Failed to update opportunity field",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+      
+      // If account was updated, refresh account contacts and reset contact selection
+      if (field === 'accountId') {
+        queryClient.invalidateQueries({ queryKey: ["/api/accounts", processedValue, "contacts"] });
+        // Also reset the contact field since the available contacts have changed
+        if (opportunity.contactId) {
+          await apiRequest("PATCH", `/api/opportunities/${opportunity.id}`, { contactId: null });
+          queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+        }
+      }
+
+      toast({
+        title: "Field Updated",
+        description: `Successfully updated ${field}`,
+      });
+    } catch (error) {
+      console.error('Failed to update field:', error);
+      toast({
+        title: "Update Failed",
+        description: "Failed to update opportunity field",
+        variant: "destructive",
+      });
     }
   };
 
@@ -72,32 +108,37 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
 
               <EditableField
                 label="Account"
-                value={opportunity.accountId?.toString() || ""}
+                value={opportunity.accountId?.toString() || "none"}
                 onSave={(value) => handleFieldUpdate('accountId', value)}
                 placeholder="Select account"
                 type="select"
-                options={accounts.map(account => ({
-                  value: account.id.toString(),
-                  label: account.companyName
-                }))}
-                displayValue={opportunity.account?.companyName}
+                options={[
+                  { value: "none", label: "No Account" },
+                  ...accounts.map(account => ({
+                    value: account.id.toString(),
+                    label: account.companyName
+                  }))
+                ]}
+                displayValue={opportunity.account?.companyName || "No Account"}
               />
 
               <EditableField
                 label="Primary Contact"
-                value={opportunity.contactId?.toString() || ""}
+                value={opportunity.contactId?.toString() || "none"}
                 onSave={(value) => handleFieldUpdate('contactId', value)}
                 placeholder="Select contact"
                 type="select"
-                options={(opportunity.accountId ? accountContacts : contacts).map(contact => ({
-                  value: contact.id.toString(),
-                  label: `${contact.firstName} ${contact.lastName}`
-                }))}
+                options={[
+                  { value: "none", label: "No Contact" },
+                  ...(opportunity.accountId ? accountContacts : contacts).map(contact => ({
+                    value: contact.id.toString(),
+                    label: `${contact.firstName} ${contact.lastName}`
+                  }))
+                ]}
                 displayValue={opportunity.contact 
                   ? `${opportunity.contact.firstName} ${opportunity.contact.lastName}`
-                  : undefined
+                  : "No Contact"
                 }
-
               />
 
               <div>
