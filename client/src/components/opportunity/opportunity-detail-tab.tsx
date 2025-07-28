@@ -60,23 +60,29 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
       queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
       queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
       
-      // If account was updated, refresh account contacts
+      // If account was updated, automatically set the contact from that account
       if (field === 'accountId') {
         queryClient.invalidateQueries({ queryKey: ["/api/accounts", processedValue, "contacts"] });
         
-        // If there's a current contact, check if it belongs to the new account
-        if (opportunity.contactId && processedValue) {
-          // Fetch contacts for the new account to see if current contact is valid
+        if (processedValue) {
+          // Fetch contacts for the new account
           const accountContactsResponse = await fetch(`/api/accounts/${processedValue}/contacts`);
           const newAccountContacts = await accountContactsResponse.json();
           
-          const currentContactExists = newAccountContacts.some((contact: any) => contact.id === opportunity.contactId);
+          let newContactId = null;
           
-          // If current contact doesn't belong to new account, reset it
-          if (!currentContactExists) {
-            await apiRequest("PATCH", `/api/opportunities/${opportunity.id}`, { contactId: null });
-            queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+          // If there are contacts for this account, select the first one
+          if (newAccountContacts.length > 0) {
+            newContactId = newAccountContacts[0].id;
           }
+          
+          // Update the contact field to match the account
+          await apiRequest("PATCH", `/api/opportunities/${opportunity.id}`, { contactId: newContactId });
+          queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+        } else {
+          // If no account selected, clear the contact
+          await apiRequest("PATCH", `/api/opportunities/${opportunity.id}`, { contactId: null });
+          queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
         }
       }
 
