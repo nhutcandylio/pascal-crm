@@ -92,6 +92,13 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
   };
   return (
     <div className="space-y-6">
+      {/* Debug: Always show this to confirm component is rendering */}
+      <div className="p-4 bg-green-100 border border-green-500 rounded">
+        <strong>COMPONENT DEBUG:</strong>
+        <br />Opportunity ID: {opportunity.id}
+        <br />Stage Logs Count: {opportunity.stageLogs?.length || 0}
+        <br />Has Account: {opportunity.account ? 'YES' : 'NO'}
+      </div>
       {/* Related Information Summary */}
       <Card className="glass-effect border-white/20">
         <CardHeader>
