@@ -92,13 +92,6 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
   };
   return (
     <div className="space-y-6">
-      {/* Debug: Always show this to confirm component is rendering */}
-      <div className="p-4 bg-green-100 border border-green-500 rounded">
-        <strong>COMPONENT DEBUG:</strong>
-        <br />Opportunity ID: {opportunity.id}
-        <br />Stage Logs Count: {opportunity.stageLogs?.length || 0}
-        <br />Has Account: {opportunity.account ? 'YES' : 'NO'}
-      </div>
       {/* Related Information Summary */}
       <Card className="glass-effect border-white/20">
         <CardHeader>
@@ -133,6 +126,83 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
               <p className="text-sm text-muted-foreground">Stage Changes</p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Stage Changes History - Moved up for better visibility */}
+      <Card className="glass-effect border-white/20 border-2 border-blue-400 shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200">
+          <CardTitle className="flex items-center space-x-2 text-slate-800">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            <span>Stage Changes History ({opportunity.stageLogs?.length || 0} changes)</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {(opportunity.stageLogs && opportunity.stageLogs.length > 0) ? (
+            <div className="space-y-4">
+              {opportunity.stageLogs
+                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                .map((stageLog) => {
+                  const stageColors = {
+                    'prospecting': 'bg-blue-100 text-blue-800 border-blue-200',
+                    'qualification': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+                    'proposal': 'bg-purple-100 text-purple-800 border-purple-200',
+                    'negotiation': 'bg-orange-100 text-orange-800 border-orange-200',
+                    'closed-won': 'bg-green-100 text-green-800 border-green-200',
+                    'closed-lost': 'bg-red-100 text-red-800 border-red-200'
+                  };
+                  
+                  return (
+                    <div key={stageLog.id} className="p-6 rounded-xl bg-white/70 backdrop-blur-sm border border-white/30 shadow-sm hover:shadow-md transition-all duration-200">
+                      {/* From → To */}
+                      <div className="flex items-center space-x-4 mb-4">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-sm font-semibold text-slate-600">From:</span>
+                          <Badge className={`${stageColors[stageLog.fromStage as keyof typeof stageColors] || 'bg-gray-100 text-gray-800 border-gray-200'} px-3 py-1 rounded-lg border`}>
+                            {stageLog.fromStage ? stageLog.fromStage.charAt(0).toUpperCase() + stageLog.fromStage.slice(1).replace('-', ' ') : 'Initial'}
+                          </Badge>
+                        </div>
+                        
+                        <div className="flex items-center">
+                          <div className="h-px w-8 bg-gradient-to-r from-blue-400 to-purple-500"></div>
+                          <TrendingUp className="h-5 w-5 text-primary mx-2" />
+                          <div className="h-px w-8 bg-gradient-to-r from-purple-500 to-blue-400"></div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-3">
+                          <span className="text-sm font-semibold text-slate-600">To:</span>
+                          <Badge className={`${stageColors[stageLog.toStage as keyof typeof stageColors] || 'bg-blue-100 text-blue-800 border-blue-200'} px-3 py-1 rounded-lg border`}>
+                            {stageLog.toStage.charAt(0).toUpperCase() + stageLog.toStage.slice(1).replace('-', ' ')}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {/* Reason */}
+                      <div className="mb-3">
+                        <span className="text-sm font-semibold text-slate-600">Reason: </span>
+                        <span className="text-sm text-slate-700 italic">
+                          {stageLog.reason ? `"${stageLog.reason}"` : 'No reason provided'}
+                        </span>
+                      </div>
+
+                      {/* Date */}
+                      <div className="text-xs text-slate-500 font-medium">
+                        {stageLog.createdAt && !isNaN(new Date(stageLog.createdAt).getTime()) 
+                          ? format(new Date(stageLog.createdAt), 'MMM dd, yyyy h:mm a') 
+                          : 'No date'
+                        }
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <TrendingUp className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+              <p className="text-slate-500 font-medium">No stage changes recorded yet</p>
+              <p className="text-sm text-slate-400 mt-1">Stage changes will appear here as the opportunity progresses</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -243,86 +313,7 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
         </Card>
       )}
 
-      {/* Stage Changes History */}
-      <Card className="bg-red-100 border-4 border-red-500 shadow-xl">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200">
-          <CardTitle className="flex items-center space-x-2 text-slate-800">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            <span>Stage Changes History ({opportunity.stageLogs?.length || 0} changes)</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4 p-2 bg-yellow-100 border border-yellow-300 rounded">
-            <strong>Debug:</strong> stageLogs length = {opportunity.stageLogs?.length || 0}
-            <br />stageLogs exists: {opportunity.stageLogs ? 'YES' : 'NO'}
-          </div>
-          {opportunity.stageLogs && opportunity.stageLogs.length > 0 ? (
-            <div className="space-y-4">
-              {opportunity.stageLogs
-                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                .map((stageLog) => {
-                  const stageColors = {
-                    'prospecting': 'bg-blue-100 text-blue-800 border-blue-200',
-                    'qualification': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-                    'proposal': 'bg-purple-100 text-purple-800 border-purple-200',
-                    'negotiation': 'bg-orange-100 text-orange-800 border-orange-200',
-                    'closed-won': 'bg-green-100 text-green-800 border-green-200',
-                    'closed-lost': 'bg-red-100 text-red-800 border-red-200'
-                  };
-                  
-                  return (
-                    <div key={stageLog.id} className="p-6 rounded-xl bg-white/70 backdrop-blur-sm border border-white/30 shadow-sm hover:shadow-md transition-all duration-200">
-                      {/* From → To */}
-                      <div className="flex items-center space-x-4 mb-4">
-                        <div className="flex items-center space-x-3">
-                          <span className="text-sm font-semibold text-slate-600">From:</span>
-                          <Badge className={`${stageColors[stageLog.fromStage as keyof typeof stageColors] || 'bg-gray-100 text-gray-800 border-gray-200'} px-3 py-1 rounded-lg border`}>
-                            {stageLog.fromStage ? stageLog.fromStage.charAt(0).toUpperCase() + stageLog.fromStage.slice(1).replace('-', ' ') : 'Initial'}
-                          </Badge>
-                        </div>
-                        
-                        <div className="flex items-center">
-                          <div className="h-px w-8 bg-gradient-to-r from-blue-400 to-purple-500"></div>
-                          <TrendingUp className="h-5 w-5 text-primary mx-2" />
-                          <div className="h-px w-8 bg-gradient-to-r from-purple-500 to-blue-400"></div>
-                        </div>
-                        
-                        <div className="flex items-center space-x-3">
-                          <span className="text-sm font-semibold text-slate-600">To:</span>
-                          <Badge className={`${stageColors[stageLog.toStage as keyof typeof stageColors] || 'bg-blue-100 text-blue-800 border-blue-200'} px-3 py-1 rounded-lg border`}>
-                            {stageLog.toStage.charAt(0).toUpperCase() + stageLog.toStage.slice(1).replace('-', ' ')}
-                          </Badge>
-                        </div>
-                      </div>
 
-                      {/* Reason */}
-                      <div className="mb-3">
-                        <span className="text-sm font-semibold text-slate-600">Reason: </span>
-                        <span className="text-sm text-slate-700 italic">
-                          {stageLog.reason ? `"${stageLog.reason}"` : 'No reason provided'}
-                        </span>
-                      </div>
-
-                      {/* Date */}
-                      <div className="text-xs text-slate-500 font-medium">
-                        {stageLog.createdAt && !isNaN(new Date(stageLog.createdAt).getTime()) 
-                          ? format(new Date(stageLog.createdAt), 'MMM dd, yyyy h:mm a') 
-                          : 'No date'
-                        }
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <TrendingUp className="h-12 w-12 mx-auto mb-4 text-slate-300" />
-              <p className="text-slate-500 font-medium">No stage changes recorded yet</p>
-              <p className="text-sm text-slate-400 mt-1">Stage changes will appear here as the opportunity progresses</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Lead Information (if originated from lead) - Hidden for now as lead is not in current schema */}
     </div>

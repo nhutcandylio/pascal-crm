@@ -115,6 +115,8 @@ The application follows modern web development practices with strong typing, com
 - **Added**: Phone field to user schema and API routes for user management (GET, POST, PATCH, DELETE)
 - **Enhanced**: Lead and Opportunity modals with owner assignment dropdowns
 - **Fixed**: Stage Changes History display now properly visible with professional styling
+- **Resolved**: Stage Changes History positioning and visibility issues - moved section higher in layout
+- **Added**: Comprehensive stage change logs for all dummy data opportunities
 - **Completed**: Storage layer with comprehensive user operations and owner relationship support
 - **Navigation**: Added Users page to sidebar with full team member management capabilities
 
