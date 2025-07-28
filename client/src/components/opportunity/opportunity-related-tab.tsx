@@ -237,6 +237,20 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
       )}
 
       {/* Stage Changes History */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <TrendingUp className="h-5 w-5" />
+            <span>Stage Changes History Debug</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>stageLogs exists: {opportunity.stageLogs ? 'Yes' : 'No'}</p>
+          <p>stageLogs length: {opportunity.stageLogs?.length || 'N/A'}</p>
+          <p>Raw data: {JSON.stringify(opportunity.stageLogs)}</p>
+        </CardContent>
+      </Card>
+      
       {opportunity.stageLogs && opportunity.stageLogs.length > 0 && (
         <Card>
           <CardHeader>
