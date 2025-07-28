@@ -246,27 +246,65 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {opportunity.stageLogs.map((stageLog) => (
-                <div key={stageLog.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="outline">Stage Change</Badge>
-                      <p className="font-medium">
-                        {stageLog.fromStage} → {stageLog.toStage}
-                      </p>
+                <div key={stageLog.id} className="border-l-4 border-blue-200 pl-4 py-3 bg-slate-50 rounded-r-lg">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                          Stage Change
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          #{stageLog.id}
+                        </span>
+                      </div>
+                      
+                      <div className="mb-3">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium text-muted-foreground">From:</span>
+                          <Badge variant="outline" className="capitalize">
+                            {stageLog.fromStage || 'Initial'}
+                          </Badge>
+                          <span className="text-muted-foreground">→</span>
+                          <span className="text-sm font-medium text-muted-foreground">To:</span>
+                          <Badge variant="default" className="capitalize">
+                            {stageLog.toStage}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      {stageLog.reason && (
+                        <div className="mb-2">
+                          <p className="text-sm font-medium text-muted-foreground mb-1">Reason:</p>
+                          <p className="text-sm bg-white p-2 rounded border italic">
+                            "{stageLog.reason}"
+                          </p>
+                        </div>
+                      )}
+
+                      {stageLog.user && (
+                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                          <User className="h-4 w-4" />
+                          <span>Changed by: {stageLog.user.firstName} {stageLog.user.lastName}</span>
+                        </div>
+                      )}
                     </div>
-                    {stageLog.reason && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Reason: {stageLog.reason}
-                      </p>
-                    )}
-                  </div>
-                  <div className="text-right text-sm text-muted-foreground">
-                    {stageLog.createdAt && !isNaN(new Date(stageLog.createdAt).getTime()) 
-                      ? format(new Date(stageLog.createdAt), 'MMM dd • h:mm a') 
-                      : 'No date'
-                    }
+                    
+                    <div className="text-right ml-4">
+                      <div className="text-sm font-medium">
+                        {stageLog.createdAt && !isNaN(new Date(stageLog.createdAt).getTime()) 
+                          ? format(new Date(stageLog.createdAt), 'MMM dd, yyyy') 
+                          : 'No date'
+                        }
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {stageLog.createdAt && !isNaN(new Date(stageLog.createdAt).getTime()) 
+                          ? format(new Date(stageLog.createdAt), 'h:mm a') 
+                          : ''
+                        }
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
