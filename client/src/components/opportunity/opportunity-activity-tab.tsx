@@ -48,6 +48,7 @@ export default function OpportunityActivityTab({ opportunity }: OpportunityActiv
     resolver: zodResolver(insertActivitySchema),
     defaultValues: {
       type: "note",
+      subject: "",
       description: "",
       opportunityId: opportunity.id,
       accountId: opportunity.accountId,
@@ -139,6 +140,23 @@ export default function OpportunityActivityTab({ opportunity }: OpportunityActiv
                               <SelectItem value="other">Other</SelectItem>
                             </SelectContent>
                           </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={activityForm.control}
+                      name="subject"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Subject</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Enter activity subject..."
+                              {...field} 
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
