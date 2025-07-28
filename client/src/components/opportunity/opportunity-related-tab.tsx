@@ -3,12 +3,46 @@ import { Badge } from "@/components/ui/badge";
 import { Package, Building, User, Users, Calendar, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { EditableField } from "@/components/ui/editable-field";
-import type { OpportunityWithRelations } from "@shared/schema";
+import type { OpportunityWithRelations, Contact } from "@shared/schema";
 
 interface OpportunityRelatedTabProps {
   opportunity: OpportunityWithRelations;
+}
+
+function AccountContactsList({ accountId, primaryContactId }: { accountId: number; primaryContactId: number | null }) {
+  const { data: accountContacts = [] } = useQuery<Contact[]>({
+    queryKey: ["/api/accounts", accountId, "contacts"],
+  });
+
+  if (accountContacts.length === 0) {
+    return <p className="text-muted-foreground">No contacts found for this account</p>;
+  }
+
+  return (
+    <div className="space-y-3">
+      {accountContacts.map((contact) => (
+        <div key={contact.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+          <div className="flex-1">
+            <div className="flex items-center space-x-2">
+              <p className="font-medium">{contact.firstName} {contact.lastName}</p>
+              {contact.id === primaryContactId && (
+                <Badge variant="default">Primary</Badge>
+              )}
+            </div>
+            <div className="text-sm text-muted-foreground mt-1">
+              <p>{contact.email}</p>
+              {contact.title && <p>{contact.title}</p>}
+            </div>
+          </div>
+          <div className="text-right text-sm text-muted-foreground">
+            {contact.phone && <p>{contact.phone}</p>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 export default function OpportunityRelatedTab({ opportunity }: OpportunityRelatedTabProps) {
@@ -145,55 +179,20 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
         </CardContent>
       </Card>
 
-      {/* Contact Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <User className="h-5 w-5" />
-            <span>Primary Contact</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {opportunity.contact ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <EditableField
-                  label="First Name"
-                  value={opportunity.contact.firstName}
-                  onSave={(value) => handleContactFieldUpdate('firstName', value)}
-                  placeholder="Enter first name"
-                />
-                <EditableField
-                  label="Last Name"
-                  value={opportunity.contact.lastName}
-                  onSave={(value) => handleContactFieldUpdate('lastName', value)}
-                  placeholder="Enter last name"
-                />
-                <EditableField
-                  label="Email"
-                  value={opportunity.contact.email}
-                  onSave={(value) => handleContactFieldUpdate('email', value)}
-                  placeholder="Enter email address"
-                />
-                <EditableField
-                  label="Phone"
-                  value={opportunity.contact.phone}
-                  onSave={(value) => handleContactFieldUpdate('phone', value)}
-                  placeholder="Enter phone number"
-                />
-                <EditableField
-                  label="Title"
-                  value={opportunity.contact.title}
-                  onSave={(value) => handleContactFieldUpdate('title', value)}
-                  placeholder="Enter job title"
-                />
-              </div>
-            </div>
-          ) : (
-            <p className="text-muted-foreground">No contact information available</p>
-          )}
-        </CardContent>
-      </Card>
+      {/* All Account Contacts */}
+      {opportunity.account && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Users className="h-5 w-5" />
+              <span>Account Contacts</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AccountContactsList accountId={opportunity.account.id} primaryContactId={opportunity.contactId} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Recent Activities Summary */}
       {opportunity.activities && opportunity.activities.filter(activity => activity.type !== 'stage_change').length > 0 && (
@@ -264,8 +263,8 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
                     )}
                   </div>
                   <div className="text-right text-sm text-muted-foreground">
-                    {stageLog.changedAt && !isNaN(new Date(stageLog.changedAt).getTime()) 
-                      ? format(new Date(stageLog.changedAt), 'MMM dd • h:mm a') 
+                    {stageLog.createdAt && !isNaN(new Date(stageLog.createdAt).getTime()) 
+                      ? format(new Date(stageLog.createdAt), 'MMM dd • h:mm a') 
                       : 'No date'
                     }
                   </div>
