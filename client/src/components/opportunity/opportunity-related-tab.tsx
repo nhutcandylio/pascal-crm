@@ -1,14 +1,152 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Package, Building, User, Users, Calendar, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Package, Building, User, Users, Calendar, TrendingUp, Edit2, Check, X } from "lucide-react";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { OpportunityWithRelations } from "@shared/schema";
 
 interface OpportunityRelatedTabProps {
   opportunity: OpportunityWithRelations;
 }
 
+interface EditableFieldProps {
+  label: string;
+  value: string | null | undefined;
+  onSave: (newValue: string) => Promise<void>;
+  placeholder?: string;
+}
+
+function EditableField({ label, value, onSave, placeholder }: EditableFieldProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(value || "");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleSave = async () => {
+    if (editValue === (value || "")) {
+      setIsEditing(false);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await onSave(editValue);
+      setIsEditing(false);
+      toast({
+        title: "Updated",
+        description: `${label} has been updated successfully.`,
+      });
+    } catch (error) {
+      console.error('Failed to update field:', error);
+      toast({
+        title: "Error",
+        description: `Failed to update ${label}. Please try again.`,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditValue(value || "");
+    setIsEditing(false);
+  };
+
+  return (
+    <div>
+      <p className="text-sm font-medium text-muted-foreground">{label}</p>
+      {isEditing ? (
+        <div className="flex items-center space-x-2 mt-1">
+          <Input
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            placeholder={placeholder}
+            className="text-base"
+            disabled={isLoading}
+          />
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={isLoading}
+          >
+            <Check className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleCancel}
+            disabled={isLoading}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between group">
+          <p className="text-base">{value || placeholder || 'Not provided'}</p>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setIsEditing(true)}
+            className="opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <Edit2 className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function OpportunityRelatedTab({ opportunity }: OpportunityRelatedTabProps) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const updateAccountMutation = useMutation({
+    mutationFn: async ({ field, value }: { field: string; value: string }) => {
+      const response = await fetch(`/api/accounts/${opportunity.accountId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update account');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+    },
+  });
+
+  const updateContactMutation = useMutation({
+    mutationFn: async ({ field, value }: { field: string; value: string }) => {
+      const response = await fetch(`/api/contacts/${opportunity.contactId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [field]: value }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update contact');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+    },
+  });
+
+  const handleAccountFieldUpdate = async (field: string, value: string) => {
+    await updateAccountMutation.mutateAsync({ field, value });
+  };
+
+  const handleContactFieldUpdate = async (field: string, value: string) => {
+    await updateContactMutation.mutateAsync({ field, value });
+  };
   return (
     <div className="space-y-6">
       {/* Related Information Summary */}
@@ -60,29 +198,37 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
           {opportunity.account ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Company Name</p>
-                  <p className="text-base font-semibold">{opportunity.account.companyName}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Industry</p>
-                  <p className="text-base">{opportunity.account.industry || 'Not specified'}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Website</p>
-                  <p className="text-base">{opportunity.account.website || 'Not provided'}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Phone</p>
-                  <p className="text-base">{opportunity.account.phone || 'Not provided'}</p>
-                </div>
+                <EditableField
+                  label="Company Name"
+                  value={opportunity.account.companyName}
+                  onSave={(value) => handleAccountFieldUpdate('companyName', value)}
+                  placeholder="Enter company name"
+                />
+                <EditableField
+                  label="Industry"
+                  value={opportunity.account.industry}
+                  onSave={(value) => handleAccountFieldUpdate('industry', value)}
+                  placeholder="Enter industry"
+                />
+                <EditableField
+                  label="Website"
+                  value={opportunity.account.website}
+                  onSave={(value) => handleAccountFieldUpdate('website', value)}
+                  placeholder="Enter website URL"
+                />
+                <EditableField
+                  label="Phone"
+                  value={opportunity.account.phone}
+                  onSave={(value) => handleAccountFieldUpdate('phone', value)}
+                  placeholder="Enter phone number"
+                />
               </div>
-              {opportunity.account.address && (
-                <div className="mt-4">
-                  <p className="text-sm font-medium text-muted-foreground">Address</p>
-                  <p className="text-base">{opportunity.account.address}</p>
-                </div>
-              )}
+              <EditableField
+                label="Address"
+                value={opportunity.account.address}
+                onSave={(value) => handleAccountFieldUpdate('address', value)}
+                placeholder="Enter company address"
+              />
             </div>
           ) : (
             <p className="text-muted-foreground">No account information available</p>
@@ -102,24 +248,36 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
           {opportunity.contact ? (
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Name</p>
-                  <p className="text-base font-semibold">
-                    {opportunity.contact.firstName} {opportunity.contact.lastName}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Title</p>
-                  <p className="text-base">{opportunity.contact.title || 'Not specified'}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Email</p>
-                  <p className="text-base">{opportunity.contact.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Phone</p>
-                  <p className="text-base">{opportunity.contact.phone || 'Not provided'}</p>
-                </div>
+                <EditableField
+                  label="First Name"
+                  value={opportunity.contact.firstName}
+                  onSave={(value) => handleContactFieldUpdate('firstName', value)}
+                  placeholder="Enter first name"
+                />
+                <EditableField
+                  label="Last Name"
+                  value={opportunity.contact.lastName}
+                  onSave={(value) => handleContactFieldUpdate('lastName', value)}
+                  placeholder="Enter last name"
+                />
+                <EditableField
+                  label="Email"
+                  value={opportunity.contact.email}
+                  onSave={(value) => handleContactFieldUpdate('email', value)}
+                  placeholder="Enter email address"
+                />
+                <EditableField
+                  label="Phone"
+                  value={opportunity.contact.phone}
+                  onSave={(value) => handleContactFieldUpdate('phone', value)}
+                  placeholder="Enter phone number"
+                />
+                <EditableField
+                  label="Title"
+                  value={opportunity.contact.title}
+                  onSave={(value) => handleContactFieldUpdate('title', value)}
+                  placeholder="Enter job title"
+                />
               </div>
             </div>
           ) : (
