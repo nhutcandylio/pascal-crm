@@ -82,7 +82,7 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
 
             <div className="text-center p-4 border rounded-lg">
               <Calendar className="h-8 w-8 mx-auto mb-2 text-purple-600" />
-              <p className="text-2xl font-bold">{opportunity.activities?.length || 0}</p>
+              <p className="text-2xl font-bold">{opportunity.activities?.filter(activity => activity.type !== 'stage_change').length || 0}</p>
               <p className="text-sm text-muted-foreground">Activities</p>
             </div>
 
@@ -196,7 +196,7 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
       </Card>
 
       {/* Recent Activities Summary */}
-      {opportunity.activities && opportunity.activities.length > 0 && (
+      {opportunity.activities && opportunity.activities.filter(activity => activity.type !== 'stage_change').length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -206,7 +206,7 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {opportunity.activities.slice(0, 3).map((activity) => (
+              {opportunity.activities.filter(activity => activity.type !== 'stage_change').slice(0, 3).map((activity) => (
                 <div key={activity.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">
@@ -227,11 +227,50 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
                   </div>
                 </div>
               ))}
-              {opportunity.activities.length > 3 && (
+              {opportunity.activities.filter(activity => activity.type !== 'stage_change').length > 3 && (
                 <p className="text-sm text-muted-foreground text-center">
-                  +{opportunity.activities.length - 3} more activities
+                  +{opportunity.activities.filter(activity => activity.type !== 'stage_change').length - 3} more activities
                 </p>
               )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Stage Changes History */}
+      {opportunity.stageLogs && opportunity.stageLogs.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <TrendingUp className="h-5 w-5" />
+              <span>Stage Changes History</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {opportunity.stageLogs.map((stageLog) => (
+                <div key={stageLog.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="outline">Stage Change</Badge>
+                      <p className="font-medium">
+                        {stageLog.fromStage} → {stageLog.toStage}
+                      </p>
+                    </div>
+                    {stageLog.reason && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Reason: {stageLog.reason}
+                      </p>
+                    )}
+                  </div>
+                  <div className="text-right text-sm text-muted-foreground">
+                    {stageLog.changedAt && !isNaN(new Date(stageLog.changedAt).getTime()) 
+                      ? format(new Date(stageLog.changedAt), 'MMM dd • h:mm a') 
+                      : 'No date'
+                    }
+                  </div>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>

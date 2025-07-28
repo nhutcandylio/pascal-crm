@@ -100,7 +100,7 @@ export default function OpportunityActivityTab({ opportunity }: OpportunityActiv
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center space-x-2">
               <Activity className="h-5 w-5" />
-              <span>Activity Timeline ({opportunity.activities?.length || 0})</span>
+              <span>Activity Timeline ({opportunity.activities?.filter(activity => activity.type !== 'stage_change').length || 0})</span>
             </CardTitle>
             <Dialog open={newActivityOpen} onOpenChange={setNewActivityOpen}>
               <DialogTrigger asChild>
@@ -188,9 +188,12 @@ export default function OpportunityActivityTab({ opportunity }: OpportunityActiv
       {/* Activity Timeline */}
       <div className="space-y-4">
         {opportunity.activities && opportunity.activities.length > 0 ? (
-          opportunity.activities.map((activity, index) => {
+          opportunity.activities
+            .filter(activity => activity.type !== 'stage_change')
+            .map((activity, index) => {
             const IconComponent = activityTypeIcons[activity.type as keyof typeof activityTypeIcons] || MessageSquare;
-            const isLast = index === opportunity.activities!.length - 1;
+            const filteredActivities = opportunity.activities!.filter(activity => activity.type !== 'stage_change');
+            const isLast = index === filteredActivities.length - 1;
 
             return (
               <div key={activity.id} className="relative">
