@@ -266,7 +266,11 @@ export default function Opportunities() {
                 </TableHeader>
                 <TableBody>
                   {filteredOpportunities.map((opportunity) => (
-                    <TableRow key={opportunity.id} className="cursor-pointer hover:bg-slate-50">
+                    <TableRow 
+                      key={opportunity.id} 
+                      className="cursor-pointer hover:bg-slate-50"
+                      onClick={() => setViewingOpportunityId(opportunity.id)}
+                    >
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
@@ -279,7 +283,7 @@ export default function Opportunities() {
                       </TableCell>
                       <TableCell>
                         {editingField === `accountId-${opportunity.id}` ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                             <Select
                               value={editingValue}
                               onValueChange={setEditingValue}
@@ -297,7 +301,8 @@ export default function Opportunities() {
                                 <SelectItem value="new">+ Create New Account</SelectItem>
                               </SelectContent>
                             </Select>
-                            <Button size="sm" variant="ghost" onClick={() => {
+                            <Button size="sm" variant="ghost" onClick={(e) => {
+                              e.stopPropagation();
                               if (editingValue === "new") {
                                 // Open account creation modal
                                 setPendingOpportunityId(opportunity.id);
@@ -309,14 +314,20 @@ export default function Opportunities() {
                             }}>
                               <Check className="h-3 w-3" />
                             </Button>
-                            <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
+                            <Button size="sm" variant="ghost" onClick={(e) => {
+                              e.stopPropagation();
+                              handleFieldCancel();
+                            }}>
                               <X className="h-3 w-3" />
                             </Button>
                           </div>
                         ) : (
                           <div 
                             className="flex items-center text-sm cursor-pointer hover:bg-slate-50 p-1 rounded"
-                            onClick={() => handleFieldEdit('accountId', opportunity.id, opportunity.accountId?.toString() || 'none')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleFieldEdit('accountId', opportunity.id, opportunity.accountId?.toString() || 'none');
+                            }}
                           >
                             {opportunity.account ? (
                               <>
@@ -336,7 +347,8 @@ export default function Opportunities() {
                             // If converted from lead, make it clickable to show lead details
                             <div 
                               className="cursor-pointer hover:bg-slate-50 p-1 rounded"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 setSelectedLeadId(opportunity.leadId);
                                 setIsLeadDetailsModalOpen(true);
                               }}
@@ -359,7 +371,7 @@ export default function Opportunities() {
 
                       <TableCell>
                         {editingField === `value-${opportunity.id}` ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                             <Input
                               type="number"
                               step="0.01"
@@ -372,17 +384,26 @@ export default function Opportunities() {
                               }}
                               autoFocus
                             />
-                            <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'value')}>
+                            <Button size="sm" variant="ghost" onClick={(e) => {
+                              e.stopPropagation();
+                              handleFieldSave(opportunity.id, 'value');
+                            }}>
                               <Check className="h-3 w-3" />
                             </Button>
-                            <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
+                            <Button size="sm" variant="ghost" onClick={(e) => {
+                              e.stopPropagation();
+                              handleFieldCancel();
+                            }}>
                               <X className="h-3 w-3" />
                             </Button>
                           </div>
                         ) : (
                           <div 
                             className="flex items-center text-sm font-medium cursor-pointer hover:bg-slate-50 p-1 rounded"
-                            onClick={() => handleFieldEdit('value', opportunity.id, opportunity.value)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleFieldEdit('value', opportunity.id, opportunity.value);
+                            }}
                           >
                             ${opportunity.value ? parseFloat(opportunity.value).toLocaleString() : '0'}
                           </div>
@@ -390,7 +411,7 @@ export default function Opportunities() {
                       </TableCell>
                       <TableCell>
                         {editingField === `grossProfit-${opportunity.id}` ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                             <Input
                               type="number"
                               step="0.01"
@@ -403,17 +424,26 @@ export default function Opportunities() {
                               }}
                               autoFocus
                             />
-                            <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'grossProfit')}>
+                            <Button size="sm" variant="ghost" onClick={(e) => {
+                              e.stopPropagation();
+                              handleFieldSave(opportunity.id, 'grossProfit');
+                            }}>
                               <Check className="h-3 w-3" />
                             </Button>
-                            <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
+                            <Button size="sm" variant="ghost" onClick={(e) => {
+                              e.stopPropagation();
+                              handleFieldCancel();
+                            }}>
                               <X className="h-3 w-3" />
                             </Button>
                           </div>
                         ) : (
                           <div 
                             className="flex items-center text-sm font-medium cursor-pointer hover:bg-slate-50 p-1 rounded"
-                            onClick={() => handleFieldEdit('grossProfit', opportunity.id, opportunity.grossProfit || '0')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleFieldEdit('grossProfit', opportunity.id, opportunity.grossProfit || '0');
+                            }}
                           >
                             ${opportunity.grossProfit ? parseFloat(opportunity.grossProfit).toLocaleString() : '0'}
                           </div>
@@ -426,7 +456,7 @@ export default function Opportunities() {
                       </TableCell>
                       <TableCell>
                         {editingField === `stage-${opportunity.id}` ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                             <Select
                               value={editingValue}
                               onValueChange={setEditingValue}
@@ -442,17 +472,26 @@ export default function Opportunities() {
                                 ))}
                               </SelectContent>
                             </Select>
-                            <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'stage')}>
+                            <Button size="sm" variant="ghost" onClick={(e) => {
+                              e.stopPropagation();
+                              handleFieldSave(opportunity.id, 'stage');
+                            }}>
                               <Check className="h-3 w-3" />
                             </Button>
-                            <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
+                            <Button size="sm" variant="ghost" onClick={(e) => {
+                              e.stopPropagation();
+                              handleFieldCancel();
+                            }}>
                               <X className="h-3 w-3" />
                             </Button>
                           </div>
                         ) : (
                           <Badge 
                             className={`${getStageColor(opportunity.stage)} cursor-pointer hover:opacity-80`}
-                            onClick={() => handleFieldEdit('stage', opportunity.id, opportunity.stage)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleFieldEdit('stage', opportunity.id, opportunity.stage);
+                            }}
                           >
                             {opportunity.stage.charAt(0).toUpperCase() + opportunity.stage.slice(1).replace('-', ' ')}
                           </Badge>
@@ -460,7 +499,7 @@ export default function Opportunities() {
                       </TableCell>
                       <TableCell>
                         {editingField === `probability-${opportunity.id}` ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                             <Input
                               type="number"
                               min="0"
@@ -475,17 +514,26 @@ export default function Opportunities() {
                               autoFocus
                             />
                             <span className="text-sm">%</span>
-                            <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'probability')}>
+                            <Button size="sm" variant="ghost" onClick={(e) => {
+                              e.stopPropagation();
+                              handleFieldSave(opportunity.id, 'probability');
+                            }}>
                               <Check className="h-3 w-3" />
                             </Button>
-                            <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
+                            <Button size="sm" variant="ghost" onClick={(e) => {
+                              e.stopPropagation();
+                              handleFieldCancel();
+                            }}>
                               <X className="h-3 w-3" />
                             </Button>
                           </div>
                         ) : (
                           <div 
                             className="flex items-center cursor-pointer hover:bg-slate-50 p-1 rounded"
-                            onClick={() => handleFieldEdit('probability', opportunity.id, (opportunity.probability || 0).toString())}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleFieldEdit('probability', opportunity.id, (opportunity.probability || 0).toString());
+                            }}
                           >
                             <div className="w-12 bg-slate-200 rounded-full h-2 mr-2">
                               <div 
@@ -499,7 +547,7 @@ export default function Opportunities() {
                       </TableCell>
                       <TableCell>
                         {editingField === `closeDate-${opportunity.id}` ? (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                             <Input
                               type="date"
                               value={editingValue}
@@ -511,17 +559,26 @@ export default function Opportunities() {
                               }}
                               autoFocus
                             />
-                            <Button size="sm" variant="ghost" onClick={() => handleFieldSave(opportunity.id, 'closeDate')}>
+                            <Button size="sm" variant="ghost" onClick={(e) => {
+                              e.stopPropagation();
+                              handleFieldSave(opportunity.id, 'closeDate');
+                            }}>
                               <Check className="h-3 w-3" />
                             </Button>
-                            <Button size="sm" variant="ghost" onClick={handleFieldCancel}>
+                            <Button size="sm" variant="ghost" onClick={(e) => {
+                              e.stopPropagation();
+                              handleFieldCancel();
+                            }}>
                               <X className="h-3 w-3" />
                             </Button>
                           </div>
                         ) : (
                           <div 
                             className="flex items-center text-sm cursor-pointer hover:bg-slate-50 p-1 rounded"
-                            onClick={() => handleFieldEdit('closeDate', opportunity.id, opportunity.closeDate ? new Date(opportunity.closeDate).toISOString().split('T')[0] : '')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleFieldEdit('closeDate', opportunity.id, opportunity.closeDate ? new Date(opportunity.closeDate).toISOString().split('T')[0] : '');
+                            }}
                           >
                             {opportunity.closeDate ? (
                               <>
