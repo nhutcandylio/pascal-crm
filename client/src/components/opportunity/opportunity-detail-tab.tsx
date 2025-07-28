@@ -234,47 +234,13 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {editingField === 'description' ? (
-            <div className="space-y-3">
-              <Textarea
-                value={editValues.description}
-                onChange={(e) => setEditValues(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Enter opportunity description..."
-                rows={4}
-                className="w-full"
-              />
-              <div className="flex justify-end space-x-2">
-                <Button size="sm" onClick={() => handleSave('description')}>
-                  <Check className="h-4 w-4 mr-2" />
-                  Save
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => handleCancel('description')}>
-                  <X className="h-4 w-4 mr-2" />
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="group">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  {opportunity.description ? (
-                    <p className="text-base leading-relaxed">{opportunity.description}</p>
-                  ) : (
-                    <p className="text-muted-foreground italic">No description provided</p>
-                  )}
-                </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="opacity-0 group-hover:opacity-100 ml-2"
-                  onClick={() => setEditingField('description')}
-                >
-                  <Edit2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
+          <EditableField
+            label="Description"
+            value={opportunity.description}
+            onSave={(value) => handleFieldUpdate('description', value)}
+            placeholder="Enter opportunity description..."
+            type="textarea"
+          />
         </CardContent>
       </Card>
     </div>

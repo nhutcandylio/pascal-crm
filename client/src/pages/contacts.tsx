@@ -1,17 +1,20 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import TopBar from "@/components/layout/top-bar";
 import ContactModal from "../components/modals/contact-modal";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { EditableField } from "@/components/ui/editable-field";
+import { apiRequest } from "@/lib/queryClient";
 import { Plus, User, Phone, Mail, Building } from "lucide-react";
 import type { ContactWithAccounts } from "@shared/schema";
 
 export default function Contacts() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const queryClient = useQueryClient();
 
   const { data: contacts = [], isLoading } = useQuery<ContactWithAccounts[]>({
     queryKey: ['/api/contacts'],
@@ -76,10 +79,44 @@ export default function Contacts() {
                           <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                             <User className="h-4 w-4 text-green-600" />
                           </div>
-                          <div>
-                            <div className="font-medium">{contact.firstName} {contact.lastName}</div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex space-x-2">
+                              <EditableField
+                                label=""
+                                value={contact.firstName}
+                                onSave={async (value) => {
+                                  const response = await apiRequest("PATCH", `/api/contacts/${contact.id}`, { firstName: value });
+                                  if (!response.ok) throw new Error('Failed to update');
+                                  queryClient.invalidateQueries({ queryKey: ['/api/contacts'] });
+                                }}
+                                placeholder="First name"
+                                className="font-medium"
+                              />
+                              <EditableField
+                                label=""
+                                value={contact.lastName}
+                                onSave={async (value) => {
+                                  const response = await apiRequest("PATCH", `/api/contacts/${contact.id}`, { lastName: value });
+                                  if (!response.ok) throw new Error('Failed to update');
+                                  queryClient.invalidateQueries({ queryKey: ['/api/contacts'] });
+                                }}
+                                placeholder="Last name"
+                                className="font-medium"
+                              />
+                            </div>
                             {contact.title && (
-                              <div className="text-sm text-slate-500">{contact.title}</div>
+                              <div className="text-sm text-slate-500 mt-1">
+                                <EditableField
+                                  label=""
+                                  value={contact.title}
+                                  onSave={async (value) => {
+                                    const response = await apiRequest("PATCH", `/api/contacts/${contact.id}`, { title: value });
+                                    if (!response.ok) throw new Error('Failed to update');
+                                    queryClient.invalidateQueries({ queryKey: ['/api/contacts'] });
+                                  }}
+                                  placeholder="Job title"
+                                />
+                              </div>
                             )}
                           </div>
                         </div>

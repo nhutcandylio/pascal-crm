@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { EditableField } from "@/components/ui/editable-field";
 import { Plus, Building, Phone, Globe, MapPin, X, UserPlus, Edit } from "lucide-react";
 import type { Account, Contact, AccountWithContacts } from "@shared/schema";
 
@@ -150,12 +151,32 @@ export default function Accounts() {
                           <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                             <Building className="h-4 w-4 text-blue-600" />
                           </div>
-                          <div>
-                            <div className="font-medium">{account.companyName}</div>
+                          <div className="min-w-0 flex-1">
+                            <EditableField
+                              label=""
+                              value={account.companyName}
+                              onSave={async (value) => {
+                                const response = await apiRequest("PATCH", `/api/accounts/${account.id}`, { companyName: value });
+                                if (!response.ok) throw new Error('Failed to update');
+                                queryClient.invalidateQueries({ queryKey: ['/api/accounts/with-contacts'] });
+                              }}
+                              placeholder="Company name"
+                              className="font-medium"
+                            />
                             {account.website && (
-                              <div className="text-sm text-slate-500 flex items-center">
+                              <div className="text-sm text-slate-500 flex items-center mt-1">
                                 <Globe className="h-3 w-3 mr-1" />
-                                {account.website.replace('https://', '')}
+                                <EditableField
+                                  label=""
+                                  value={account.website}
+                                  onSave={async (value) => {
+                                    const response = await apiRequest("PATCH", `/api/accounts/${account.id}`, { website: value });
+                                    if (!response.ok) throw new Error('Failed to update');
+                                    queryClient.invalidateQueries({ queryKey: ['/api/accounts/with-contacts'] });
+                                  }}
+                                  placeholder="Website"
+                                  type="url"
+                                />
                               </div>
                             )}
                           </div>
