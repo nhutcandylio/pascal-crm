@@ -443,6 +443,77 @@ export class MemStorage implements IStorage {
       this.createOpportunity(opportunity);
     });
 
+    // Add sample stage change logs for existing opportunities
+    const sampleStageChangeLogs: InsertStageChangeLog[] = [
+      // For opportunity 1 (Software License Renewal) - progression to proposal stage
+      {
+        opportunityId: 1,
+        fromStage: "prospecting",
+        toStage: "qualification",
+        reason: "Lead showed strong interest in renewal, budget confirmed",
+        changedBy: 1 // Alice Johnson
+      },
+      {
+        opportunityId: 1,
+        fromStage: "qualification",
+        toStage: "proposal",
+        reason: "Requirements gathered, proposal ready to send",
+        changedBy: 1 // Alice Johnson
+      },
+      // For opportunity 2 (Enterprise Solution) - progression to negotiation
+      {
+        opportunityId: 2,
+        fromStage: "prospecting",
+        toStage: "qualification",
+        reason: "Decision maker identified, technical requirements discussed",
+        changedBy: 2 // Bob Smith
+      },
+      {
+        opportunityId: 2,
+        fromStage: "qualification",
+        toStage: "proposal",
+        reason: "Proposal submitted with detailed implementation plan",
+        changedBy: 2 // Bob Smith
+      },
+      {
+        opportunityId: 2,
+        fromStage: "proposal",
+        toStage: "negotiation",
+        reason: "Customer requested pricing adjustments and timeline changes",
+        changedBy: 2 // Bob Smith
+      },
+      // For opportunity 3 (Financial Consulting) - closed won
+      {
+        opportunityId: 3,
+        fromStage: "prospecting",
+        toStage: "qualification",
+        reason: "Urgent consulting need identified, budget approved",
+        changedBy: 3 // Carol Davis
+      },
+      {
+        opportunityId: 3,
+        fromStage: "qualification",
+        toStage: "proposal",
+        reason: "Scope defined, proposal with timeline submitted",
+        changedBy: 3 // Carol Davis
+      },
+      {
+        opportunityId: 3,
+        fromStage: "proposal",
+        toStage: "closed-won",
+        reason: "Contract signed, work to begin immediately",
+        changedBy: 3 // Carol Davis
+      }
+    ];
+
+    // Create stage change logs with proper dates (in chronological order)
+    const baseDate = new Date('2024-01-15');
+    sampleStageChangeLogs.forEach((stageLog, index) => {
+      const logDate = new Date(baseDate);
+      logDate.setDate(baseDate.getDate() + (index * 7)); // 7 days apart
+      this.createStageChangeLogWithDate(stageLog, logDate);
+    });
+
     // Add sample activities
     const sampleActivities: InsertActivity[] = [
       {
@@ -1077,41 +1148,7 @@ export class MemStorage implements IStorage {
     return this.users.delete(id);
   }
 
-  async getUsers(): Promise<User[]> {
-    return Array.from(this.users.values()).sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-  }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const now = new Date();
-    const user: User = {
-      ...insertUser,
-      role: insertUser.role || 'sales_rep',
-      isActive: insertUser.isActive ?? true,
-      id,
-      createdAt: now
-    };
-    this.users.set(id, user);
-    return user;
-  }
-
-  async updateUser(id: number, userUpdate: Partial<InsertUser>): Promise<User | undefined> {
-    const user = this.users.get(id);
-    if (!user) return undefined;
-
-    const updatedUser: User = {
-      ...user,
-      ...userUpdate
-    };
-    this.users.set(id, updatedUser);
-    return updatedUser;
-  }
-
-  async deleteUser(id: number): Promise<boolean> {
-    return this.users.delete(id);
-  }
 
   // Product operations
   async getProduct(id: number): Promise<Product | undefined> {
@@ -1333,6 +1370,21 @@ export class MemStorage implements IStorage {
       reason: insertStageChangeLog.reason || null,
       id,
       createdAt: now
+    };
+    this.stageChangeLogs.set(id, stageChangeLog);
+    return stageChangeLog;
+  }
+
+  // Helper method to create stage change log with custom date (for sample data)
+  createStageChangeLogWithDate(insertStageChangeLog: InsertStageChangeLog, createdAt: Date): StageChangeLog {
+    const id = this.currentStageChangeLogId++;
+    const stageChangeLog: StageChangeLog = {
+      ...insertStageChangeLog,
+      fromStage: insertStageChangeLog.fromStage || null,
+      changedBy: insertStageChangeLog.changedBy || null,
+      reason: insertStageChangeLog.reason || null,
+      id,
+      createdAt
     };
     this.stageChangeLogs.set(id, stageChangeLog);
     return stageChangeLog;
