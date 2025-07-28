@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, TrendingUp, DollarSign, Calendar, Users, Building, Package, FileText, ShoppingCart } from "lucide-react";
+import { ArrowLeft, TrendingUp, DollarSign, Calendar, Users, Building, Package, FileText, ShoppingCart, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import type { OpportunityWithRelations } from "@shared/schema";
@@ -21,6 +21,7 @@ interface OpportunityDetailLayoutProps {
   opportunityId: number;
   onBack: () => void;
   onEdit: (opportunity: OpportunityWithRelations) => void;
+  onCreateNew?: () => void;
 }
 
 
@@ -46,7 +47,8 @@ const stageLabels = {
 export default function OpportunityDetailLayout({ 
   opportunityId, 
   onBack, 
-  onEdit 
+  onEdit,
+  onCreateNew
 }: OpportunityDetailLayoutProps) {
   const [activeTab, setActiveTab] = useState("detail");
   const [stageChangeModal, setStageChangeModal] = useState<{
@@ -179,6 +181,23 @@ export default function OpportunityDetailLayout({
                 )}
               </div>
             </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                if (onCreateNew) {
+                  onCreateNew();
+                } else {
+                  onBack();
+                }
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create New
+            </Button>
           </div>
 
         </div>

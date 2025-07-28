@@ -197,6 +197,10 @@ export default function Opportunities() {
               setEditingOpportunity(opportunity);
               setIsModalOpen(true);
             }}
+            onCreateNew={() => {
+              setViewingOpportunityId(null);
+              setIsModalOpen(true);
+            }}
           />
         </div>
         
@@ -282,63 +286,16 @@ export default function Opportunities() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {editingField === `accountId-${opportunity.id}` ? (
-                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                            <Select
-                              value={editingValue}
-                              onValueChange={setEditingValue}
-                            >
-                              <SelectTrigger className="w-40 h-8">
-                                <SelectValue placeholder="Select account" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="none">No Account</SelectItem>
-                                {accounts.map((account) => (
-                                  <SelectItem key={account.id} value={account.id.toString()}>
-                                    {account.companyName}
-                                  </SelectItem>
-                                ))}
-                                <SelectItem value="new">+ Create New Account</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Button size="sm" variant="ghost" onClick={(e) => {
-                              e.stopPropagation();
-                              if (editingValue === "new") {
-                                // Open account creation modal
-                                setPendingOpportunityId(opportunity.id);
-                                setNewAccountMode(true);
-                                setIsAccountModalOpen(true);
-                              } else {
-                                handleFieldSave(opportunity.id, 'accountId');
-                              }
-                            }}>
-                              <Check className="h-3 w-3" />
-                            </Button>
-                            <Button size="sm" variant="ghost" onClick={(e) => {
-                              e.stopPropagation();
-                              handleFieldCancel();
-                            }}>
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div 
-                            className="flex items-center text-sm cursor-pointer hover:bg-slate-50 p-1 rounded"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleFieldEdit('accountId', opportunity.id, opportunity.accountId?.toString() || 'none');
-                            }}
-                          >
-                            {opportunity.account ? (
-                              <>
-                                <Building className="h-3 w-3 mr-1 text-slate-400" />
-                                {opportunity.account.companyName}
-                              </>
-                            ) : (
-                              <span className="text-slate-400">Click to assign account</span>
-                            )}
-                          </div>
-                        )}
+                        <div className="flex items-center text-sm">
+                          {opportunity.account ? (
+                            <>
+                              <Building className="h-3 w-3 mr-1 text-slate-400" />
+                              {opportunity.account.companyName}
+                            </>
+                          ) : (
+                            <span className="text-slate-400">No Account</span>
+                          )}
+                        </div>
                       </TableCell>
 
                       <TableCell>
