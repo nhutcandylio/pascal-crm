@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -7,7 +7,7 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { EditableField, EditableCurrencyField, EditablePercentageField, EditableDateField } from "@/components/ui/editable-field";
-import type { OpportunityWithRelations } from "@shared/schema";
+import type { OpportunityWithRelations, Account, Contact } from "@shared/schema";
 
 interface OpportunityDetailTabProps {
   opportunity: OpportunityWithRelations;
@@ -16,6 +16,14 @@ interface OpportunityDetailTabProps {
 export default function OpportunityDetailTab({ opportunity }: OpportunityDetailTabProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const { data: accounts = [] } = useQuery<Account[]>({
+    queryKey: ["/api/accounts"],
+  });
+
+  const { data: contacts = [] } = useQuery<Contact[]>({
+    queryKey: ["/api/contacts"],
+  });
 
   const value = parseFloat(opportunity.value) || 0;
   const grossProfit = parseFloat(opportunity.grossProfit || "0") || 0;
@@ -52,26 +60,34 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
                 placeholder="Enter opportunity name"
               />
 
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Account</label>
-                <p className="text-base font-medium flex items-center space-x-2">
-                  <Building className="h-4 w-4 text-muted-foreground" />
-                  <span>{opportunity.account?.companyName || "No Account"}</span>
-                </p>
-              </div>
+              <EditableField
+                label="Account"
+                value={opportunity.accountId?.toString() || ""}
+                onSave={(value) => handleFieldUpdate('accountId', value)}
+                placeholder="Select account"
+                type="select"
+                options={accounts.map(account => ({
+                  value: account.id.toString(),
+                  label: account.companyName
+                }))}
+                displayValue={opportunity.account?.companyName}
+              />
 
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Primary Contact</label>
-                <p className="text-base font-medium flex items-center space-x-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span>
-                    {opportunity.contact 
-                      ? `${opportunity.contact.firstName} ${opportunity.contact.lastName}`
-                      : "No Contact"
-                    }
-                  </span>
-                </p>
-              </div>
+              <EditableField
+                label="Primary Contact"
+                value={opportunity.contactId?.toString() || ""}
+                onSave={(value) => handleFieldUpdate('contactId', value)}
+                placeholder="Select contact"
+                type="select"
+                options={contacts.map(contact => ({
+                  value: contact.id.toString(),
+                  label: `${contact.firstName} ${contact.lastName}`
+                }))}
+                displayValue={opportunity.contact 
+                  ? `${opportunity.contact.firstName} ${opportunity.contact.lastName}`
+                  : undefined
+                }
+              />
 
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Owner</label>

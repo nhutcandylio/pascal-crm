@@ -262,7 +262,6 @@ export default function Opportunities() {
                     <TableHead>Stage</TableHead>
                     <TableHead>Probability</TableHead>
                     <TableHead>Close Date</TableHead>
-                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -534,50 +533,6 @@ export default function Opportunities() {
                             )}
                           </div>
                         )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setViewingOpportunityId(opportunity.id)}
-                            title="View details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedOpportunityForDescription(opportunity);
-                              setIsDescriptionModalOpen(true);
-                            }}
-                            title={opportunity.description || 'Add description'}
-                          >
-                            <FileText className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedOpportunityForContact(opportunity);
-                              setIsContactModalOpen(true);
-                            }}
-                            title="Create new contact"
-                          >
-                            <UserPlus className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setEditingOpportunity(opportunity);
-                              setIsModalOpen(true);
-                            }}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
-                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
