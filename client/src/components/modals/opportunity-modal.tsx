@@ -45,18 +45,15 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
   });
 
   const form = useForm({
-    resolver: zodResolver(insertOpportunitySchema),
     defaultValues: {
       name: "",
-      value: "",
-      grossProfit: "",
-      grossProfitMargin: 0,
       stage: "prospecting",
       probability: 50,
       closeDate: "",
       accountId: null,
       contactId: null,
       ownerId: null,
+      description: "",
     },
   });
 
@@ -65,28 +62,24 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
     if (opportunity) {
       form.reset({
         name: opportunity.name || "",
-        value: opportunity.value?.toString() || "",
-        grossProfit: opportunity.grossProfit?.toString() || "",
-        grossProfitMargin: opportunity.grossProfitMargin || 0,
         stage: opportunity.stage || "prospecting",
         probability: opportunity.probability || 50,
         closeDate: opportunity.closeDate ? new Date(opportunity.closeDate).toISOString().split('T')[0] : "",
         accountId: opportunity.accountId || null,
         contactId: opportunity.contactId || null,
         ownerId: opportunity.ownerId || null,
+        description: opportunity.description || "",
       });
     } else {
       form.reset({
         name: "",
-        value: "",
-        grossProfit: "",
-        grossProfitMargin: 0,
         stage: "prospecting",
         probability: 50,
         closeDate: "",
         accountId: null,
         contactId: null,
         ownerId: null,
+        description: "",
       });
     }
   }, [opportunity, form]);
@@ -95,23 +88,6 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
   const filteredContacts = selectedAccountId 
     ? contacts.filter(contact => contact.accountId === selectedAccountId)
     : contacts;
-
-  // Auto-calculate gross profit margin
-  const opportunityValue = form.watch("value");
-  const grossProfit = form.watch("grossProfit");
-  
-  useEffect(() => {
-    if (opportunityValue || grossProfit) {
-      const value = parseFloat(opportunityValue) || 0;
-      const profit = parseFloat(grossProfit) || 0;
-      if (value > 0) {
-        const margin = Math.round((profit / value) * 100);
-        form.setValue("grossProfitMargin", margin);
-      } else {
-        form.setValue("grossProfitMargin", 0);
-      }
-    }
-  }, [opportunityValue, grossProfit, form]);
 
   const saveOpportunityMutation = useMutation({
     mutationFn: async (data: InsertOpportunity) => {
@@ -146,6 +122,8 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
     const opportunityData: InsertOpportunity = {
       ...data,
       closeDate: data.closeDate ? data.closeDate : null,
+      ownerId: data.ownerId === "no-owner" ? null : data.ownerId,
+      value: "0.00", // Default value - will be updated from orders
     };
     saveOpportunityMutation.mutate(opportunityData);
   };
@@ -176,67 +154,19 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
               )}
             />
 
-            <div className="grid grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="value"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Opportunity Value ($) *</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        step="0.01"
-                        placeholder="63650.00" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="grossProfit"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Gross Profit ($)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        step="0.01"
-                        placeholder="41150.00" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="grossProfitMargin"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Gross Profit Margin (%)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min="0"
-                        max="100"
-                        placeholder="Auto-calculated" 
-                        {...field} 
-                        disabled
-                        className="bg-gray-50"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter opportunity description" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
@@ -296,8 +226,8 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
                     <Input 
                       type="date" 
                       {...field}
-                      value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
-                      onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                      value={field.value || ''}
+                      onChange={(e) => field.onChange(e.target.value || '')}
                     />
                   </FormControl>
                   <FormMessage />
@@ -381,7 +311,7 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">No owner</SelectItem>
+                      <SelectItem value="no-owner">No owner</SelectItem>
                       {users.map((user) => (
                         <SelectItem key={user.id} value={user.id.toString()}>
                           {user.firstName} {user.lastName} ({user.role})
