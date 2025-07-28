@@ -237,7 +237,7 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
       )}
 
       {/* Stage Changes History */}
-      <Card className="glass-effect border-white/20 border-2 border-blue-300 shadow-lg">
+      <Card className="bg-red-100 border-4 border-red-500 shadow-xl">
         <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200">
           <CardTitle className="flex items-center space-x-2 text-slate-800">
             <TrendingUp className="h-5 w-5 text-primary" />
@@ -245,6 +245,10 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
           </CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="mb-4 p-2 bg-yellow-100 border border-yellow-300 rounded">
+            <strong>Debug:</strong> stageLogs length = {opportunity.stageLogs?.length || 0}
+            <br />stageLogs exists: {opportunity.stageLogs ? 'YES' : 'NO'}
+          </div>
           {opportunity.stageLogs && opportunity.stageLogs.length > 0 ? (
             <div className="space-y-4">
               {opportunity.stageLogs
