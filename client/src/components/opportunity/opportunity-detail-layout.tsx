@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -62,6 +62,7 @@ export default function OpportunityDetailLayout({
   });
   const [stageChangeReason, setStageChangeReason] = useState("");
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleStageChangeClick = (newStage: string, stageLabel: string) => {
     if (newStage === opportunity?.stage) return;
@@ -92,16 +93,16 @@ export default function OpportunityDetailLayout({
         body: JSON.stringify({ stage: stageChangeModal.targetStage }),
       });
 
-      // Create stage change log with reason
-      await fetch('/api/stage-logs', {
+      // Create activity log for stage change with reason
+      await fetch('/api/activities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           opportunityId: opportunityId,
-          fromStage: opportunity?.stage,
-          toStage: stageChangeModal.targetStage,
-          reason: stageChangeReason.trim(),
-          userId: 1,
+          type: 'stage_change',
+          subject: `Stage changed from ${stageLabels[opportunity?.stage as keyof typeof stageLabels]} to ${stageChangeModal.targetStageLabel}`,
+          description: `Reason: ${stageChangeReason.trim()}`,
+          createdBy: 1,
         }),
       });
 
@@ -110,12 +111,20 @@ export default function OpportunityDetailLayout({
         description: `Opportunity moved to ${stageChangeModal.targetStageLabel}`,
       });
 
-      // Close modal and refresh data
+      // Close modal and refresh data using React Query
       setStageChangeModal({ isOpen: false, targetStage: "", targetStageLabel: "" });
       setStageChangeReason("");
       
-      // Refresh the opportunity data
-      window.location.reload();
+      // Invalidate and refetch queries to update the UI
+      await queryClient.invalidateQueries({ 
+        queryKey: ["/api/opportunities", opportunityId, "with-relations"] 
+      });
+      await queryClient.invalidateQueries({ 
+        queryKey: ["/api/opportunities"] 
+      });
+      await queryClient.invalidateQueries({ 
+        queryKey: ["/api/activities"] 
+      });
     } catch (error) {
       console.error('Failed to update stage:', error);
       toast({
