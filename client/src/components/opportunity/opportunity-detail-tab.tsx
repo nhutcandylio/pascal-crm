@@ -1,15 +1,12 @@
-import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Building, User, DollarSign, Calendar, TrendingUp, Percent, Edit2, Check, X, FileText } from "lucide-react";
+import { Building, User, DollarSign, Calendar, TrendingUp, Percent, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { EditableField, EditableCurrencyField, EditablePercentageField, EditableDateField } from "@/components/ui/editable-field";
 import type { OpportunityWithRelations } from "@shared/schema";
 
 interface OpportunityDetailTabProps {
@@ -19,57 +16,18 @@ interface OpportunityDetailTabProps {
 export default function OpportunityDetailTab({ opportunity }: OpportunityDetailTabProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [editingField, setEditingField] = useState<string | null>(null);
-  const [editValues, setEditValues] = useState({
-    name: opportunity.name,
-    description: opportunity.description || "",
-    probability: opportunity.probability || 0,
-    closeDate: opportunity.closeDate || '',
-    value: opportunity.value,
-  });
 
   const value = parseFloat(opportunity.value) || 0;
   const grossProfit = parseFloat(opportunity.grossProfit || "0") || 0;
   const grossProfitMargin = opportunity.grossProfitMargin || 0;
 
-  const updateOpportunityMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await apiRequest("PATCH", `/api/opportunities/${opportunity.id}`, data);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
-      toast({
-        title: "Success",
-        description: "Opportunity updated successfully.",
-      });
-      setEditingField(null);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update opportunity.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSave = (field: string) => {
-    const updateData = { [field]: editValues[field as keyof typeof editValues] };
-    updateOpportunityMutation.mutate(updateData);
-  };
-
-  const handleCancel = (field: string) => {
-    setEditValues(prev => ({
-      ...prev,
-      [field]: field === 'name' ? opportunity.name : 
-               field === 'description' ? (opportunity.description || "") :
-               field === 'closeDate' ? (opportunity.closeDate || '') :
-               field === 'value' ? opportunity.value :
-               field === 'probability' ? (opportunity.probability || 0) : prev[field as keyof typeof prev]
-    }));
-    setEditingField(null);
+  const handleFieldUpdate = async (field: string, value: string) => {
+    const response = await apiRequest("PATCH", `/api/opportunities/${opportunity.id}`, { [field]: value });
+    if (!response.ok) {
+      throw new Error('Failed to update opportunity');
+    }
+    queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
   };
 
 
@@ -87,36 +45,12 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Opportunity Name</label>
-                {editingField === 'name' ? (
-                  <div className="flex items-center space-x-2 mt-1">
-                    <Input
-                      value={editValues.name}
-                      onChange={(e) => setEditValues(prev => ({ ...prev, name: e.target.value }))}
-                      className="flex-1"
-                    />
-                    <Button size="sm" onClick={() => handleSave('name')}>
-                      <Check className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleCancel('name')}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2 group">
-                    <p className="text-base font-medium flex-1">{opportunity.name}</p>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="opacity-0 group-hover:opacity-100"
-                      onClick={() => setEditingField('name')}
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
+              <EditableField
+                label="Opportunity Name"
+                value={opportunity.name}
+                onSave={(value) => handleFieldUpdate('name', value)}
+                placeholder="Enter opportunity name"
+              />
 
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Account</label>
@@ -170,82 +104,19 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
                 </div>
               </div>
 
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Probability (%)</label>
-                {editingField === 'probability' ? (
-                  <div className="flex items-center space-x-2 mt-1">
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      value={editValues.probability}
-                      onChange={(e) => setEditValues(prev => ({ ...prev, probability: parseInt(e.target.value) || 0 }))}
-                      className="flex-1"
-                    />
-                    <Button size="sm" onClick={() => handleSave('probability')}>
-                      <Check className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleCancel('probability')}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2 group">
-                    <p className="text-base font-medium flex items-center space-x-2 flex-1">
-                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                      <span>{opportunity.probability || 0}%</span>
-                    </p>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="opacity-0 group-hover:opacity-100"
-                      onClick={() => setEditingField('probability')}
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
+              <EditablePercentageField
+                label="Probability"
+                value={opportunity.probability}
+                onSave={(value) => handleFieldUpdate('probability', value)}
+                placeholder="0"
+              />
 
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Close Date</label>
-                {editingField === 'closeDate' ? (
-                  <div className="flex items-center space-x-2 mt-1">
-                    <Input
-                      type="date"
-                      value={editValues.closeDate ? editValues.closeDate.split('T')[0] : ''}
-                      onChange={(e) => setEditValues(prev => ({ ...prev, closeDate: e.target.value ? new Date(e.target.value).toISOString() : '' }))}
-                      className="flex-1"
-                    />
-                    <Button size="sm" onClick={() => handleSave('closeDate')}>
-                      <Check className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleCancel('closeDate')}>
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2 group">
-                    <p className="text-base font-medium flex items-center space-x-2 flex-1">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>
-                        {opportunity.closeDate 
-                          ? format(new Date(opportunity.closeDate), 'MMM dd, yyyy')
-                          : 'Not set'
-                        }
-                      </span>
-                    </p>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="opacity-0 group-hover:opacity-100"
-                      onClick={() => setEditingField('closeDate')}
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </div>
+              <EditableDateField
+                label="Close Date"
+                value={opportunity.closeDate}
+                onSave={(value) => handleFieldUpdate('closeDate', value)}
+                placeholder="Select close date"
+              />
 
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Created Date</label>
@@ -268,47 +139,12 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-muted-foreground">Opportunity Value</label>
-              {editingField === 'value' ? (
-                <div className="flex items-center space-x-2">
-                  <DollarSign className="h-4 w-4 text-green-600" />
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={editValues.value}
-                    onChange={(e) => setEditValues(prev => ({ ...prev, value: e.target.value }))}
-                    className="text-xl font-bold"
-                  />
-                  <Button size="sm" onClick={() => handleSave('value')}>
-                    <Check className="h-4 w-4" />
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleCancel('value')}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="group">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <DollarSign className="h-4 w-4 text-green-600" />
-                      <span className="text-2xl font-bold text-green-600">
-                        ${value.toLocaleString()}
-                      </span>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="opacity-0 group-hover:opacity-100"
-                      onClick={() => setEditingField('value')}
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
+            <EditableCurrencyField
+              label="Opportunity Value"
+              value={opportunity.value}
+              onSave={(value) => handleFieldUpdate('value', value)}
+              placeholder="0.00"
+            />
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground">Gross Profit</label>

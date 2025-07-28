@@ -1,105 +1,14 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Package, Building, User, Users, Calendar, TrendingUp, Edit2, Check, X } from "lucide-react";
+import { Package, Building, User, Users, Calendar, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { EditableField } from "@/components/ui/editable-field";
 import type { OpportunityWithRelations } from "@shared/schema";
 
 interface OpportunityRelatedTabProps {
   opportunity: OpportunityWithRelations;
-}
-
-interface EditableFieldProps {
-  label: string;
-  value: string | null | undefined;
-  onSave: (newValue: string) => Promise<void>;
-  placeholder?: string;
-}
-
-function EditableField({ label, value, onSave, placeholder }: EditableFieldProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value || "");
-  const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
-
-  const handleSave = async () => {
-    if (editValue === (value || "")) {
-      setIsEditing(false);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await onSave(editValue);
-      setIsEditing(false);
-      toast({
-        title: "Updated",
-        description: `${label} has been updated successfully.`,
-      });
-    } catch (error) {
-      console.error('Failed to update field:', error);
-      toast({
-        title: "Error",
-        description: `Failed to update ${label}. Please try again.`,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCancel = () => {
-    setEditValue(value || "");
-    setIsEditing(false);
-  };
-
-  return (
-    <div>
-      <p className="text-sm font-medium text-muted-foreground">{label}</p>
-      {isEditing ? (
-        <div className="flex items-center space-x-2 mt-1">
-          <Input
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            placeholder={placeholder}
-            className="text-base"
-            disabled={isLoading}
-          />
-          <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={isLoading}
-          >
-            <Check className="h-4 w-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleCancel}
-            disabled={isLoading}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      ) : (
-        <div className="flex items-center justify-between group">
-          <p className="text-base">{value || placeholder || 'Not provided'}</p>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setIsEditing(true)}
-            className="opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <Edit2 className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-    </div>
-  );
 }
 
 export default function OpportunityRelatedTab({ opportunity }: OpportunityRelatedTabProps) {
