@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, TrendingUp, DollarSign, Calendar, Users, Building, Package, FileText, ShoppingCart, Plus, Edit, Check, X, Trash2 } from "lucide-react";
+import { ArrowLeft, TrendingUp, DollarSign, Calendar, Users, Building, Package, FileText, ShoppingCart } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -185,32 +185,7 @@ export default function OpportunityDetailLayout({
     setSelectedOwnerId(null);
   };
 
-  const deleteOpportunityMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("DELETE", `/api/opportunities/${opportunityId}`);
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Opportunity Deleted",
-        description: "Opportunity has been permanently removed.",
-      });
-      onBack(); // Navigate back to opportunities list
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete opportunity. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
 
-  const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this opportunity? This action cannot be undone.")) {
-      deleteOpportunityMutation.mutate();
-    }
-  };
 
   const { data: opportunity, isLoading } = useQuery<OpportunityWithRelations>({
     queryKey: ["/api/opportunities", opportunityId, "with-relations"],
@@ -264,31 +239,7 @@ export default function OpportunityDetailLayout({
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => {
-                if (onCreateNew) {
-                  onCreateNew();
-                } else {
-                  onBack();
-                }
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create New
-            </Button>
-            <Button 
-              variant="destructive" 
-              size="sm"
-              onClick={handleDelete}
-              disabled={deleteOpportunityMutation.isPending}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              {deleteOpportunityMutation.isPending ? "Deleting..." : "Delete"}
-            </Button>
-          </div>
+
 
         </div>
 
