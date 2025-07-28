@@ -236,8 +236,8 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
         </Card>
       )}
 
-      {/* Stage Changes History - Debug Mode */}
-      {opportunity.stageLogs && opportunity.stageLogs.length > 0 ? (
+      {/* Stage Changes History */}
+      {opportunity.stageLogs && opportunity.stageLogs.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -309,26 +309,6 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <TrendingUp className="h-5 w-5" />
-              <span>Stage Changes History (Debug)</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Debug Info: stageLogs exists = {opportunity.stageLogs ? 'Yes' : 'No'}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Length: {opportunity.stageLogs?.length || 'undefined'}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Data: {JSON.stringify(opportunity.stageLogs)}
-            </p>
           </CardContent>
         </Card>
       )}
