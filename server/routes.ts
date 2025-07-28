@@ -108,6 +108,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get contacts for specific account
+  app.get("/api/accounts/:accountId/contacts", async (req, res) => {
+    try {
+      const accountId = parseInt(req.params.accountId);
+      const contacts = await storage.getContactsByAccount(accountId);
+      res.json(contacts);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch contacts for account" });
+    }
+  });
+
   app.post("/api/contacts", async (req, res) => {
     try {
       const contactData = insertContactSchema.parse(req.body);

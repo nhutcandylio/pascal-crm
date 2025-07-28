@@ -25,6 +25,12 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
     queryKey: ["/api/contacts"],
   });
 
+  // Load contacts relevant to the opportunity's account
+  const { data: accountContacts = [] } = useQuery<Contact[]>({
+    queryKey: ["/api/accounts", opportunity.accountId, "contacts"],
+    enabled: !!opportunity.accountId,
+  });
+
   const value = parseFloat(opportunity.value) || 0;
   const grossProfit = parseFloat(opportunity.grossProfit || "0") || 0;
   const grossProfitMargin = opportunity.grossProfitMargin || 0;
@@ -36,6 +42,10 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
     }
     queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
     queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+    // If account was updated, refresh account contacts
+    if (field === 'accountId') {
+      queryClient.invalidateQueries({ queryKey: ["/api/accounts", value, "contacts"] });
+    }
   };
 
 
@@ -79,7 +89,7 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
                 onSave={(value) => handleFieldUpdate('contactId', value)}
                 placeholder="Select contact"
                 type="select"
-                options={contacts.map(contact => ({
+                options={(opportunity.accountId ? accountContacts : contacts).map(contact => ({
                   value: contact.id.toString(),
                   label: `${contact.firstName} ${contact.lastName}`
                 }))}
@@ -87,6 +97,7 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
                   ? `${opportunity.contact.firstName} ${opportunity.contact.lastName}`
                   : undefined
                 }
+
               />
 
               <div>
@@ -129,7 +140,7 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
 
               <EditableDateField
                 label="Close Date"
-                value={opportunity.closeDate}
+                value={opportunity.closeDate ? new Date(opportunity.closeDate).toISOString().split('T')[0] : ''}
                 onSave={(value) => handleFieldUpdate('closeDate', value)}
                 placeholder="Select close date"
               />
@@ -144,6 +155,41 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
           </div>
         </CardContent>
       </Card>
+
+      {/* Account Contacts Section */}
+      {opportunity.accountId && opportunity.account && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <User className="h-5 w-5" />
+              <span>Contacts from {opportunity.account.companyName}</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {accountContacts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {accountContacts.map((contact) => (
+                  <div key={contact.id} className="p-3 border rounded-lg">
+                    <div className="font-medium">{contact.firstName} {contact.lastName}</div>
+                    <div className="text-sm text-muted-foreground">{contact.email}</div>
+                    {contact.phone && (
+                      <div className="text-sm text-muted-foreground">{contact.phone}</div>
+                    )}
+                    {contact.title && (
+                      <div className="text-sm text-muted-foreground">{contact.title}</div>
+                    )}
+                    {opportunity.contactId === contact.id && (
+                      <Badge variant="secondary" className="mt-2">Primary Contact</Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">No contacts associated with this account yet.</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Financial Information */}
       <Card>
