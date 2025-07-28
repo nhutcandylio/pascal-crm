@@ -2,12 +2,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Building, User, DollarSign, Calendar, TrendingUp, Percent, FileText } from "lucide-react";
+import { Building, User as UserIcon, DollarSign, Calendar, TrendingUp, Percent, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { EditableField, EditableCurrencyField, EditablePercentageField, EditableDateField } from "@/components/ui/editable-field";
-import type { OpportunityWithRelations, Account, Contact } from "@shared/schema";
+import type { OpportunityWithRelations, Account, Contact, User } from "@shared/schema";
 
 interface OpportunityDetailTabProps {
   opportunity: OpportunityWithRelations;
@@ -25,6 +25,10 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
     queryKey: ["/api/contacts"],
   });
 
+  const { data: users = [] } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+  });
+
   // Load contacts relevant to the opportunity's account
   const { data: accountContacts = [] } = useQuery<Contact[]>({
     queryKey: ["/api/accounts", opportunity.accountId, "contacts"],
@@ -39,7 +43,7 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
     try {
       // Convert string values to appropriate types for numeric fields
       let processedValue: any = value;
-      if (field === 'accountId' || field === 'contactId') {
+      if (field === 'accountId' || field === 'contactId' || field === 'ownerId') {
         processedValue = value === '' || value === 'none' ? null : parseInt(value);
       } else if (field === 'probability') {
         processedValue = parseInt(value);
@@ -157,18 +161,24 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
                 }
               />
 
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">Owner</label>
-                <p className="text-base font-medium flex items-center space-x-2">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span>
-                    {opportunity.owner 
-                      ? `${opportunity.owner.firstName} ${opportunity.owner.lastName}`
-                      : "Unassigned"
-                    }
-                  </span>
-                </p>
-              </div>
+              <EditableField
+                label="Owner"
+                value={opportunity.ownerId?.toString() || "none"}
+                onSave={(value) => handleFieldUpdate('ownerId', value)}
+                placeholder="Select owner"
+                type="select"
+                options={[
+                  { value: "none", label: "Unassigned" },
+                  ...users.map(user => ({
+                    value: user.id.toString(),
+                    label: `${user.firstName} ${user.lastName}`
+                  }))
+                ]}
+                displayValue={opportunity.owner 
+                  ? `${opportunity.owner.firstName} ${opportunity.owner.lastName}`
+                  : "Unassigned"
+                }
+              />
             </div>
 
             <div className="space-y-4">
@@ -218,7 +228,7 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <User className="h-5 w-5" />
+              <UserIcon className="h-5 w-5" />
               <span>Contacts from {opportunity.account.companyName}</span>
             </CardTitle>
           </CardHeader>

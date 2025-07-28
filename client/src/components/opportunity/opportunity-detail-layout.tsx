@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -8,10 +8,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, TrendingUp, DollarSign, Calendar, Users, Building, Package, FileText, ShoppingCart, Plus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, TrendingUp, DollarSign, Calendar, Users, Building, Package, FileText, ShoppingCart, Plus, Edit, Check, X } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-import type { OpportunityWithRelations } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import type { OpportunityWithRelations, User } from "@shared/schema";
 import OpportunityDetailTab from "./opportunity-detail-tab";
 import OpportunityRelatedTab from "./opportunity-related-tab";
 import OpportunityOrdersTab from "./opportunity-orders-tab";
@@ -61,8 +63,14 @@ export default function OpportunityDetailLayout({
     targetStageLabel: "",
   });
   const [stageChangeReason, setStageChangeReason] = useState("");
+  const [isEditingOwner, setIsEditingOwner] = useState(false);
+  const [selectedOwnerId, setSelectedOwnerId] = useState<number | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  const { data: users = [] } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+  });
 
   const handleStageChangeClick = (newStage: string, stageLabel: string) => {
     if (newStage === opportunity?.stage) return;
@@ -138,6 +146,43 @@ export default function OpportunityDetailLayout({
   const handleStageChangeCancel = () => {
     setStageChangeModal({ isOpen: false, targetStage: "", targetStageLabel: "" });
     setStageChangeReason("");
+  };
+
+  const updateOwnerMutation = useMutation({
+    mutationFn: async (ownerId: number | null) => {
+      const response = await apiRequest("PATCH", `/api/opportunities/${opportunityId}`, { ownerId });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunityId, "with-relations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+      setIsEditingOwner(false);
+      toast({
+        title: "Owner Updated",
+        description: "Opportunity owner has been updated successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update owner. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleOwnerEdit = () => {
+    setSelectedOwnerId(opportunity?.ownerId || null);
+    setIsEditingOwner(true);
+  };
+
+  const handleOwnerSave = () => {
+    updateOwnerMutation.mutate(selectedOwnerId);
+  };
+
+  const handleOwnerCancel = () => {
+    setIsEditingOwner(false);
+    setSelectedOwnerId(null);
   };
 
   const { data: opportunity, isLoading } = useQuery<OpportunityWithRelations>({
