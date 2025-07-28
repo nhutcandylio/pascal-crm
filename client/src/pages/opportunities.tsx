@@ -228,7 +228,7 @@ export default function Opportunities() {
             <h1 className="text-2xl font-bold text-slate-900">Opportunities</h1>
             <p className="text-slate-600">Manage your sales pipeline and deals</p>
           </div>
-          <Button onClick={() => setIsModalOpen(true)}>
+          <Button onClick={() => setIsModalOpen(true)} className="btn-gradient h-11 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200">
             <Plus className="h-4 w-4 mr-2" />
             New Opportunity
           </Button>
@@ -245,7 +245,7 @@ export default function Opportunities() {
       </div>
       
       <div>
-        <Card>
+        <Card className="glass-effect border-white/20">
           <CardContent className="p-0">
             {isLoading ? (
               <div className="p-8 text-center text-slate-500">Loading opportunities...</div>

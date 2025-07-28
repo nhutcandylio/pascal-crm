@@ -87,69 +87,79 @@ export default function Dashboard() {
     <main className="p-6 space-y-6">
         {/* Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-          <Card>
+          <Card className="card-hover glass-effect border-white/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Accounts</CardTitle>
-              <Building className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-slate-700">Total Accounts</CardTitle>
+              <div className="p-2 rounded-lg bg-blue-100">
+                <Building className="h-4 w-4 text-blue-600" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalAccounts}</div>
-              <div className="flex items-center text-xs text-green-600 mt-1">
+              <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">{totalAccounts}</div>
+              <div className="flex items-center text-xs text-green-600 mt-2">
                 <ArrowUpRight className="h-3 w-3 mr-1" />
                 +12% from last month
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="card-hover glass-effect border-white/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Contacts</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-slate-700">Total Contacts</CardTitle>
+              <div className="p-2 rounded-lg bg-green-100">
+                <Users className="h-4 w-4 text-green-600" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalContacts}</div>
-              <div className="flex items-center text-xs text-green-600 mt-1">
+              <div className="text-3xl font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent">{totalContacts}</div>
+              <div className="flex items-center text-xs text-green-600 mt-2">
                 <ArrowUpRight className="h-3 w-3 mr-1" />
                 +8% from last month
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="card-hover glass-effect border-white/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Leads</CardTitle>
-              <UserPlus className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-slate-700">Active Leads</CardTitle>
+              <div className="p-2 rounded-lg bg-yellow-100">
+                <UserPlus className="h-4 w-4 text-yellow-600" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalLeads}</div>
-              <div className="flex items-center text-xs text-red-600 mt-1">
+              <div className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-700 bg-clip-text text-transparent">{totalLeads}</div>
+              <div className="flex items-center text-xs text-red-600 mt-2">
                 <ArrowDownRight className="h-3 w-3 mr-1" />
                 -3% from last month
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="card-hover glass-effect border-white/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pipeline Value</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-slate-700">Pipeline Value</CardTitle>
+              <div className="p-2 rounded-lg bg-purple-100">
+                <DollarSign className="h-4 w-4 text-purple-600" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${totalRevenue.toLocaleString()}</div>
-              <div className="flex items-center text-xs text-green-600 mt-1">
+              <div className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent">${totalRevenue.toLocaleString()}</div>
+              <div className="flex items-center text-xs text-green-600 mt-2">
                 <ArrowUpRight className="h-3 w-3 mr-1" />
                 +24% from last month
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="card-hover glass-effect border-white/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-slate-700">Conversion Rate</CardTitle>
+              <div className="p-2 rounded-lg bg-indigo-100">
+                <TrendingUp className="h-4 w-4 text-indigo-600" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{conversionRate}%</div>
+              <div className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-indigo-700 bg-clip-text text-transparent">{conversionRate}%</div>
               <Progress value={conversionRate} className="mt-2" />
             </CardContent>
           </Card>
@@ -158,9 +168,9 @@ export default function Dashboard() {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Pipeline Chart */}
-          <Card>
+          <Card className="glass-effect border-white/20">
             <CardHeader>
-              <CardTitle>Sales Pipeline</CardTitle>
+              <CardTitle className="text-slate-800">Sales Pipeline</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -181,9 +191,9 @@ export default function Dashboard() {
           </Card>
 
           {/* Lead Sources */}
-          <Card>
+          <Card className="glass-effect border-white/20">
             <CardHeader>
-              <CardTitle>Lead Sources</CardTitle>
+              <CardTitle className="text-slate-800">Lead Sources</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -208,9 +218,9 @@ export default function Dashboard() {
         </div>
 
         {/* Activity Trends */}
-        <Card>
+        <Card className="glass-effect border-white/20">
           <CardHeader>
-            <CardTitle>Activity Trends (Last 6 Months)</CardTitle>
+            <CardTitle className="text-slate-800">Activity Trends (Last 6 Months)</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
