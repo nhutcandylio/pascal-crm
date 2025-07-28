@@ -288,6 +288,20 @@ export class MemStorage implements IStorage {
         email: "mike.wilson@globalent.com",
         phone: "(555) 345-6789",
         title: "CFO"
+      },
+      {
+        firstName: "Emily",
+        lastName: "Davis",
+        email: "emily.davis@acme.com",
+        phone: "(555) 123-4568",
+        title: "VP of Sales"
+      },
+      {
+        firstName: "David",
+        lastName: "Brown",
+        email: "david.brown@acme.com",
+        phone: "(555) 123-4569",
+        title: "Product Manager"
       }
     ];
 
@@ -299,6 +313,8 @@ export class MemStorage implements IStorage {
     this.addContactToAccount(1, 1); // John Smith -> Acme Corp
     this.addContactToAccount(2, 2); // Sarah Johnson -> TechInnovate Solutions  
     this.addContactToAccount(3, 3); // Mike Wilson -> Global Enterprises
+    this.addContactToAccount(1, 4); // Emily Davis -> Acme Corp
+    this.addContactToAccount(1, 5); // David Brown -> Acme Corp
 
     // Add sample leads
     const sampleLeads: InsertLead[] = [
