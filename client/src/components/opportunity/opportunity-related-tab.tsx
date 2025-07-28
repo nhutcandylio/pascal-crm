@@ -237,11 +237,11 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
       )}
 
       {/* Stage Changes History */}
-      <Card className="glass-effect border-white/20">
-        <CardHeader>
+      <Card className="glass-effect border-white/20 border-2 border-blue-300 shadow-lg">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200">
           <CardTitle className="flex items-center space-x-2 text-slate-800">
             <TrendingUp className="h-5 w-5 text-primary" />
-            <span>Stage Changes History</span>
+            <span>Stage Changes History ({opportunity.stageLogs?.length || 0} changes)</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
