@@ -282,6 +282,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.delete("/api/opportunities/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteOpportunity(id);
+      if (success) {
+        res.json({ message: "Opportunity deleted successfully" });
+      } else {
+        res.status(404).json({ error: "Opportunity not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete opportunity" });
+    }
+  });
+
   // Activity routes
   app.get("/api/activities", async (req, res) => {
     try {

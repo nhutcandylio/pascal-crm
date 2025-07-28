@@ -84,7 +84,7 @@ export function EditableField({
             </SelectTrigger>
             <SelectContent>
               {options.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
+                <SelectItem key={option.value} value={option.value || "undefined"}>
                   {option.label}
                 </SelectItem>
               ))}
