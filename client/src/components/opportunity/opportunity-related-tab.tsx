@@ -49,6 +49,12 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Fetch account contacts to get accurate count
+  const { data: accountContacts } = useQuery({
+    queryKey: ["/api/accounts", opportunity.account?.id, "contacts"],
+    enabled: !!opportunity.account?.id,
+  });
+
   const updateAccountMutation = useMutation({
     mutationFn: async ({ field, value }: { field: string; value: string }) => {
       const response = await fetch(`/api/accounts/${opportunity.accountId}`, {
@@ -104,14 +110,14 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-4 border rounded-lg">
               <Building className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-              <p className="text-2xl font-bold">1</p>
+              <p className="text-2xl font-bold">{opportunity.account ? 1 : 0}</p>
               <p className="text-sm text-muted-foreground">Account</p>
             </div>
 
             <div className="text-center p-4 border rounded-lg">
               <User className="h-8 w-8 mx-auto mb-2 text-green-600" />
-              <p className="text-2xl font-bold">1</p>
-              <p className="text-sm text-muted-foreground">Contact</p>
+              <p className="text-2xl font-bold">{accountContacts?.length || (opportunity.contact ? 1 : 0)}</p>
+              <p className="text-sm text-muted-foreground">Contact{(accountContacts?.length || 0) !== 1 ? 's' : ''}</p>
             </div>
 
             <div className="text-center p-4 border rounded-lg">
