@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { insertActivitySchema, type InsertActivity, type Customer, type Deal } from "@shared/schema";
+import { insertActivitySchema, type InsertActivity, type Account, type Opportunity } from "@shared/schema";
 
 interface ActivityModalProps {
   isOpen: boolean;
@@ -16,22 +16,23 @@ interface ActivityModalProps {
 
 export default function ActivityModal({ isOpen, onClose }: ActivityModalProps) {
   const [formData, setFormData] = useState<InsertActivity>({
-    customerId: null,
-    dealId: null,
+    accountId: null,
+    opportunityId: null,
     type: "note",
+    subject: "",
     description: "",
   });
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: customers } = useQuery<Customer[]>({
-    queryKey: ["/api/customers"],
+  const { data: accounts } = useQuery<Account[]>({
+    queryKey: ["/api/accounts"],
     enabled: isOpen,
   });
 
-  const { data: deals } = useQuery<Deal[]>({
-    queryKey: ["/api/deals"],
+  const { data: opportunities } = useQuery<Opportunity[]>({
+    queryKey: ["/api/opportunities"],
     enabled: isOpen,
   });
 
@@ -74,9 +75,10 @@ export default function ActivityModal({ isOpen, onClose }: ActivityModalProps) {
 
   const handleClose = () => {
     setFormData({
-      customerId: null,
-      dealId: null,
+      accountId: null,
+      opportunityId: null,
       type: "note",
+      subject: "",
       description: "",
     });
     onClose();
@@ -110,31 +112,43 @@ export default function ActivityModal({ isOpen, onClose }: ActivityModalProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Description *</Label>
+            <Label htmlFor="subject">Subject *</Label>
+            <input
+              id="subject"
+              type="text"
+              placeholder="Enter activity subject"
+              value={formData.subject}
+              onChange={(e) => handleInputChange("subject", e.target.value)}
+              required
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
               placeholder="Enter activity description"
-              value={formData.description}
+              value={formData.description || ""}
               onChange={(e) => handleInputChange("description", e.target.value)}
-              required
               rows={3}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="customerId">Customer (Optional)</Label>
+            <Label htmlFor="accountId">Account (Optional)</Label>
             <Select 
-              value={formData.customerId?.toString() || ""} 
-              onValueChange={(value) => handleInputChange("customerId", value ? parseInt(value) : null)}
+              value={formData.accountId?.toString() || ""} 
+              onValueChange={(value) => handleInputChange("accountId", value ? parseInt(value) : null)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select customer" />
+                <SelectValue placeholder="Select account" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No customer</SelectItem>
-                {customers?.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id.toString()}>
-                    {customer.companyName} - {customer.contactName}
+                <SelectItem value="">No account</SelectItem>
+                {accounts?.map((account) => (
+                  <SelectItem key={account.id} value={account.id.toString()}>
+                    {account.companyName}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -142,19 +156,19 @@ export default function ActivityModal({ isOpen, onClose }: ActivityModalProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="dealId">Deal (Optional)</Label>
+            <Label htmlFor="opportunityId">Opportunity (Optional)</Label>
             <Select 
-              value={formData.dealId?.toString() || ""} 
-              onValueChange={(value) => handleInputChange("dealId", value ? parseInt(value) : null)}
+              value={formData.opportunityId?.toString() || ""} 
+              onValueChange={(value) => handleInputChange("opportunityId", value ? parseInt(value) : null)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select deal" />
+                <SelectValue placeholder="Select opportunity" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No deal</SelectItem>
-                {deals?.map((deal) => (
-                  <SelectItem key={deal.id} value={deal.id.toString()}>
-                    {deal.title}
+                <SelectItem value="">No opportunity</SelectItem>
+                {opportunities?.map((opportunity) => (
+                  <SelectItem key={opportunity.id} value={opportunity.id.toString()}>
+                    {opportunity.name}
                   </SelectItem>
                 ))}
               </SelectContent>
