@@ -18,6 +18,7 @@ const navigation = [
   { name: "Leads", href: "/leads", icon: UserPlus },
   { name: "Opportunities", href: "/opportunities", icon: Handshake },
   { name: "Products", href: "/products", icon: Package },
+  { name: "Users", href: "/users", icon: User },
 ];
 
 export default function TopNav() {
