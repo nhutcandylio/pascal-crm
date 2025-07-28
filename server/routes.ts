@@ -251,7 +251,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const opportunityData = updateOpportunitySchema.parse(req.body);
+      
+      // Get the current opportunity to check for stage changes
+      const currentOpportunity = await storage.getOpportunity(id);
+      if (!currentOpportunity) {
+        return res.status(404).json({ error: "Opportunity not found" });
+      }
+      
       const opportunity = await storage.updateOpportunity(id, opportunityData);
+      
+      // If stage changed, create a stage change log
+      if (opportunityData.stage && opportunityData.stage !== currentOpportunity.stage) {
+        await storage.createStageChangeLog({
+          opportunityId: id,
+          fromStage: currentOpportunity.stage,
+          toStage: opportunityData.stage,
+          changedBy: 1, // Default user for now
+          reason: null, // Will be set by activity if provided
+        });
+      }
+      
       res.json(opportunity);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -277,6 +296,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const activityData = insertActivitySchema.parse(req.body);
       const activity = await storage.createActivity(activityData);
+      
+      // If this is a stage_change activity, update the most recent stage change log with the reason
+      if (activityData.type === 'stage_change' && activityData.opportunityId && activityData.description) {
+        const reason = activityData.description.replace(/^Reason:\s*/, ''); // Extract reason from description
+        await storage.updateLatestStageChangeLogReason(activityData.opportunityId, reason);
+      }
+      
       res.status(201).json(activity);
     } catch (error) {
       if (error instanceof z.ZodError) {

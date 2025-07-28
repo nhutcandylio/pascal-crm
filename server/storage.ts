@@ -122,6 +122,7 @@ export interface IStorage {
   getStageChangeLogs(): Promise<StageChangeLog[]>;
   getStageChangeLogsByOpportunity(opportunityId: number): Promise<StageChangeLogWithUser[]>;
   createStageChangeLog(log: InsertStageChangeLog): Promise<StageChangeLog>;
+  updateLatestStageChangeLogReason(opportunityId: number, reason: string): Promise<StageChangeLog | undefined>;
 
   // Activity operations
   getActivity(id: number): Promise<Activity | undefined>;
@@ -1283,6 +1284,26 @@ export class MemStorage implements IStorage {
     };
     this.stageChangeLogs.set(id, stageChangeLog);
     return stageChangeLog;
+  }
+
+  async updateLatestStageChangeLogReason(opportunityId: number, reason: string): Promise<StageChangeLog | undefined> {
+    // Find the most recent stage change log for this opportunity
+    const stageLogs = Array.from(this.stageChangeLogs.values())
+      .filter(log => log.opportunityId === opportunityId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    
+    if (stageLogs.length === 0) {
+      return undefined;
+    }
+    
+    const latestLog = stageLogs[0];
+    const updatedLog: StageChangeLog = {
+      ...latestLog,
+      reason: reason
+    };
+    
+    this.stageChangeLogs.set(latestLog.id, updatedLog);
+    return updatedLog;
   }
 
   // Enhanced Opportunity operations with relations
