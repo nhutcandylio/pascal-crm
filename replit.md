@@ -110,6 +110,14 @@ The application follows modern web development practices with strong typing, com
 
 ## Recent Changes
 
+### July 2025 - User Management & Owner Assignment
+- **Implemented**: Complete User CRUD functionality with create, edit, delete operations
+- **Added**: Phone field to user schema and API routes for user management (GET, POST, PATCH, DELETE)
+- **Enhanced**: Lead and Opportunity modals with owner assignment dropdowns
+- **Fixed**: Stage Changes History display now properly visible with professional styling
+- **Completed**: Storage layer with comprehensive user operations and owner relationship support
+- **Navigation**: Added Users page to sidebar with full team member management capabilities
+
 ### January 2025 - Many-to-Many Account-Contact Relationships
 - **Implemented**: Junction table (AccountContacts) for shared contact relationships
 - **Updated**: Storage layer with new relationship management methods

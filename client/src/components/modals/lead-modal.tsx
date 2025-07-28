@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,7 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { insertLeadSchema, type InsertLead } from "@shared/schema";
+import { insertLeadSchema, type InsertLead, type User } from "@shared/schema";
 
 interface LeadModalProps {
   open: boolean;
@@ -36,6 +36,10 @@ export default function LeadModal({ open, onOpenChange }: LeadModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const { data: users = [] } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+  });
+
   const form = useForm<InsertLead>({
     resolver: zodResolver(insertLeadSchema.extend({
       status: insertLeadSchema.shape.status.default("new")
@@ -49,6 +53,7 @@ export default function LeadModal({ open, onOpenChange }: LeadModalProps) {
       title: null,
       source: null,
       status: "new",
+      ownerId: null,
     },
   });
 
@@ -228,6 +233,35 @@ export default function LeadModal({ open, onOpenChange }: LeadModalProps) {
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="ownerId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Owner</FormLabel>
+                  <Select 
+                    onValueChange={(value) => field.onChange(value ? parseInt(value) : null)} 
+                    value={field.value?.toString() || ""}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select owner" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">No owner</SelectItem>
+                      {users.map((user) => (
+                        <SelectItem key={user.id} value={user.id.toString()}>
+                          {user.firstName} {user.lastName} ({user.role})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button

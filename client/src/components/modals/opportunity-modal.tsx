@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { insertOpportunitySchema, type InsertOpportunity, type Account, type Contact, type Opportunity } from "@shared/schema";
+import { insertOpportunitySchema, type InsertOpportunity, type Account, type Contact, type Opportunity, type User } from "@shared/schema";
 import { z } from "zod";
 
 interface OpportunityModalProps {
@@ -40,6 +40,10 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
     queryKey: ["/api/contacts"],
   });
 
+  const { data: users = [] } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+  });
+
   const form = useForm({
     resolver: zodResolver(insertOpportunitySchema),
     defaultValues: {
@@ -52,6 +56,7 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
       closeDate: "",
       accountId: null,
       contactId: null,
+      ownerId: null,
     },
   });
 
@@ -68,6 +73,7 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
         closeDate: opportunity.closeDate ? new Date(opportunity.closeDate).toISOString().split('T')[0] : "",
         accountId: opportunity.accountId || null,
         contactId: opportunity.contactId || null,
+        ownerId: opportunity.ownerId || null,
       });
     } else {
       form.reset({
@@ -80,6 +86,7 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
         closeDate: "",
         accountId: null,
         contactId: null,
+        ownerId: null,
       });
     }
   }, [opportunity, form]);
@@ -349,6 +356,35 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
                       {filteredContacts.map((contact) => (
                         <SelectItem key={contact.id} value={contact.id.toString()}>
                           {contact.firstName} {contact.lastName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="ownerId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Owner</FormLabel>
+                  <Select 
+                    onValueChange={(value) => field.onChange(value ? parseInt(value) : null)} 
+                    value={field.value?.toString() || ""}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select owner" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">No owner</SelectItem>
+                      {users.map((user) => (
+                        <SelectItem key={user.id} value={user.id.toString()}>
+                          {user.firstName} {user.lastName} ({user.role})
                         </SelectItem>
                       ))}
                     </SelectContent>
