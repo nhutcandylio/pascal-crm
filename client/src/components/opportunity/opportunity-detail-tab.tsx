@@ -127,6 +127,11 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
           <CardTitle className="flex items-center space-x-2">
             <Building className="h-5 w-5" />
             <span>Opportunity Information</span>
+            {isClosedOpportunity && (
+              <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full ml-2">
+                Read-Only
+              </span>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">

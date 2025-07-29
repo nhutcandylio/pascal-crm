@@ -183,6 +183,17 @@ export default function OpportunityDetailLayout({
   });
 
   const handleOwnerEdit = () => {
+    // Prevent owner editing for closed opportunities
+    const isClosedOpportunity = opportunity?.stage === 'closed-won' || opportunity?.stage === 'closed-lost';
+    if (isClosedOpportunity) {
+      toast({
+        title: "Cannot Edit",
+        description: "Closed opportunities cannot be edited.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setSelectedOwnerId(opportunity?.ownerId || null);
     setIsEditingOwner(true);
   };
