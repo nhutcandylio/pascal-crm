@@ -284,18 +284,7 @@ export default function OpportunityDetailLayout({
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center space-x-2">
-            {opportunity?.stage !== 'closed-won' && opportunity?.stage !== 'closed-lost' ? (
-              <Button variant="outline" size="sm" onClick={() => onEdit(opportunity)}>
-                Edit Opportunity
-              </Button>
-            ) : (
-              <Button variant="outline" size="sm" disabled className="opacity-50">
-                Edit Opportunity
-              </Button>
-            )}
-          </div>
+
         </div>
 
         {/* Visual Pipeline Selector */}
