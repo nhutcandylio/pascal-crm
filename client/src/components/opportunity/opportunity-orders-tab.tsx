@@ -30,11 +30,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { ShoppingCart, Plus, Package, Minus, Calendar, DollarSign } from "lucide-react";
+import { ShoppingCart, Plus, Package, Minus, Calendar, DollarSign, Edit2, Save, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
-import type { OpportunityWithRelations, Product } from "@shared/schema";
+import type { OpportunityWithRelations, Product, Order, OrderItem } from "@shared/schema";
 import { z } from "zod";
 
 const createOrderWithItemsSchema = z.object({
@@ -60,6 +60,9 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [newOrderOpen, setNewOrderOpen] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<number | null>(null);
+  const [editingOrderItem, setEditingOrderItem] = useState<number | null>(null);
+  const [addingProductToOrder, setAddingProductToOrder] = useState<number | null>(null);
 
   // Fetch products for order creation
   const { data: products = [] } = useQuery<Product[]>({
@@ -148,6 +151,78 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
   const handleCreateOrder = (data: any) => {
     createOrderMutation.mutate(data);
   };
+
+  // Update order status mutation
+  const updateOrderStatusMutation = useMutation({
+    mutationFn: async ({ orderId, status }: { orderId: number; status: string }) => {
+      const response = await apiRequest("PATCH", `/api/orders/${orderId}`, { status });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+      toast({
+        title: "Success",
+        description: "Order status updated successfully.",
+      });
+      setEditingOrder(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update order status.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Update order item mutation
+  const updateOrderItemMutation = useMutation({
+    mutationFn: async ({ itemId, data }: { itemId: number; data: any }) => {
+      const response = await apiRequest("PATCH", `/api/order-items/${itemId}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+      toast({
+        title: "Success",
+        description: "Order item updated successfully.",
+      });
+      setEditingOrderItem(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update order item.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Add product to existing order mutation
+  const addProductToOrderMutation = useMutation({
+    mutationFn: async ({ orderId, productData }: { orderId: number; productData: any }) => {
+      const response = await apiRequest("POST", "/api/order-items", {
+        orderId,
+        ...productData,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+      toast({
+        title: "Success",
+        description: "Product added to order successfully.",
+      });
+      setAddingProductToOrder(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add product to order.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const getOrderStatusColor = (status: string) => {
     switch (status) {
@@ -460,9 +535,46 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
                       <h4 className="font-medium">Order #{order.id}</h4>
-                      <Badge className={getOrderStatusColor(order.status)}>
-                        {order.status}
-                      </Badge>
+                      {editingOrder === order.id ? (
+                        <div className="flex items-center space-x-2">
+                          <Select 
+                            defaultValue={order.status}
+                            onValueChange={(status) => updateOrderStatusMutation.mutate({ orderId: order.id, status })}
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="draft">Draft</SelectItem>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="confirmed">Confirmed</SelectItem>
+                              <SelectItem value="shipped">Shipped</SelectItem>
+                              <SelectItem value="delivered">Delivered</SelectItem>
+                              <SelectItem value="cancelled">Cancelled</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEditingOrder(null)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <Badge className={getOrderStatusColor(order.status)}>
+                            {order.status}
+                          </Badge>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setEditingOrder(order.id)}
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                       <Calendar className="h-4 w-4" />
@@ -485,7 +597,17 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                     <>
                       <Separator className="my-4" />
                       <div className="space-y-2">
-                        <h5 className="font-medium">Order Items</h5>
+                        <div className="flex items-center justify-between">
+                          <h5 className="font-medium">Order Items</h5>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setAddingProductToOrder(order.id)}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Product
+                          </Button>
+                        </div>
                         {order.items.map((item, itemIndex) => (
                           <div key={itemIndex} className="py-2 px-3 bg-muted/50 rounded space-y-2">
                             <div className="flex items-center justify-between">
@@ -498,40 +620,73 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                                   </p>
                                 </div>
                               </div>
-                              <div className="text-right">
-                                <p className="font-semibold">${item.totalPrice}</p>
+                              <div className="flex items-center space-x-2">
+                                <div className="text-right">
+                                  <p className="font-semibold">${item.totalPrice}</p>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setEditingOrderItem(item.id)}
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </Button>
                               </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <span className="text-muted-foreground">Cost: </span>
-                                <span>${item.costValue}</span>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Proposal: </span>
-                                <span>${item.proposalValue}</span>
-                              </div>
-                            </div>
-                            {item.product?.type === "subscription" && (item.startDate || item.endDate) && (
-                              <div className="grid grid-cols-2 gap-4 text-sm">
-                                {item.startDate && (
+                            
+                            {editingOrderItem === item.id ? (
+                              <EditOrderItemForm 
+                                item={item}
+                                products={products}
+                                onSave={(data) => updateOrderItemMutation.mutate({ itemId: item.id, data })}
+                                onCancel={() => setEditingOrderItem(null)}
+                                isLoading={updateOrderItemMutation.isPending}
+                              />
+                            ) : (
+                              <>
+                                <div className="grid grid-cols-2 gap-4 text-sm">
                                   <div>
-                                    <span className="text-muted-foreground">Start: </span>
-                                    <span>{format(new Date(item.startDate), 'MMM dd, yyyy')}</span>
+                                    <span className="text-muted-foreground">Cost: </span>
+                                    <span>${item.costValue}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-muted-foreground">Proposal: </span>
+                                    <span>${item.proposalValue}</span>
+                                  </div>
+                                </div>
+                                {item.product?.type === "subscription" && (item.startDate || item.endDate) && (
+                                  <div className="grid grid-cols-2 gap-4 text-sm">
+                                    {item.startDate && (
+                                      <div>
+                                        <span className="text-muted-foreground">Start: </span>
+                                        <span>{format(new Date(item.startDate), 'MMM dd, yyyy')}</span>
+                                      </div>
+                                    )}
+                                    {item.endDate && (
+                                      <div>
+                                        <span className="text-muted-foreground">End: </span>
+                                        <span>{format(new Date(item.endDate), 'MMM dd, yyyy')}</span>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
-                                {item.endDate && (
-                                  <div>
-                                    <span className="text-muted-foreground">End: </span>
-                                    <span>{format(new Date(item.endDate), 'MMM dd, yyyy')}</span>
-                                  </div>
-                                )}
-                              </div>
+                              </>
                             )}
                           </div>
                         ))}
                       </div>
                     </>
+                  )}
+
+                  {/* Add Product to Order Dialog */}
+                  {addingProductToOrder === order.id && (
+                    <AddProductToOrderDialog
+                      orderId={order.id}
+                      products={products}
+                      onAdd={(data) => addProductToOrderMutation.mutate({ orderId: order.id, productData: data })}
+                      onCancel={() => setAddingProductToOrder(null)}
+                      isLoading={addProductToOrderMutation.isPending}
+                    />
                   )}
 
                   {(!order.items || order.items.length === 0) && (
@@ -557,5 +712,233 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// Edit Order Item Form Component
+interface EditOrderItemFormProps {
+  item: OrderItem;
+  products: Product[];
+  onSave: (data: any) => void;
+  onCancel: () => void;
+  isLoading: boolean;
+}
+
+function EditOrderItemForm({ item, products, onSave, onCancel, isLoading }: EditOrderItemFormProps) {
+  const [quantity, setQuantity] = useState(item.quantity);
+  const [costValue, setCostValue] = useState(item.costValue);
+  const [proposalValue, setProposalValue] = useState(item.proposalValue);
+  const [startDate, setStartDate] = useState(item.startDate ? format(new Date(item.startDate), 'yyyy-MM-dd') : '');
+  const [endDate, setEndDate] = useState(item.endDate ? format(new Date(item.endDate), 'yyyy-MM-dd') : '');
+
+  const selectedProduct = products.find(p => p.id === item.productId);
+
+  const handleSave = () => {
+    const updatedData = {
+      quantity,
+      costValue,
+      proposalValue,
+      unitPrice: proposalValue,
+      totalPrice: (parseFloat(proposalValue) * quantity).toFixed(2),
+      startDate: startDate ? new Date(startDate) : null,
+      endDate: endDate ? new Date(endDate) : null,
+    };
+    onSave(updatedData);
+  };
+
+  return (
+    <div className="space-y-4 border-t pt-4">
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <label className="text-sm font-medium">Quantity</label>
+          <Input
+            type="number"
+            min="1"
+            value={quantity}
+            onChange={(e) => setQuantity(parseInt(e.target.value))}
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Cost Value</label>
+          <Input
+            type="number"
+            step="0.01"
+            value={costValue}
+            onChange={(e) => setCostValue(e.target.value)}
+          />
+        </div>
+        <div>
+          <label className="text-sm font-medium">Proposal Value</label>
+          <Input
+            type="number"
+            step="0.01"
+            value={proposalValue}
+            onChange={(e) => setProposalValue(e.target.value)}
+          />
+        </div>
+      </div>
+      
+      {selectedProduct?.type === "subscription" && (
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium">Start Date</label>
+            <Input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium">End Date</label>
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </div>
+        </div>
+      )}
+      
+      <div className="flex justify-end space-x-2">
+        <Button variant="outline" onClick={onCancel} disabled={isLoading}>
+          Cancel
+        </Button>
+        <Button onClick={handleSave} disabled={isLoading}>
+          {isLoading ? "Saving..." : "Save"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// Add Product to Order Dialog Component
+interface AddProductToOrderDialogProps {
+  orderId: number;
+  products: Product[];
+  onAdd: (data: any) => void;
+  onCancel: () => void;
+  isLoading: boolean;
+}
+
+function AddProductToOrderDialog({ orderId, products, onAdd, onCancel, isLoading }: AddProductToOrderDialogProps) {
+  const [selectedProductId, setSelectedProductId] = useState<number>(0);
+  const [quantity, setQuantity] = useState(1);
+  const [costValue, setCostValue] = useState('');
+  const [proposalValue, setProposalValue] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  const selectedProduct = products.find(p => p.id === selectedProductId);
+
+  const handleAdd = () => {
+    if (!selectedProductId || !costValue || !proposalValue) return;
+    
+    const productData = {
+      productId: selectedProductId,
+      quantity,
+      costValue,
+      proposalValue,
+      unitPrice: proposalValue,
+      totalPrice: (parseFloat(proposalValue) * quantity).toFixed(2),
+      startDate: startDate ? new Date(startDate) : null,
+      endDate: endDate ? new Date(endDate) : null,
+    };
+    onAdd(productData);
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={onCancel}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add Product to Order</DialogTitle>
+          <DialogDescription>
+            Add a new product to this order.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">Product</label>
+            <Select onValueChange={(value) => setSelectedProductId(parseInt(value))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select product" />
+              </SelectTrigger>
+              <SelectContent>
+                {products.map((product) => (
+                  <SelectItem key={product.id} value={product.id.toString()}>
+                    {product.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="text-sm font-medium">Quantity</label>
+              <Input
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={(e) => setQuantity(parseInt(e.target.value))}
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Cost Value</label>
+              <Input
+                type="number"
+                step="0.01"
+                value={costValue}
+                onChange={(e) => setCostValue(e.target.value)}
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Proposal Value</label>
+              <Input
+                type="number"
+                step="0.01"
+                value={proposalValue}
+                onChange={(e) => setProposalValue(e.target.value)}
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+          
+          {selectedProduct?.type === "subscription" && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Start Date</label>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">End Date</label>
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <div className="flex justify-end space-x-2 pt-4">
+          <Button variant="outline" onClick={onCancel} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleAdd} 
+            disabled={isLoading || !selectedProductId || !costValue || !proposalValue}
+          >
+            {isLoading ? "Adding..." : "Add Product"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

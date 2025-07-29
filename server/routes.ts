@@ -484,6 +484,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update order status
+  app.patch("/api/orders/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const orderData = insertOrderSchema.partial().parse(req.body);
+      const order = await storage.updateOrder(id, orderData);
+      if (order) {
+        res.json(order);
+      } else {
+        res.status(404).json({ error: "Order not found" });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid order data", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to update order" });
+      }
+    }
+  });
+
+  // Update order item
+  app.patch("/api/order-items/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const orderItemData = insertOrderItemSchema.partial().parse(req.body);
+      const orderItem = await storage.updateOrderItem(id, orderItemData);
+      if (orderItem) {
+        res.json(orderItem);
+      } else {
+        res.status(404).json({ error: "Order item not found" });
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid order item data", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to update order item" });
+      }
+    }
+  });
+
   // Stage Change Log routes
   app.get("/api/stage-logs/by-opportunity/:opportunityId", async (req, res) => {
     try {
