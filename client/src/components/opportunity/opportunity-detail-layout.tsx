@@ -139,6 +139,9 @@ export default function OpportunityDetailLayout({
         queryKey: ["/api/opportunities", opportunityId, "with-relations"] 
       });
       await queryClient.invalidateQueries({ 
+        queryKey: ["/api/opportunities/with-orders"] 
+      });
+      await queryClient.invalidateQueries({ 
         queryKey: ["/api/opportunities"] 
       });
       await queryClient.invalidateQueries({ 
@@ -166,6 +169,7 @@ export default function OpportunityDetailLayout({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunityId, "with-relations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities/with-orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
       setIsEditingOwner(false);
       toast({
