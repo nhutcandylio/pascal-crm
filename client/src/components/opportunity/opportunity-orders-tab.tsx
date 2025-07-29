@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -77,6 +77,13 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
   
   // Check if opportunity is closed (Won or Lost) - makes orders read-only
   const isOpportunityClosed = opportunity.stage === "Closed Won" || opportunity.stage === "Closed Lost";
+  
+  // Close new order dialog if opportunity becomes closed
+  useEffect(() => {
+    if (isOpportunityClosed && newOrderOpen) {
+      setNewOrderOpen(false);
+    }
+  }, [isOpportunityClosed, newOrderOpen]);
 
   // Fetch products for order creation
   const { data: products = [] } = useQuery<Product[]>({
@@ -336,7 +343,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
               <ShoppingCart className="h-5 w-5" />
               <span>Orders ({opportunity.orders?.length || 0})</span>
             </CardTitle>
-            <Dialog open={newOrderOpen} onOpenChange={setNewOrderOpen}>
+            <Dialog open={newOrderOpen && !isOpportunityClosed} onOpenChange={setNewOrderOpen}>
               <DialogTrigger asChild>
                 <Button size="sm" disabled={isOpportunityClosed}>
                   <Plus className="h-4 w-4 mr-2" />
@@ -764,7 +771,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                 }
               </p>
               {!isOpportunityClosed && (
-                <Button onClick={() => setNewOrderOpen(true)}>
+                <Button onClick={() => !isOpportunityClosed && setNewOrderOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Create First Order
                 </Button>
