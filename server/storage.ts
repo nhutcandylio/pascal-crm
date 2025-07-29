@@ -412,9 +412,9 @@ export class MemStorage implements IStorage {
         contactId: 1,
         leadId: 1, // Converted from Alex Chen lead
         name: "Software License Renewal",
-        value: "63650.00",
-        grossProfit: "41150.00",
-        grossProfitMargin: 65,
+        value: "3699.88",
+        grossProfit: "739.88",
+        grossProfitMargin: 20,
         stage: "proposal",
         probability: 75,
         closeDate: new Date("2024-03-15"),
@@ -427,9 +427,9 @@ export class MemStorage implements IStorage {
         contactId: 2,
         leadId: 2, // Converted from Emily Davis lead
         name: "Enterprise Solution Implementation",
-        value: "9105.00",
-        grossProfit: "2745.00",
-        grossProfitMargin: 30,
+        value: "3500.00",
+        grossProfit: "700.00",
+        grossProfitMargin: 20,
         stage: "negotiation",
         probability: 60,
         closeDate: new Date("2024-03-22"),
@@ -442,9 +442,9 @@ export class MemStorage implements IStorage {
         contactId: 3,
         leadId: null, // Direct opportunity, not from lead conversion
         name: "Financial Consulting Services",
-        value: "1512.00",
-        grossProfit: "252.00",
-        grossProfitMargin: 17,
+        value: "1500.00",
+        grossProfit: "300.00",
+        grossProfitMargin: 20,
         stage: "closed-won",
         probability: 100,
         closeDate: new Date("2024-03-10"),
@@ -575,21 +575,21 @@ export class MemStorage implements IStorage {
       {
         opportunityId: 1,
         orderNumber: "ORD-2024-001",
-        totalAmount: "63650.00",
+        totalAmount: "3699.88",
         status: "confirmed",
         orderDate: new Date("2024-01-15")
       },
       {
         opportunityId: 2,
         orderNumber: "ORD-2024-002",
-        totalAmount: "9105.00",
+        totalAmount: "3500.00",
         status: "draft",
         orderDate: new Date("2024-02-20")
       },
       {
         opportunityId: 3,
         orderNumber: "ORD-2024-003",
-        totalAmount: "1512.00",
+        totalAmount: "1500.00",
         status: "delivered",
         orderDate: new Date("2024-03-05")
       }
