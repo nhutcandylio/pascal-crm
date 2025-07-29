@@ -34,9 +34,9 @@ function OpportunityDetailPageWrapper({ opportunityId }: { opportunityId: number
 
 function Router() {
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="h-screen bg-slate-50 flex flex-col">
       <TopNav />
-      <div className="flex-1">
+      <div className="flex-1 overflow-hidden">
         <Switch>
           <Route path="/" component={Dashboard} />
           <Route path="/accounts" component={Accounts} />

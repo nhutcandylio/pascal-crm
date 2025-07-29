@@ -84,7 +84,8 @@ export default function Dashboard() {
   };
 
   return (
-    <main className="p-6 space-y-6">
+    <div className="h-full overflow-auto">
+      <main className="p-6 space-y-6 min-h-full">
         {/* Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <Card className="card-hover glass-effect border-white/20">
@@ -287,5 +288,6 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </main>
+    </div>
   );
 }

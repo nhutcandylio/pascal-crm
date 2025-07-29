@@ -57,8 +57,9 @@ export default function Contacts() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="h-full overflow-auto">
+      <div className="p-6 min-h-full">
+        <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Contacts</h1>
           <p className="text-slate-600">Manage your contacts and relationships</p>
@@ -164,8 +165,7 @@ export default function Contacts() {
         open={isModalOpen} 
         onOpenChange={setIsModalOpen}
       />
-
-      
+      </div>
     </div>
   );
 }

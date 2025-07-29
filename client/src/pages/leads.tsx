@@ -102,8 +102,9 @@ export default function Leads() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="h-full overflow-auto">
+      <div className="p-6 min-h-full">
+        <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Leads</h1>
           <p className="text-slate-600">Manage potential customers and prospects</p>
@@ -230,6 +231,7 @@ export default function Leads() {
         open={convertModalOpen}
         onOpenChange={setConvertModalOpen}
       />
+      </div>
     </div>
   );
 }
