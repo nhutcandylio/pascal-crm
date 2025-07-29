@@ -50,7 +50,7 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
   const { toast } = useToast();
 
   // Fetch account contacts to get accurate count
-  const { data: accountContacts } = useQuery({
+  const { data: accountContacts = [] } = useQuery<Contact[]>({
     queryKey: ["/api/accounts", opportunity.account?.id, "contacts"],
     enabled: !!opportunity.account?.id,
   });
@@ -97,7 +97,8 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
     await updateContactMutation.mutateAsync({ field, value });
   };
   return (
-    <div className="space-y-6">
+    <div className="h-full overflow-auto">
+      <div className="space-y-6 pb-6">
       {/* Related Information Summary */}
       <Card className="glass-effect border-white/20">
         <CardHeader>
@@ -116,8 +117,8 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
 
             <div className="text-center p-4 border rounded-lg">
               <User className="h-8 w-8 mx-auto mb-2 text-green-600" />
-              <p className="text-2xl font-bold">{accountContacts?.length || (opportunity.contact ? 1 : 0)}</p>
-              <p className="text-sm text-muted-foreground">Contact{(accountContacts?.length || 0) !== 1 ? 's' : ''}</p>
+              <p className="text-2xl font-bold">{accountContacts.length || (opportunity.contact ? 1 : 0)}</p>
+              <p className="text-sm text-muted-foreground">Contact{accountContacts.length !== 1 ? 's' : ''}</p>
             </div>
 
             <div className="text-center p-4 border rounded-lg">
@@ -322,6 +323,7 @@ export default function OpportunityRelatedTab({ opportunity }: OpportunityRelate
 
 
       {/* Lead Information (if originated from lead) - Hidden for now as lead is not in current schema */}
+      </div>
     </div>
   );
 }
