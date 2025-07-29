@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import TopBar from "@/components/layout/top-bar";
 import LeadModal from "../components/modals/lead-modal";
 import ConvertToOpportunityModal from "../components/modals/convert-to-opportunity-modal";
+import LeadDetailLayout from "../components/lead/lead-detail-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +35,8 @@ export default function Leads() {
   const [searchQuery, setSearchQuery] = useState("");
   const [convertModalOpen, setConvertModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [viewingLeadId, setViewingLeadId] = useState<number | null>(null);
+  const [editingLead, setEditingLead] = useState<Lead | null>(null);
 
   const { data: leads = [], isLoading } = useQuery<Lead[]>({
     queryKey: ['/api/leads'],
@@ -45,6 +48,46 @@ export default function Leads() {
     lead.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (lead.company && lead.company.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  // Show detail view if viewing a specific lead
+  if (viewingLeadId) {
+    return (
+      <div className="flex flex-col h-screen">
+        <TopBar title="Lead Details" />
+        <div className="flex-1 overflow-hidden">
+          <LeadDetailLayout
+            leadId={viewingLeadId}
+            onBack={() => setViewingLeadId(null)}
+            onEdit={(lead) => {
+              setEditingLead(lead);
+              setIsModalOpen(true);
+            }}
+            onConvert={(lead) => {
+              setSelectedLead(lead);
+              setConvertModalOpen(true);
+            }}
+          />
+        </div>
+        
+        <LeadModal 
+          open={isModalOpen} 
+          onOpenChange={(open) => {
+            setIsModalOpen(open);
+            if (!open) {
+              setEditingLead(null);
+            }
+          }}
+          lead={editingLead}
+        />
+        
+        <ConvertToOpportunityModal
+          lead={selectedLead}
+          open={convertModalOpen}
+          onOpenChange={setConvertModalOpen}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -92,7 +135,11 @@ export default function Leads() {
                 </TableHeader>
                 <TableBody>
                   {filteredLeads.map((lead) => (
-                    <TableRow key={lead.id} className="cursor-pointer hover:bg-slate-50">
+                    <TableRow 
+                      key={lead.id} 
+                      className="cursor-pointer hover:bg-slate-50"
+                      onClick={() => setViewingLeadId(lead.id)}
+                    >
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
@@ -177,7 +224,13 @@ export default function Leads() {
 
       <LeadModal 
         open={isModalOpen} 
-        onOpenChange={setIsModalOpen}
+        onOpenChange={(open) => {
+          setIsModalOpen(open);
+          if (!open) {
+            setEditingLead(null);
+          }
+        }}
+        lead={editingLead}
       />
       
       <ConvertToOpportunityModal
