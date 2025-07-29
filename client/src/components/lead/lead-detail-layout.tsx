@@ -8,6 +8,7 @@ import { ArrowLeft, User, Building, Mail, Phone, Calendar, Tag, Edit2, UserCheck
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
+import LeadDetailTab from "./lead-detail-tab";
 import type { Lead } from "@shared/schema";
 
 interface LeadDetailLayoutProps {
@@ -156,113 +157,8 @@ export default function LeadDetailLayout({
               <TabsTrigger value="notes">Notes</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="details" className="space-y-6 mt-6">
-              {/* Contact Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <User className="h-5 w-5" />
-                    <span>Contact Information</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">Full Name</label>
-                        <p className="text-base font-medium">{lead.firstName} {lead.lastName}</p>
-                      </div>
-                      
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground">Email</label>
-                        <div className="flex items-center space-x-2">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <a href={`mailto:${lead.email}`} className="text-blue-600 hover:underline">
-                            {lead.email}
-                          </a>
-                        </div>
-                      </div>
-
-                      {lead.phone && (
-                        <div>
-                          <label className="text-sm font-medium text-muted-foreground">Phone</label>
-                          <div className="flex items-center space-x-2">
-                            <Phone className="h-4 w-4 text-muted-foreground" />
-                            <a href={`tel:${lead.phone}`} className="text-blue-600 hover:underline">
-                              {lead.phone}
-                            </a>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-4">
-                      {lead.company && (
-                        <div>
-                          <label className="text-sm font-medium text-muted-foreground">Company</label>
-                          <div className="flex items-center space-x-2">
-                            <Building className="h-4 w-4 text-muted-foreground" />
-                            <p className="font-medium">{lead.company}</p>
-                          </div>
-                        </div>
-                      )}
-
-                      {lead.title && (
-                        <div>
-                          <label className="text-sm font-medium text-muted-foreground">Title</label>
-                          <p className="text-base">{lead.title}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Lead Status & Source */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Tag className="h-5 w-5" />
-                    <span>Lead Status & Source</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Status</label>
-                      <div className="mt-1">
-                        <Badge className={getStatusColor(lead.status)}>
-                          {lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}
-                        </Badge>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground">Source</label>
-                      <div className="mt-1">
-                        <Badge variant="outline" className={getSourceColor(lead.source || '')}>
-                          {getSourceLabel(lead.source)}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Timeline */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Calendar className="h-5 w-5" />
-                    <span>Timeline</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-sm text-muted-foreground">
-                    Created on {format(new Date(lead.createdAt), 'PPP p')}
-                  </div>
-                </CardContent>
-              </Card>
+            <TabsContent value="details" className="mt-6">
+              <LeadDetailTab lead={lead} />
             </TabsContent>
 
             <TabsContent value="activity" className="mt-6">
