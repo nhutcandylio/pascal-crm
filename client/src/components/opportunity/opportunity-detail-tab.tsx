@@ -227,24 +227,36 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
                 />
               )}
 
-              <EditableField
-                label="Owner"
-                value={opportunity.ownerId?.toString() || "none"}
-                onSave={isClosedOpportunity ? () => Promise.resolve() : (value) => handleFieldUpdate('ownerId', value)}
-                placeholder="Select owner"
-                type="select"
-                options={[
-                  { value: "none", label: "Unassigned" },
-                  ...users.map(user => ({
-                    value: user.id.toString(),
-                    label: `${user.firstName} ${user.lastName}`
-                  }))
-                ]}
-                displayValue={opportunity.owner 
-                  ? `${opportunity.owner.firstName} ${opportunity.owner.lastName}`
-                  : "Unassigned"
-                }
-              />
+              {isClosedOpportunity ? (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Owner</label>
+                  <div className="mt-1 text-base font-medium text-gray-500 bg-gray-50 px-3 py-2 rounded border">
+                    {opportunity.owner 
+                      ? `${opportunity.owner.firstName} ${opportunity.owner.lastName}`
+                      : "Unassigned"
+                    }
+                  </div>
+                </div>
+              ) : (
+                <EditableField
+                  label="Owner"
+                  value={opportunity.ownerId?.toString() || "none"}
+                  onSave={(value) => handleFieldUpdate('ownerId', value)}
+                  placeholder="Select owner"
+                  type="select"
+                  options={[
+                    { value: "none", label: "Unassigned" },
+                    ...users.map(user => ({
+                      value: user.id.toString(),
+                      label: `${user.firstName} ${user.lastName}`
+                    }))
+                  ]}
+                  displayValue={opportunity.owner 
+                    ? `${opportunity.owner.firstName} ${opportunity.owner.lastName}`
+                    : "Unassigned"
+                  }
+                />
+              )}
             </div>
 
             <div className="space-y-4">
@@ -267,19 +279,37 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
                 </div>
               </div>
 
-              <EditablePercentageField
-                label="Probability"
-                value={opportunity.probability}
-                onSave={isClosedOpportunity ? () => Promise.resolve() : (value) => handleFieldUpdate('probability', value)}
-                placeholder="0"
-              />
+              {isClosedOpportunity ? (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Probability</label>
+                  <div className="mt-1 text-base font-medium text-gray-500 bg-gray-50 px-3 py-2 rounded border">
+                    {opportunity.probability || 0}%
+                  </div>
+                </div>
+              ) : (
+                <EditablePercentageField
+                  label="Probability"
+                  value={opportunity.probability}
+                  onSave={(value) => handleFieldUpdate('probability', value)}
+                  placeholder="0"
+                />
+              )}
 
-              <EditableDateField
-                label="Close Date"
-                value={opportunity.closeDate ? new Date(opportunity.closeDate).toISOString().split('T')[0] : ''}
-                onSave={isClosedOpportunity ? () => Promise.resolve() : (value) => handleFieldUpdate('closeDate', value)}
-                placeholder="Select close date"
-              />
+              {isClosedOpportunity ? (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Close Date</label>
+                  <div className="mt-1 text-base font-medium text-gray-500 bg-gray-50 px-3 py-2 rounded border">
+                    {opportunity.closeDate ? new Date(opportunity.closeDate).toLocaleDateString() : 'Not set'}
+                  </div>
+                </div>
+              ) : (
+                <EditableDateField
+                  label="Close Date"
+                  value={opportunity.closeDate ? new Date(opportunity.closeDate).toISOString().split('T')[0] : ''}
+                  onSave={(value) => handleFieldUpdate('closeDate', value)}
+                  placeholder="Select close date"
+                />
+              )}
 
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Created Date</label>
@@ -337,12 +367,21 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <EditableCurrencyField
-              label="Opportunity Value"
-              value={opportunity.value}
-              onSave={isClosedOpportunity ? () => Promise.resolve() : (value) => handleFieldUpdate('value', value)}
-              placeholder="0.00"
-            />
+            {isClosedOpportunity ? (
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Opportunity Value</label>
+                <div className="mt-1 text-base font-medium text-gray-500 bg-gray-50 px-3 py-2 rounded border">
+                  ${parseFloat(opportunity.value || "0").toLocaleString()}
+                </div>
+              </div>
+            ) : (
+              <EditableCurrencyField
+                label="Opportunity Value"
+                value={opportunity.value}
+                onSave={(value) => handleFieldUpdate('value', value)}
+                placeholder="0.00"
+              />
+            )}
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground">Gross Profit</label>
