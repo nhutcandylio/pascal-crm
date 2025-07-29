@@ -292,7 +292,19 @@ export default function Opportunities() {
                         ${(() => {
                           const value = parseFloat(opportunity.value || "0");
                           const costValue = parseFloat(opportunity.weightedValue || "0");
-                          return (value - costValue).toLocaleString();
+                          const grossProfit = value - costValue;
+                          // Debug: log values for software license renewal
+                          if (opportunity.name && opportunity.name.includes("Software License Renewal")) {
+                            console.log("Debug - Software License Renewal:", {
+                              name: opportunity.name,
+                              value: opportunity.value,
+                              weightedValue: opportunity.weightedValue,
+                              valueNum: value,
+                              costValueNum: costValue,
+                              grossProfit: grossProfit
+                            });
+                          }
+                          return grossProfit.toLocaleString();
                         })()}
                       </div>
                     </TableCell>
