@@ -15,6 +15,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Form,
   FormControl,
   FormField,
@@ -30,7 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { ShoppingCart, Plus, Package, Minus, Calendar, DollarSign, Edit2, Save, X } from "lucide-react";
+import { ShoppingCart, Plus, Package, Minus, Calendar, DollarSign, Edit2, Save, X, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
@@ -63,6 +73,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
   const [editingOrder, setEditingOrder] = useState<number | null>(null);
   const [editingOrderItem, setEditingOrderItem] = useState<number | null>(null);
   const [addingProductToOrder, setAddingProductToOrder] = useState<number | null>(null);
+  const [deletingOrder, setDeletingOrder] = useState<number | null>(null);
 
   // Fetch products for order creation
   const { data: products = [] } = useQuery<Product[]>({
@@ -219,6 +230,29 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
       toast({
         title: "Error",
         description: error.message || "Failed to add product to order.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete order mutation
+  const deleteOrderMutation = useMutation({
+    mutationFn: async (orderId: number) => {
+      const response = await apiRequest("DELETE", `/api/orders/${orderId}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+      toast({
+        title: "Success",
+        description: "Order deleted successfully.",
+      });
+      setDeletingOrder(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete order.",
         variant: "destructive",
       });
     },
@@ -576,9 +610,19 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      <span>{format(new Date(order.orderDate), 'MMM dd, yyyy')}</span>
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                        <Calendar className="h-4 w-4" />
+                        <span>{format(new Date(order.orderDate), 'MMM dd, yyyy')}</span>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setDeletingOrder(order.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
 
@@ -711,6 +755,28 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Order Confirmation Dialog */}
+      <AlertDialog open={deletingOrder !== null} onOpenChange={() => setDeletingOrder(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Order</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this order? This action cannot be undone and will remove all order items.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeletingOrder(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deletingOrder && deleteOrderMutation.mutate(deletingOrder)}
+              className="bg-red-600 hover:bg-red-700"
+              disabled={deleteOrderMutation.isPending}
+            >
+              {deleteOrderMutation.isPending ? "Deleting..." : "Delete Order"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

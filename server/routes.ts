@@ -524,6 +524,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete order
+  app.delete("/api/orders/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteOrder(id);
+      if (success) {
+        res.json({ message: "Order deleted successfully" });
+      } else {
+        res.status(404).json({ error: "Order not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete order" });
+    }
+  });
+
   // Stage Change Log routes
   app.get("/api/stage-logs/by-opportunity/:opportunityId", async (req, res) => {
     try {
