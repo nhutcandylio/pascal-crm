@@ -234,16 +234,22 @@ export default function OpportunityDetailLayout({
   
   // Calculate actual cost value from order items
   let actualCostValue = 0;
+  let actualProposalValue = 0;
   if (opportunity.orders) {
     opportunity.orders.forEach(order => {
       if (order.items) {
         order.items.forEach(item => {
-          actualCostValue += parseFloat(item.costValue || "0") * (item.quantity || 1);
+          const itemCost = parseFloat(item.costValue || "0") * (item.quantity || 1);
+          const itemProposal = parseFloat(item.proposalValue || "0") * (item.quantity || 1);
+          actualCostValue += itemCost;
+          actualProposalValue += itemProposal;
         });
       }
     });
   }
   
+  // Use calculated values instead of stored value if we have order data
+  const calculatedValue = opportunity.orders && opportunity.orders.length > 0 ? actualProposalValue : parseFloat(opportunity.value) || 0;
   const weightedValue = actualCostValue;
 
   return (
@@ -375,7 +381,7 @@ export default function OpportunityDetailLayout({
                 <DollarSign className="h-4 w-4 text-green-600" />
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Opportunity Value</p>
-                  <p className="text-lg font-bold">${value.toLocaleString()}</p>
+                  <p className="text-lg font-bold">${calculatedValue.toLocaleString()}</p>
                 </div>
               </div>
             </CardContent>
@@ -411,7 +417,7 @@ export default function OpportunityDetailLayout({
                 <TrendingUp className="h-4 w-4 text-emerald-600" />
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Gross Profit</p>
-                  <p className="text-lg font-bold">${(value - weightedValue).toLocaleString()}</p>
+                  <p className="text-lg font-bold">${(calculatedValue - weightedValue).toLocaleString()}</p>
                 </div>
               </div>
             </CardContent>
@@ -424,7 +430,7 @@ export default function OpportunityDetailLayout({
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Margin</p>
                   <p className="text-lg font-bold">
-                    {value > 0 ? ((value - weightedValue) / value * 100).toFixed(1) : '0'}%
+                    {calculatedValue > 0 ? ((calculatedValue - weightedValue) / calculatedValue * 100).toFixed(1) : '0'}%
                   </p>
                 </div>
               </div>
