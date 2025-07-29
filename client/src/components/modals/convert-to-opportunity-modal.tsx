@@ -87,26 +87,27 @@ export default function ConvertToOpportunityModal({
       const opportunityResponse = await apiRequest('POST', '/api/opportunities', opportunityData);
       const opportunity = await opportunityResponse.json();
 
-      // Update lead status to converted
-      if (lead) {
-        await apiRequest('PATCH', `/api/leads/${lead.id}`, { status: 'converted' });
-      }
+      // Don't automatically update lead status - allow multiple conversions
+      // The lead can remain active and be converted to multiple opportunities
 
       return opportunity;
     },
-    onSuccess: () => {
+    onSuccess: (opportunity) => {
       queryClient.invalidateQueries({ queryKey: ['/api/opportunities'] });
       queryClient.invalidateQueries({ queryKey: ['/api/leads'] });
       queryClient.invalidateQueries({ queryKey: ['/api/accounts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/contacts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/metrics'] });
+      if (lead) {
+        queryClient.invalidateQueries({ queryKey: ['/api/leads', lead.id] });
+      }
       
       toast({
-        title: "Success",
-        description: "Lead successfully converted to opportunity",
+        title: "Opportunity Created",
+        description: `Successfully created opportunity "${opportunity.name}" from lead. You can create more opportunities from this lead.`,
       });
 
-      // Reset form
+      // Reset form for potential additional opportunities
       setOpportunityName("");
       setValue("");
       setStage("prospecting");
@@ -116,7 +117,8 @@ export default function ConvertToOpportunityModal({
       setSelectedAccountId("none");
       setSelectedContactId("");
       
-      onOpenChange(false);
+      // Don't close modal - allow creating more opportunities
+      // onOpenChange(false);
     },
     onError: (error: any) => {
       toast({
@@ -169,15 +171,18 @@ export default function ConvertToOpportunityModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Convert Lead to Opportunity</DialogTitle>
+          <DialogTitle>Create Opportunity from Lead</DialogTitle>
         </DialogHeader>
 
         {lead && (
           <div className="mb-4 p-4 bg-slate-50 rounded-lg">
-            <h4 className="font-medium mb-2">Converting Lead:</h4>
+            <h4 className="font-medium mb-2">Creating Opportunity from Lead:</h4>
             <p className="text-sm text-slate-600">
               {lead.firstName} {lead.lastName} - {lead.email}
               {lead.company && ` from ${lead.company}`}
+            </p>
+            <p className="text-xs text-slate-500 mt-1">
+              Note: You can create multiple opportunities from this lead
             </p>
           </div>
         )}

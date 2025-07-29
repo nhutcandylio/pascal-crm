@@ -58,10 +58,6 @@ export default function Leads() {
           <LeadDetailLayout
             leadId={viewingLeadId}
             onBack={() => setViewingLeadId(null)}
-            onEdit={(lead) => {
-              setEditingLead(lead);
-              setIsModalOpen(true);
-            }}
             onConvert={(lead) => {
               setSelectedLead(lead);
               setConvertModalOpen(true);
@@ -77,7 +73,6 @@ export default function Leads() {
               setEditingLead(null);
             }
           }}
-          lead={editingLead}
         />
         
         <ConvertToOpportunityModal
@@ -230,7 +225,6 @@ export default function Leads() {
             setEditingLead(null);
           }
         }}
-        lead={editingLead}
       />
       
       <ConvertToOpportunityModal

@@ -14,7 +14,6 @@ import type { Lead } from "@shared/schema";
 interface LeadDetailLayoutProps {
   leadId: number;
   onBack: () => void;
-  onEdit: (lead: Lead) => void;
   onConvert: (lead: Lead) => void;
 }
 
@@ -60,7 +59,6 @@ const getSourceLabel = (source: string | null) => {
 export default function LeadDetailLayout({
   leadId,
   onBack,
-  onEdit,
   onConvert
 }: LeadDetailLayoutProps) {
   const [activeTab, setActiveTab] = useState("details");
@@ -127,23 +125,13 @@ export default function LeadDetailLayout({
         </div>
         <div className="flex items-center space-x-2">
           <Button
-            onClick={() => onEdit(lead)}
-            variant="outline"
+            onClick={() => onConvert(lead)}
             size="sm"
+            className="bg-green-600 hover:bg-green-700"
           >
-            <Edit2 className="h-4 w-4 mr-2" />
-            Edit
+            <UserCheck className="h-4 w-4 mr-2" />
+            Convert
           </Button>
-          {lead.status !== 'converted' && (
-            <Button
-              onClick={() => onConvert(lead)}
-              size="sm"
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <UserCheck className="h-4 w-4 mr-2" />
-              Convert
-            </Button>
-          )}
         </div>
       </div>
 
