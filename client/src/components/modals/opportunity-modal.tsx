@@ -31,6 +31,9 @@ const stageOptions = [
 export default function OpportunityModal({ open, onOpenChange, opportunity }: OpportunityModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Check if opportunity is closed (won or lost) - if so, make it read-only
+  const isClosedOpportunity = opportunity && (opportunity.stage === 'Closed Won' || opportunity.stage === 'Closed Lost');
 
   const { data: accounts = [] } = useQuery<Account[]>({
     queryKey: ["/api/accounts"],
@@ -119,6 +122,16 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
   });
 
   const handleSubmit = (data: any) => {
+    // Prevent editing if opportunity is closed
+    if (isClosedOpportunity) {
+      toast({
+        title: "Cannot Edit",
+        description: "Closed opportunities cannot be edited.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const opportunityData: InsertOpportunity = {
       ...data,
       closeDate: data.closeDate ? data.closeDate : null,
@@ -132,11 +145,41 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{opportunity ? 'Edit Opportunity' : 'Create New Opportunity'}</DialogTitle>
+          <DialogTitle>
+            {opportunity ? 'Edit Opportunity' : 'Create New Opportunity'}
+            {isClosedOpportunity && (
+              <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full ml-2">
+                Read-Only
+              </span>
+            )}
+          </DialogTitle>
           <DialogDescription>
-            {opportunity ? 'Update opportunity details.' : 'Add a new sales opportunity to your CRM system.'}
+            {isClosedOpportunity 
+              ? 'This opportunity is closed and cannot be edited.' 
+              : opportunity 
+                ? 'Update opportunity details.' 
+                : 'Add a new sales opportunity to your CRM system.'
+            }
           </DialogDescription>
         </DialogHeader>
+
+        {/* Show read-only warning for closed opportunities */}
+        {isClosedOpportunity && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-amber-800">
+                  <span className="font-medium">Read-Only Mode:</span> This opportunity is closed and cannot be edited.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
@@ -147,7 +190,7 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
                 <FormItem>
                   <FormLabel>Opportunity Name *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Software License Renewal" {...field} />
+                    <Input placeholder="Software License Renewal" {...field} disabled={isClosedOpportunity} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -161,7 +204,7 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter opportunity description" {...field} />
+                    <Input placeholder="Enter opportunity description" {...field} disabled={isClosedOpportunity} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -174,7 +217,7 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Stage *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value} disabled={isClosedOpportunity}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select stage" />
@@ -208,6 +251,7 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
                         value={[field.value || 50]}
                         onValueChange={(value) => field.onChange(value[0])}
                         className="w-full"
+                        disabled={isClosedOpportunity}
                       />
                     </div>
                   </FormControl>
@@ -228,6 +272,7 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
                       {...field}
                       value={field.value || ''}
                       onChange={(e) => field.onChange(e.target.value || '')}
+                      disabled={isClosedOpportunity}
                     />
                   </FormControl>
                   <FormMessage />
@@ -248,6 +293,7 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
                       form.setValue("contactId", undefined);
                     }}
                     value={field.value?.toString()}
+                    disabled={isClosedOpportunity}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -276,6 +322,7 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
                   <Select
                     onValueChange={(value) => field.onChange(value ? parseInt(value) : undefined)}
                     value={field.value?.toString()}
+                    disabled={isClosedOpportunity}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -304,6 +351,7 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
                   <Select 
                     onValueChange={(value) => field.onChange(value ? parseInt(value) : null)} 
                     value={field.value?.toString() || ""}
+                    disabled={isClosedOpportunity}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -334,7 +382,7 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
               </Button>
               <Button
                 type="submit"
-                disabled={saveOpportunityMutation.isPending}
+                disabled={saveOpportunityMutation.isPending || isClosedOpportunity}
               >
                 {saveOpportunityMutation.isPending ? (opportunity ? "Updating..." : "Creating...") : (opportunity ? "Update Opportunity" : "Create Opportunity")}
               </Button>

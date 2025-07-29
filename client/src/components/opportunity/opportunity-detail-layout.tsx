@@ -76,7 +76,7 @@ export default function OpportunityDetailLayout({
     if (newStage === opportunity?.stage) return;
     
     // Prevent stage changes for closed opportunities
-    const isClosedOpportunity = opportunity?.stage === 'closed-won' || opportunity?.stage === 'closed-lost';
+    const isClosedOpportunity = opportunity?.stage === 'Closed Won' || opportunity?.stage === 'Closed Lost';
     if (isClosedOpportunity) {
       toast({
         title: "Cannot Change Stage",
@@ -184,7 +184,7 @@ export default function OpportunityDetailLayout({
 
   const handleOwnerEdit = () => {
     // Prevent owner editing for closed opportunities
-    const isClosedOpportunity = opportunity?.stage === 'closed-won' || opportunity?.stage === 'closed-lost';
+    const isClosedOpportunity = opportunity?.stage === 'Closed Won' || opportunity?.stage === 'Closed Lost';
     if (isClosedOpportunity) {
       toast({
         title: "Cannot Edit",
@@ -303,7 +303,7 @@ export default function OpportunityDetailLayout({
               const isCompleted = [
                 "prospecting", "qualification", "proposal", "negotiation", "closed-won", "closed-lost"
               ].findIndex(s => s === opportunity?.stage) > index;
-              const isClosedOpportunity = opportunity?.stage === 'closed-won' || opportunity?.stage === 'closed-lost';
+              const isClosedOpportunity = opportunity?.stage === 'Closed Won' || opportunity?.stage === 'Closed Lost';
               
               return (
                 <div key={stage.value} className="flex items-center">

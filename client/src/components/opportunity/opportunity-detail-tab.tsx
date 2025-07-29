@@ -18,7 +18,7 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
   const queryClient = useQueryClient();
 
   // Check if opportunity is closed (won or lost) - if so, make it read-only
-  const isClosedOpportunity = opportunity.stage === 'closed-won' || opportunity.stage === 'closed-lost';
+  const isClosedOpportunity = opportunity.stage === 'Closed Won' || opportunity.stage === 'Closed Lost';
 
   const { data: accounts = [] } = useQuery<Account[]>({
     queryKey: ["/api/accounts"],
