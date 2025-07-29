@@ -336,7 +336,7 @@ export default function LeadDetailTab({ lead }: LeadDetailTabProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <EditableSelectField
               label="Status"
-              value={lead.status}
+              value={lead.status || 'new'}
               onSave={(value) => handleFieldUpdate('status', value)}
               options={statusOptions}
               placeholder="Select status"
