@@ -361,7 +361,7 @@ export default function OpportunityDetailLayout({
               <div className="flex items-center space-x-2">
                 <DollarSign className="h-4 w-4 text-green-600" />
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Value</p>
+                  <p className="text-sm font-medium text-muted-foreground">Opportunity Value</p>
                   <p className="text-lg font-bold">${value.toLocaleString()}</p>
                 </div>
               </div>
@@ -385,7 +385,7 @@ export default function OpportunityDetailLayout({
               <div className="flex items-center space-x-2">
                 <DollarSign className="h-4 w-4 text-purple-600" />
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Weighted Value</p>
+                  <p className="text-sm font-medium text-muted-foreground">Cost Value</p>
                   <p className="text-lg font-bold">${weightedValue.toLocaleString()}</p>
                 </div>
               </div>
