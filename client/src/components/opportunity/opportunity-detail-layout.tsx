@@ -280,15 +280,29 @@ export default function OpportunityDetailLayout({
             </div>
           </div>
 
-
-
+          {/* Action Buttons */}
+          <div className="flex items-center space-x-2">
+            {opportunity?.stage !== 'Closed Won' && opportunity?.stage !== 'Closed Lost' ? (
+              <Button variant="outline" size="sm" onClick={() => onEdit(opportunity)}>
+                Edit Opportunity
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" disabled className="opacity-50">
+                Edit Opportunity
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Visual Pipeline Selector */}
         <div className="mt-6">
           <div className="mb-4">
             <h3 className="text-lg font-semibold">Sales Pipeline</h3>
-            <p className="text-sm text-muted-foreground">Click any stage to move this opportunity through the pipeline</p>
+            {opportunity?.stage === 'Closed Won' || opportunity?.stage === 'Closed Lost' ? (
+              <p className="text-sm text-amber-600">Pipeline locked - Closed opportunities cannot be moved to other stages</p>
+            ) : (
+              <p className="text-sm text-muted-foreground">Click any stage to move this opportunity through the pipeline</p>
+            )}
           </div>
           <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
             {[
@@ -313,7 +327,7 @@ export default function OpportunityDetailLayout({
                     } ${
                       isClosedOpportunity ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-105'
                     }`}
-                    onClick={() => handleStageChangeClick(stage.value, stage.label)}
+                    onClick={() => !isClosedOpportunity && handleStageChangeClick(stage.value, stage.label)}
                   >
                     {/* Stage Circle */}
                     <div className={`
