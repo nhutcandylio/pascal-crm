@@ -262,6 +262,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/opportunities/with-orders", async (req, res) => {
+    try {
+      const opportunities = await storage.getOpportunitiesWithOrders();
+      res.json(opportunities);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch opportunities with orders" });
+    }
+  });
+
   app.post("/api/opportunities", async (req, res) => {
     try {
       const opportunityData = insertOpportunitySchema.parse(req.body);

@@ -57,7 +57,7 @@ export default function Opportunities() {
   });
 
   const { data: opportunities = [], isLoading } = useQuery<OpportunityWithRelations[]>({
-    queryKey: ['/api/opportunities'],
+    queryKey: ['/api/opportunities/with-orders'],
   });
 
   // Fetch lead data for selected opportunity when creating contact
@@ -290,18 +290,44 @@ export default function Opportunities() {
                     <TableCell>
                       <div className="flex items-center text-sm font-medium">
                         ${(() => {
-                          const value = parseFloat(opportunity.value || "0");
-                          const costValue = parseFloat(opportunity.weightedValue || "0");
-                          return (value - costValue).toLocaleString();
+                          // Calculate actual gross profit from order items
+                          let totalProposal = 0;
+                          let totalCost = 0;
+                          
+                          if (opportunity.orders) {
+                            opportunity.orders.forEach(order => {
+                              if (order.items) {
+                                order.items.forEach(item => {
+                                  totalProposal += parseFloat(item.proposalValue || "0") * (item.quantity || 1);
+                                  totalCost += parseFloat(item.costValue || "0") * (item.quantity || 1);
+                                });
+                              }
+                            });
+                          }
+                          
+                          return (totalProposal - totalCost).toLocaleString();
                         })()}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center text-sm font-medium text-slate-600">
                         {(() => {
-                          const value = parseFloat(opportunity.value || "0");
-                          const costValue = parseFloat(opportunity.weightedValue || "0");
-                          const margin = value > 0 ? ((value - costValue) / value * 100) : 0;
+                          // Calculate actual margin from order items
+                          let totalProposal = 0;
+                          let totalCost = 0;
+                          
+                          if (opportunity.orders) {
+                            opportunity.orders.forEach(order => {
+                              if (order.items) {
+                                order.items.forEach(item => {
+                                  totalProposal += parseFloat(item.proposalValue || "0") * (item.quantity || 1);
+                                  totalCost += parseFloat(item.costValue || "0") * (item.quantity || 1);
+                                });
+                              }
+                            });
+                          }
+                          
+                          const margin = totalProposal > 0 ? ((totalProposal - totalCost) / totalProposal * 100) : 0;
                           return margin.toFixed(1);
                         })()}%
                       </div>

@@ -92,6 +92,7 @@ export interface IStorage {
   getOpportunity(id: number): Promise<Opportunity | undefined>;
   getOpportunities(): Promise<Opportunity[]>;
   getOpportunitiesWithRelations(): Promise<OpportunityWithRelations[]>;
+  getOpportunitiesWithOrders(): Promise<OpportunityWithRelations[]>;
   getOpportunitiesByAccount(accountId: number): Promise<Opportunity[]>;
   getOpportunitiesByContact(contactId: number): Promise<Opportunity[]>;
   createOpportunity(opportunity: InsertOpportunity): Promise<Opportunity>;
@@ -987,6 +988,30 @@ export class MemStorage implements IStorage {
       if (opportunity.contactId) {
         result.contact = await this.getContact(opportunity.contactId);
       }
+      
+      opportunitiesWithRelations.push(result);
+    }
+
+    return opportunitiesWithRelations;
+  }
+
+  async getOpportunitiesWithOrders(): Promise<OpportunityWithRelations[]> {
+    const opportunities = await this.getOpportunities();
+    const opportunitiesWithRelations: OpportunityWithRelations[] = [];
+
+    for (const opportunity of opportunities) {
+      const result: OpportunityWithRelations = { ...opportunity };
+      
+      if (opportunity.accountId) {
+        result.account = await this.getAccount(opportunity.accountId);
+      }
+      
+      if (opportunity.contactId) {
+        result.contact = await this.getContact(opportunity.contactId);
+      }
+
+      // Add orders with items
+      result.orders = await this.getOrdersByOpportunity(opportunity.id);
       
       opportunitiesWithRelations.push(result);
     }
