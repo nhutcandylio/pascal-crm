@@ -13,6 +13,23 @@ import type { Lead } from "@shared/schema";
 
 
 
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'new':
+      return 'bg-blue-100 text-blue-800';
+    case 'contacted':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'qualified':
+      return 'bg-green-100 text-green-800';
+    case 'converted':
+      return 'bg-purple-100 text-purple-800';
+    case 'lost':
+      return 'bg-red-100 text-red-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
 const getSourceColor = (source: string) => {
   switch (source) {
     case 'website':
@@ -124,8 +141,8 @@ export default function Leads() {
                     <TableHead>Company</TableHead>
                     <TableHead>Source</TableHead>
                     <TableHead>Contact Info</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Created</TableHead>
-                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -181,32 +198,13 @@ export default function Leads() {
                           )}
                         </div>
                       </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={getStatusColor(lead.status)}>
+                          {lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-slate-500">
                         {new Date(lead.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex space-x-2">
-                          {lead.status !== 'converted' && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedLead(lead);
-                                setConvertModalOpen(true);
-                              }}
-                              className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                            >
-                              <ArrowRight className="h-3 w-3 mr-1" />
-                              Convert
-                            </Button>
-                          )}
-                          {lead.status === 'converted' && (
-                            <Badge variant="outline" className="bg-green-50 text-green-700">
-                              Converted
-                            </Badge>
-                          )}
-                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
