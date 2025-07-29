@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TopBar from "@/components/layout/top-bar";
 import AccountModal from "../components/modals/account-modal";
 import ContactModal from "../components/modals/contact-modal";
+import AccountDetailLayout from "../components/account/account-detail-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +20,7 @@ export default function Accounts() {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
+  const [viewingAccountId, setViewingAccountId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -100,6 +102,38 @@ export default function Accounts() {
     account.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (account.industry && account.industry.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  // Show detail view if viewing a specific account
+  if (viewingAccountId) {
+    return (
+      <div className="flex flex-col h-screen">
+        <TopBar title="Account Details" />
+        <div className="flex-1 overflow-hidden">
+          <AccountDetailLayout
+            accountId={viewingAccountId}
+            onBack={() => setViewingAccountId(null)}
+          />
+        </div>
+        
+        <AccountModal 
+          open={isModalOpen} 
+          onOpenChange={(open) => {
+            setIsModalOpen(open);
+            if (!open) {
+              setEditingAccount(null);
+            }
+          }}
+          editingAccount={editingAccount}
+        />
+        
+        <ContactModal 
+          open={isContactModalOpen} 
+          onOpenChange={setIsContactModalOpen}
+          defaultAccountId={selectedAccountId}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">

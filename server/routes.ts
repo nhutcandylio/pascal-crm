@@ -71,6 +71,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/contacts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const contact = await storage.getContactWithAccounts(id);
+      if (contact) {
+        res.json(contact);
+      } else {
+        res.status(404).json({ error: "Contact not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch contact" });
+    }
+  });
+
   // Account routes with contacts
   app.get("/api/accounts/with-contacts", async (req, res) => {
     try {
@@ -78,6 +92,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(accounts);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch accounts with contacts" });
+    }
+  });
+
+  app.get("/api/accounts/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const account = await storage.getAccountWithContacts(id);
+      if (account) {
+        res.json(account);
+      } else {
+        res.status(404).json({ error: "Account not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch account" });
     }
   });
 

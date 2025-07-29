@@ -110,6 +110,16 @@ The application follows modern web development practices with strong typing, com
 
 ## Recent Changes
 
+### July 2025 - Detail Pages & Inline Editing
+- **Implemented**: Contact and Account detail pages with comprehensive inline editing capabilities
+- **Added**: ContactDetailLayout and AccountDetailLayout components with tabbed interfaces (Details, Notes)
+- **Enhanced**: API routes for individual contact (/api/contacts/:id) and account (/api/accounts/:id) data fetching
+- **Created**: ContactDetailTab and AccountDetailTab components with inline field editing
+- **Integrated**: Notes functionality into Contact and Account detail pages
+- **Updated**: Contacts and Accounts pages to support click-through navigation to detail views
+- **Removed**: Actions column from Leads table and added Status column with colored badges
+- **Storage**: Added getContactWithAccounts and getAccountWithContacts methods to storage interface
+
 ### July 2025 - User Management & Owner Assignment
 - **Implemented**: Complete User CRUD functionality with create, edit, delete operations
 - **Added**: Phone field to user schema and API routes for user management (GET, POST, PATCH, DELETE)

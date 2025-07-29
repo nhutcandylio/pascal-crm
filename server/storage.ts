@@ -57,6 +57,7 @@ export interface IStorage {
   // Account operations
   getAccount(id: number): Promise<Account | undefined>;
   getAccounts(): Promise<Account[]>;
+  getAccountWithContacts(id: number): Promise<AccountWithContacts | undefined>;
   createAccount(account: InsertAccount): Promise<Account>;
   updateAccount(id: number, account: Partial<InsertAccount>): Promise<Account | undefined>;
   deleteAccount(id: number): Promise<boolean>;
@@ -66,6 +67,7 @@ export interface IStorage {
   getContact(id: number): Promise<Contact | undefined>;
   getContacts(): Promise<Contact[]>;
   getContactsWithAccounts(): Promise<ContactWithAccounts[]>;
+  getContactWithAccounts(id: number): Promise<ContactWithAccounts | undefined>;
   getContactsByAccount(accountId: number): Promise<Contact[]>;
   createContact(contact: InsertContact): Promise<Contact>;
   updateContact(id: number, contact: Partial<InsertContact>): Promise<Contact | undefined>;
@@ -753,6 +755,26 @@ export class MemStorage implements IStorage {
     return contactsWithAccounts;
   }
 
+  async getContactWithAccounts(id: number): Promise<ContactWithAccounts | undefined> {
+    const contact = await this.getContact(id);
+    if (!contact) return undefined;
+
+    const result: ContactWithAccounts = { ...contact, accounts: [] };
+    
+    // Find all accounts associated with this contact
+    const accountContactRelations = Array.from(this.accountContacts.values())
+      .filter(ac => ac.contactId === contact.id);
+    
+    for (const relation of accountContactRelations) {
+      const account = await this.getAccount(relation.accountId);
+      if (account) {
+        result.accounts!.push(account);
+      }
+    }
+    
+    return result;
+  }
+
   async getContactsByAccount(accountId: number): Promise<Contact[]> {
     const contactAccountRelations = Array.from(this.accountContacts.values())
       .filter(ac => ac.accountId === accountId);
@@ -852,6 +874,26 @@ export class MemStorage implements IStorage {
     }
 
     return accountsWithContacts;
+  }
+
+  async getAccountWithContacts(id: number): Promise<AccountWithContacts | undefined> {
+    const account = await this.getAccount(id);
+    if (!account) return undefined;
+
+    const result: AccountWithContacts = { ...account, contacts: [] };
+    
+    // Find all contacts associated with this account
+    const accountContactRelations = Array.from(this.accountContacts.values())
+      .filter(ac => ac.accountId === account.id);
+    
+    for (const relation of accountContactRelations) {
+      const contact = await this.getContact(relation.contactId);
+      if (contact) {
+        result.contacts!.push(contact);
+      }
+    }
+    
+    return result;
   }
 
   // Lead operations

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import TopBar from "@/components/layout/top-bar";
 import ContactModal from "../components/modals/contact-modal";
+import ContactDetailLayout from "../components/contact/contact-detail-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,7 @@ import type { ContactWithAccounts } from "@shared/schema";
 export default function Contacts() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [viewingContactId, setViewingContactId] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
   const { data: contacts = [], isLoading } = useQuery<ContactWithAccounts[]>({
@@ -28,6 +30,26 @@ export default function Contacts() {
     contact.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (contact.accounts?.some(account => account.companyName.toLowerCase().includes(searchQuery.toLowerCase())))
   );
+
+  // Show detail view if viewing a specific contact
+  if (viewingContactId) {
+    return (
+      <div className="flex flex-col h-screen">
+        <TopBar title="Contact Details" />
+        <div className="flex-1 overflow-hidden">
+          <ContactDetailLayout
+            contactId={viewingContactId}
+            onBack={() => setViewingContactId(null)}
+          />
+        </div>
+        
+        <ContactModal 
+          open={isModalOpen} 
+          onOpenChange={setIsModalOpen}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
