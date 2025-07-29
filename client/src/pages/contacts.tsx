@@ -95,7 +95,11 @@ export default function Contacts() {
                 </TableHeader>
                 <TableBody>
                   {filteredContacts.map((contact) => (
-                    <TableRow key={contact.id} className="cursor-pointer hover:bg-slate-50">
+                    <TableRow 
+                      key={contact.id} 
+                      className="cursor-pointer hover:bg-slate-50"
+                      onClick={() => setViewingContactId(contact.id)}
+                    >
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -103,42 +107,10 @@ export default function Contacts() {
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex space-x-2">
-                              <EditableField
-                                label=""
-                                value={contact.firstName}
-                                onSave={async (value) => {
-                                  const response = await apiRequest("PATCH", `/api/contacts/${contact.id}`, { firstName: value });
-                                  if (!response.ok) throw new Error('Failed to update');
-                                  queryClient.invalidateQueries({ queryKey: ['/api/contacts'] });
-                                }}
-                                placeholder="First name"
-                                className="font-medium"
-                              />
-                              <EditableField
-                                label=""
-                                value={contact.lastName}
-                                onSave={async (value) => {
-                                  const response = await apiRequest("PATCH", `/api/contacts/${contact.id}`, { lastName: value });
-                                  if (!response.ok) throw new Error('Failed to update');
-                                  queryClient.invalidateQueries({ queryKey: ['/api/contacts'] });
-                                }}
-                                placeholder="Last name"
-                                className="font-medium"
-                              />
+                              <div className="font-medium">{contact.firstName} {contact.lastName}</div>
                             </div>
                             {contact.title && (
-                              <div className="text-sm text-slate-500 mt-1">
-                                <EditableField
-                                  label=""
-                                  value={contact.title}
-                                  onSave={async (value) => {
-                                    const response = await apiRequest("PATCH", `/api/contacts/${contact.id}`, { title: value });
-                                    if (!response.ok) throw new Error('Failed to update');
-                                    queryClient.invalidateQueries({ queryKey: ['/api/contacts'] });
-                                  }}
-                                  placeholder="Job title"
-                                />
-                              </div>
+                              <div className="text-sm text-slate-500 mt-1">{contact.title}</div>
                             )}
                           </div>
                         </div>

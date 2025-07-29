@@ -123,13 +123,11 @@ export default function Accounts() {
               setEditingAccount(null);
             }
           }}
-          editingAccount={editingAccount}
         />
         
         <ContactModal 
           open={isContactModalOpen} 
           onOpenChange={setIsContactModalOpen}
-          defaultAccountId={selectedAccountId}
         />
       </div>
     );
@@ -179,38 +177,22 @@ export default function Accounts() {
                 </TableHeader>
                 <TableBody>
                   {filteredAccounts.map((account) => (
-                    <TableRow key={account.id} className="cursor-pointer hover:bg-slate-50">
+                    <TableRow 
+                      key={account.id} 
+                      className="cursor-pointer hover:bg-slate-50"
+                      onClick={() => setViewingAccountId(account.id)}
+                    >
                       <TableCell>
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                             <Building className="h-4 w-4 text-blue-600" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <EditableField
-                              label=""
-                              value={account.companyName}
-                              onSave={async (value) => {
-                                const response = await apiRequest("PATCH", `/api/accounts/${account.id}`, { companyName: value });
-                                if (!response.ok) throw new Error('Failed to update');
-                                queryClient.invalidateQueries({ queryKey: ['/api/accounts/with-contacts'] });
-                              }}
-                              placeholder="Company name"
-                              className="font-medium"
-                            />
+                            <div className="font-medium">{account.companyName}</div>
                             {account.website && (
                               <div className="text-sm text-slate-500 flex items-center mt-1">
                                 <Globe className="h-3 w-3 mr-1" />
-                                <EditableField
-                                  label=""
-                                  value={account.website}
-                                  onSave={async (value) => {
-                                    const response = await apiRequest("PATCH", `/api/accounts/${account.id}`, { website: value });
-                                    if (!response.ok) throw new Error('Failed to update');
-                                    queryClient.invalidateQueries({ queryKey: ['/api/accounts/with-contacts'] });
-                                  }}
-                                  placeholder="Website"
-                                  type="url"
-                                />
+                                {account.website}
                               </div>
                             )}
                           </div>
