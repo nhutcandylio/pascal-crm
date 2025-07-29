@@ -120,7 +120,8 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
 
 
   return (
-    <div className="space-y-6">
+    <div className="h-full overflow-auto">
+      <div className="space-y-6 pb-6">
       {/* Basic Information */}
       <Card>
         <CardHeader>
@@ -480,6 +481,7 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
           />
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
