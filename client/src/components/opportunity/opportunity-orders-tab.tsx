@@ -69,21 +69,26 @@ interface OpportunityOrdersTabProps {
 export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersTabProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Check if opportunity is closed (won or lost) - if so, make it read-only
+  const isClosedOpportunity = opportunity.stage === 'Closed Won' || opportunity.stage === 'Closed Lost';
+  
   const [newOrderOpen, setNewOrderOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<number | null>(null);
   const [editingOrderItem, setEditingOrderItem] = useState<number | null>(null);
   const [addingProductToOrder, setAddingProductToOrder] = useState<number | null>(null);
   const [deletingOrder, setDeletingOrder] = useState<number | null>(null);
   
-  // Check if opportunity is closed (Won or Lost) - makes orders read-only
-  const isOpportunityClosed = opportunity.stage === "Closed Won" || opportunity.stage === "Closed Lost";
-  
-  // Close new order dialog if opportunity becomes closed
+  // Close dialogs if opportunity becomes closed
   useEffect(() => {
-    if (isOpportunityClosed && newOrderOpen) {
+    if (isClosedOpportunity) {
       setNewOrderOpen(false);
+      setEditingOrder(null);
+      setEditingOrderItem(null);
+      setAddingProductToOrder(null);
+      setDeletingOrder(null);
     }
-  }, [isOpportunityClosed, newOrderOpen]);
+  }, [isClosedOpportunity]);
 
   // Fetch products for order creation
   const { data: products = [] } = useQuery<Product[]>({
@@ -169,8 +174,47 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
     },
   });
 
+  // Protection function for closed opportunities
+  const preventClosedOpportunityAction = (actionName: string) => {
+    if (isClosedOpportunity) {
+      toast({
+        title: "Cannot Edit",
+        description: `Cannot ${actionName} for closed opportunities.`,
+        variant: "destructive",
+      });
+      return true;
+    }
+    return false;
+  };
+
   const handleCreateOrder = (data: any) => {
+    if (preventClosedOpportunityAction("create orders")) return;
     createOrderMutation.mutate(data);
+  };
+
+  const handleNewOrderClick = () => {
+    if (preventClosedOpportunityAction("create orders")) return;
+    setNewOrderOpen(true);
+  };
+
+  const handleEditOrder = (orderId: number) => {
+    if (preventClosedOpportunityAction("edit orders")) return;
+    setEditingOrder(orderId);
+  };
+
+  const handleEditOrderItem = (itemId: number) => {
+    if (preventClosedOpportunityAction("edit order items")) return;
+    setEditingOrderItem(itemId);
+  };
+
+  const handleAddProductToOrder = (orderId: number) => {
+    if (preventClosedOpportunityAction("add products to orders")) return;
+    setAddingProductToOrder(orderId);
+  };
+
+  const handleDeleteOrder = (orderId: number) => {
+    if (preventClosedOpportunityAction("delete orders")) return;
+    setDeletingOrder(orderId);
   };
 
   // Update order status mutation
@@ -342,10 +386,15 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
             <CardTitle className="flex items-center space-x-2">
               <ShoppingCart className="h-5 w-5" />
               <span>Orders ({opportunity.orders?.length || 0})</span>
+              {isClosedOpportunity && (
+                <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full ml-2">
+                  Read-Only
+                </span>
+              )}
             </CardTitle>
-            <Dialog open={newOrderOpen && !isOpportunityClosed} onOpenChange={setNewOrderOpen}>
+            <Dialog open={newOrderOpen && !isClosedOpportunity} onOpenChange={setNewOrderOpen}>
               <DialogTrigger asChild>
-                <Button size="sm" disabled={isOpportunityClosed}>
+                <Button size="sm" disabled={isClosedOpportunity} onClick={handleNewOrderClick}>
                   <Plus className="h-4 w-4 mr-2" />
                   New Order
                 </Button>
@@ -572,6 +621,24 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
           </div>
         </CardHeader>
         <CardContent>
+          {/* Show read-only warning for closed opportunities */}
+          {isClosedOpportunity && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-amber-800">
+                    <span className="font-medium">Read-Only Mode:</span> Orders cannot be modified for closed opportunities.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {opportunity.orders && opportunity.orders.length > 0 ? (
             <div className="space-y-4">
               {opportunity.orders.map((order) => (
@@ -579,7 +646,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
                       <h4 className="font-medium">Order #{order.id}</h4>
-                      {editingOrder === order.id && !isOpportunityClosed ? (
+                      {editingOrder === order.id && !isClosedOpportunity ? (
                         <div className="flex items-center space-x-2">
                           <Select 
                             defaultValue={order.status}
@@ -610,7 +677,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                           <Badge className={getOrderStatusColor(order.status)}>
                             {order.status}
                           </Badge>
-                          {!isOpportunityClosed && (
+                          {!isClosedOpportunity && (
                             <Button
                               size="sm"
                               variant="ghost"
@@ -627,7 +694,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                         <Calendar className="h-4 w-4" />
                         <span>{format(new Date(order.orderDate), 'MMM dd, yyyy')}</span>
                       </div>
-                      {!isOpportunityClosed && (
+                      {!isClosedOpportunity && (
                         <Button
                           size="sm"
                           variant="ghost"
@@ -657,7 +724,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <h5 className="font-medium">Order Items</h5>
-                          {!isOpportunityClosed && (
+                          {!isClosedOpportunity && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -684,7 +751,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                                 <div className="text-right">
                                   <p className="font-semibold">${item.totalPrice}</p>
                                 </div>
-                                {!isOpportunityClosed && (
+                                {!isClosedOpportunity && (
                                   <Button
                                     size="sm"
                                     variant="ghost"
@@ -696,7 +763,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                               </div>
                             </div>
                             
-                            {editingOrderItem === item.id && !isOpportunityClosed ? (
+                            {editingOrderItem === item.id && !isClosedOpportunity ? (
                               <EditOrderItemForm 
                                 item={item}
                                 products={products}
@@ -741,7 +808,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                   )}
 
                   {/* Add Product to Order Dialog */}
-                  {addingProductToOrder === order.id && !isOpportunityClosed && (
+                  {addingProductToOrder === order.id && !isClosedOpportunity && (
                     <AddProductToOrderDialog
                       orderId={order.id}
                       products={products}
@@ -765,13 +832,13 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
               <ShoppingCart className="h-12 w-12 mx-auto mb-4" />
               <h3 className="text-lg font-medium mb-2">No Orders</h3>
               <p className="mb-4">
-                {isOpportunityClosed 
+                {isClosedOpportunity 
                   ? "This opportunity doesn't have any orders." 
                   : "This opportunity doesn't have any orders yet."
                 }
               </p>
-              {!isOpportunityClosed && (
-                <Button onClick={() => !isOpportunityClosed && setNewOrderOpen(true)}>
+              {!isClosedOpportunity && (
+                <Button onClick={() => !isClosedOpportunity && setNewOrderOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Create First Order
                 </Button>
@@ -782,7 +849,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
       </Card>
 
       {/* Delete Order Confirmation Dialog */}
-      <AlertDialog open={deletingOrder !== null && !isOpportunityClosed} onOpenChange={() => setDeletingOrder(null)}>
+      <AlertDialog open={deletingOrder !== null && !isClosedOpportunity} onOpenChange={() => setDeletingOrder(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Order</AlertDialogTitle>
@@ -804,7 +871,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
       </AlertDialog>
 
       {/* Read-Only Warning for Closed Opportunities */}
-      {isOpportunityClosed && (
+      {isClosedOpportunity && (
         <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
