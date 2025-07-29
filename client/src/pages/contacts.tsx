@@ -40,6 +40,11 @@ export default function Contacts() {
           <ContactDetailLayout
             contactId={viewingContactId}
             onBack={() => setViewingContactId(null)}
+            onNavigateToAccount={(accountId) => {
+              setViewingContactId(null);
+              // Navigate to accounts page with specific account
+              window.location.href = `/accounts?view=${accountId}`;
+            }}
           />
         </div>
         

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import * as React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import TopBar from "@/components/layout/top-bar";
 import AccountModal from "../components/modals/account-modal";
@@ -22,6 +23,20 @@ export default function Accounts() {
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [viewingAccountId, setViewingAccountId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Check for account ID in URL params on component mount
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const viewParam = urlParams.get('view');
+    if (viewParam) {
+      const accountId = parseInt(viewParam);
+      if (!isNaN(accountId)) {
+        setViewingAccountId(accountId);
+        // Clean up the URL
+        window.history.replaceState({}, '', '/accounts');
+      }
+    }
+  }, []);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 

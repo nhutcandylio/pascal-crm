@@ -13,9 +13,10 @@ import type { ContactWithAccounts, InsertContact } from "@shared/schema";
 
 interface ContactDetailTabProps {
   contact: ContactWithAccounts;
+  onNavigateToAccount?: (accountId: number) => void;
 }
 
-export default function ContactDetailTab({ contact }: ContactDetailTabProps) {
+export default function ContactDetailTab({ contact, onNavigateToAccount }: ContactDetailTabProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<Partial<InsertContact>>({
     firstName: contact.firstName,
@@ -219,9 +220,15 @@ export default function ContactDetailTab({ contact }: ContactDetailTabProps) {
           {contact.accounts && contact.accounts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {contact.accounts.map((account) => (
-                <div key={account.id} className="p-4 border rounded-lg">
+                <div 
+                  key={account.id} 
+                  className="p-4 border rounded-lg cursor-pointer hover:bg-slate-50 hover:border-blue-300 transition-colors"
+                  onClick={() => onNavigateToAccount?.(account.id)}
+                >
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium">{account.companyName}</h3>
+                    <h3 className="font-medium text-blue-600 hover:text-blue-800">
+                      {account.companyName}
+                    </h3>
                     <Badge variant="outline" className="bg-blue-50 text-blue-700">
                       Active
                     </Badge>
@@ -236,6 +243,9 @@ export default function ContactDetailTab({ contact }: ContactDetailTabProps) {
                       Website: {account.website}
                     </p>
                   )}
+                  <div className="text-xs text-blue-600 mt-2 opacity-75">
+                    Click to view account details →
+                  </div>
                 </div>
               ))}
             </div>

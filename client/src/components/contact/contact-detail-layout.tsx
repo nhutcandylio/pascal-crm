@@ -12,9 +12,10 @@ import type { ContactWithAccounts } from "@shared/schema";
 interface ContactDetailLayoutProps {
   contactId: number;
   onBack: () => void;
+  onNavigateToAccount?: (accountId: number) => void;
 }
 
-export default function ContactDetailLayout({ contactId, onBack }: ContactDetailLayoutProps) {
+export default function ContactDetailLayout({ contactId, onBack, onNavigateToAccount }: ContactDetailLayoutProps) {
   const [activeTab, setActiveTab] = useState("details");
 
   const { data: contact, isLoading } = useQuery<ContactWithAccounts>({
@@ -114,7 +115,7 @@ export default function ContactDetailLayout({ contactId, onBack }: ContactDetail
             </TabsList>
 
             <TabsContent value="details" className="mt-6">
-              <ContactDetailTab contact={contact} />
+              <ContactDetailTab contact={contact} onNavigateToAccount={onNavigateToAccount} />
             </TabsContent>
 
             <TabsContent value="notes" className="mt-6">
