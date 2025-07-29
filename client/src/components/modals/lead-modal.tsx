@@ -241,8 +241,8 @@ export default function LeadModal({ open, onOpenChange }: LeadModalProps) {
                 <FormItem>
                   <FormLabel>Owner</FormLabel>
                   <Select 
-                    onValueChange={(value) => field.onChange(value ? parseInt(value) : null)} 
-                    value={field.value?.toString() || ""}
+                    onValueChange={(value) => field.onChange(value === 'none' ? null : parseInt(value))} 
+                    value={field.value?.toString() || "none"}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -250,7 +250,7 @@ export default function LeadModal({ open, onOpenChange }: LeadModalProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">No owner</SelectItem>
+                      <SelectItem value="none">No owner</SelectItem>
                       {users.map((user) => (
                         <SelectItem key={user.id} value={user.id.toString()}>
                           {user.firstName} {user.lastName} ({user.role})

@@ -285,7 +285,7 @@ export default function LeadDetailTab({ lead }: LeadDetailTabProps) {
               <EditableField
                 label="Phone"
                 value={lead.phone || ''}
-                onSave={(value) => handleFieldUpdate('phone', value || null)}
+                onSave={(value) => handleFieldUpdate('phone', value.trim() || null)}
                 placeholder="Enter phone number"
                 type="tel"
               />
@@ -295,21 +295,21 @@ export default function LeadDetailTab({ lead }: LeadDetailTabProps) {
               <EditableField
                 label="Company"
                 value={lead.company || ''}
-                onSave={(value) => handleFieldUpdate('company', value || null)}
+                onSave={(value) => handleFieldUpdate('company', value.trim() || null)}
                 placeholder="Enter company name"
               />
 
               <EditableField
                 label="Title"
                 value={lead.title || ''}
-                onSave={(value) => handleFieldUpdate('title', value || null)}
+                onSave={(value) => handleFieldUpdate('title', value.trim() || null)}
                 placeholder="Enter job title"
               />
 
               <EditableSelectField
                 label="Owner"
                 value={lead.ownerId?.toString() || 'none'}
-                onSave={(value) => handleFieldUpdate('ownerId', value)}
+                onSave={(value) => handleFieldUpdate('ownerId', value === 'none' ? null : parseInt(value))}
                 options={[
                   { value: 'none', label: 'No owner assigned' },
                   ...users.map(user => ({

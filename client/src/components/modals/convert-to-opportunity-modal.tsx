@@ -42,10 +42,13 @@ export default function ConvertToOpportunityModal({
     queryKey: ['/api/contacts'],
   });
 
-  // Filter contacts based on selected account
-  const filteredContacts = selectedAccountId 
-    ? contacts.filter(contact => contact.accountId?.toString() === selectedAccountId)
-    : contacts;
+  // Filter contacts based on selected account  
+  const filteredContacts = selectedAccountId && selectedAccountId !== 'none'
+    ? contacts.filter(contact => {
+        // For now, return all contacts since we'll create association later
+        return true;
+      })
+    : [];
 
   const convertMutation = useMutation({
     mutationFn: async () => {
