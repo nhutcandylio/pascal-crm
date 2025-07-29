@@ -443,20 +443,20 @@ export default function OpportunityDetailLayout({
             </TabsTrigger>
           </TabsList>
 
-          <div className="mt-6 flex-1 overflow-hidden">
-            <TabsContent value="detail" className="h-full overflow-auto">
+          <div className="mt-6 h-full">
+            <TabsContent value="detail" className="h-full">
               <OpportunityDetailTab opportunity={opportunity} />
             </TabsContent>
 
-            <TabsContent value="related" className="h-full overflow-auto">
+            <TabsContent value="related" className="h-full">
               <OpportunityRelatedTab opportunity={opportunity} />
             </TabsContent>
 
-            <TabsContent value="orders" className="h-full overflow-auto">
+            <TabsContent value="orders" className="h-full">
               <OpportunityOrdersTab opportunity={opportunity} />
             </TabsContent>
 
-            <TabsContent value="activity" className="h-full overflow-auto">
+            <TabsContent value="activity" className="h-full">
               <OpportunityActivityTab opportunity={opportunity} />
             </TabsContent>
           </div>

@@ -94,8 +94,7 @@ export default function OpportunityActivityTab({ opportunity }: OpportunityActiv
   };
 
   return (
-    <div className="h-full overflow-auto">
-      <div className="space-y-6 pb-6">
+    <div className="space-y-6">
       {/* Activity Feed Header */}
       <Card>
         <CardHeader>
@@ -332,7 +331,6 @@ export default function OpportunityActivityTab({ opportunity }: OpportunityActiv
           </CardContent>
         </Card>
       )}
-      </div>
     </div>
   );
 }

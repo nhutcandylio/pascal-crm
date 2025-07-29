@@ -83,8 +83,7 @@ export default function Users() {
   });
 
   return (
-    <div className="h-full overflow-auto">
-      <div className="p-6 space-y-6 min-h-full">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Users</h1>
         <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
@@ -183,7 +182,6 @@ export default function Users() {
           ))}
         </div>
       )}
-      </div>
     </div>
   );
 }

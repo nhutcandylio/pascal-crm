@@ -161,8 +161,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
   };
 
   return (
-    <div className="h-full overflow-auto">
-      <div className="space-y-6 pb-6">
+    <div className="space-y-6">
       {/* Orders Summary */}
       <Card>
         <CardHeader>
@@ -444,7 +443,6 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
           )}
         </CardContent>
       </Card>
-      </div>
     </div>
   );
 }

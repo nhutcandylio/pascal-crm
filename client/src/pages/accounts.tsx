@@ -146,9 +146,8 @@ export default function Accounts() {
   }
 
   return (
-    <div className="h-full overflow-auto">
-      <div className="p-6 min-h-full">
-        <div className="flex items-center justify-between mb-6">
+    <div className="p-6">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Accounts</h1>
           <p className="text-slate-600">Manage your company accounts and business relationships</p>
@@ -273,7 +272,6 @@ export default function Accounts() {
         onOpenChange={setIsContactModalOpen}
         preselectedAccountId={selectedAccountId}
       />
-      </div>
     </div>
   );
 }
