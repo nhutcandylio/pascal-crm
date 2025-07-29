@@ -64,6 +64,7 @@ export const opportunities = pgTable("opportunities", {
   leadId: integer("lead_id"), // Reference to the original lead that was converted
   name: text("name").notNull(),
   value: decimal("value", { precision: 12, scale: 2 }).notNull(),
+  weightedValue: decimal("weighted_value", { precision: 12, scale: 2 }),
   grossProfit: decimal("gross_profit", { precision: 12, scale: 2 }),
   grossProfitMargin: integer("gross_profit_margin").default(0), // 0-100%
   stage: text("stage").notNull(), // 'prospecting', 'qualification', 'proposal', 'negotiation', 'closed-won', 'closed-lost'
