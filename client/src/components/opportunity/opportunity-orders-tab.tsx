@@ -74,6 +74,9 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
   const [editingOrderItem, setEditingOrderItem] = useState<number | null>(null);
   const [addingProductToOrder, setAddingProductToOrder] = useState<number | null>(null);
   const [deletingOrder, setDeletingOrder] = useState<number | null>(null);
+  
+  // Check if opportunity is closed (Won or Lost) - makes orders read-only
+  const isOpportunityClosed = opportunity.stage === "Closed Won" || opportunity.stage === "Closed Lost";
 
   // Fetch products for order creation
   const { data: products = [] } = useQuery<Product[]>({
@@ -335,7 +338,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
             </CardTitle>
             <Dialog open={newOrderOpen} onOpenChange={setNewOrderOpen}>
               <DialogTrigger asChild>
-                <Button size="sm">
+                <Button size="sm" disabled={isOpportunityClosed}>
                   <Plus className="h-4 w-4 mr-2" />
                   New Order
                 </Button>
@@ -569,7 +572,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
                       <h4 className="font-medium">Order #{order.id}</h4>
-                      {editingOrder === order.id ? (
+                      {editingOrder === order.id && !isOpportunityClosed ? (
                         <div className="flex items-center space-x-2">
                           <Select 
                             defaultValue={order.status}
@@ -600,13 +603,15 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                           <Badge className={getOrderStatusColor(order.status)}>
                             {order.status}
                           </Badge>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setEditingOrder(order.id)}
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </Button>
+                          {!isOpportunityClosed && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setEditingOrder(order.id)}
+                            >
+                              <Edit2 className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -615,14 +620,16 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                         <Calendar className="h-4 w-4" />
                         <span>{format(new Date(order.orderDate), 'MMM dd, yyyy')}</span>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setDeletingOrder(order.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      {!isOpportunityClosed && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setDeletingOrder(order.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
 
@@ -643,14 +650,16 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <h5 className="font-medium">Order Items</h5>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setAddingProductToOrder(order.id)}
-                          >
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Product
-                          </Button>
+                          {!isOpportunityClosed && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setAddingProductToOrder(order.id)}
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add Product
+                            </Button>
+                          )}
                         </div>
                         {order.items.map((item, itemIndex) => (
                           <div key={itemIndex} className="py-2 px-3 bg-muted/50 rounded space-y-2">
@@ -668,17 +677,19 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                                 <div className="text-right">
                                   <p className="font-semibold">${item.totalPrice}</p>
                                 </div>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => setEditingOrderItem(item.id)}
-                                >
-                                  <Edit2 className="h-4 w-4" />
-                                </Button>
+                                {!isOpportunityClosed && (
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setEditingOrderItem(item.id)}
+                                  >
+                                    <Edit2 className="h-4 w-4" />
+                                  </Button>
+                                )}
                               </div>
                             </div>
                             
-                            {editingOrderItem === item.id ? (
+                            {editingOrderItem === item.id && !isOpportunityClosed ? (
                               <EditOrderItemForm 
                                 item={item}
                                 products={products}
@@ -723,7 +734,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                   )}
 
                   {/* Add Product to Order Dialog */}
-                  {addingProductToOrder === order.id && (
+                  {addingProductToOrder === order.id && !isOpportunityClosed && (
                     <AddProductToOrderDialog
                       orderId={order.id}
                       products={products}
@@ -757,7 +768,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
       </Card>
 
       {/* Delete Order Confirmation Dialog */}
-      <AlertDialog open={deletingOrder !== null} onOpenChange={() => setDeletingOrder(null)}>
+      <AlertDialog open={deletingOrder !== null && !isOpportunityClosed} onOpenChange={() => setDeletingOrder(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Order</AlertDialogTitle>
@@ -777,6 +788,21 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Read-Only Warning for Closed Opportunities */}
+      {isOpportunityClosed && (
+        <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+            <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+              Orders are read-only for closed opportunities ({opportunity.stage})
+            </p>
+          </div>
+          <p className="text-xs text-amber-600 dark:text-amber-300 mt-1">
+            No changes can be made to orders, products, or pricing for opportunities that are marked as Closed Won or Closed Lost.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
