@@ -17,6 +17,9 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Check if opportunity is closed (won or lost) - if so, make it read-only
+  const isClosedOpportunity = opportunity.stage === 'closed-won' || opportunity.stage === 'closed-lost';
+
   const { data: accounts = [] } = useQuery<Account[]>({
     queryKey: ["/api/accounts"],
   });
@@ -40,6 +43,16 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
   const grossProfitMargin = opportunity.grossProfitMargin || 0;
 
   const handleFieldUpdate = async (field: string, value: string) => {
+    // Prevent editing if opportunity is closed
+    if (isClosedOpportunity) {
+      toast({
+        title: "Cannot Edit",
+        description: "Closed opportunities cannot be edited.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       // Convert string values to appropriate types for numeric fields
       let processedValue: any = value;
@@ -117,19 +130,37 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Show read-only warning for closed opportunities */}
+          {isClosedOpportunity && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-amber-800">
+                    <span className="font-medium">Read-Only Mode:</span> This opportunity is closed and cannot be edited.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
               <EditableField
                 label="Opportunity Name"
                 value={opportunity.name}
-                onSave={(value) => handleFieldUpdate('name', value)}
+                onSave={isClosedOpportunity ? () => Promise.resolve() : (value) => handleFieldUpdate('name', value)}
                 placeholder="Enter opportunity name"
               />
 
               <EditableField
                 label="Account"
                 value={opportunity.accountId?.toString() || "none"}
-                onSave={(value) => handleFieldUpdate('accountId', value)}
+                onSave={isClosedOpportunity ? () => Promise.resolve() : (value) => handleFieldUpdate('accountId', value)}
                 placeholder="Select account"
                 type="select"
                 options={[
@@ -145,7 +176,7 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
               <EditableField
                 label="Primary Contact"
                 value={opportunity.contactId?.toString() || "none"}
-                onSave={(value) => handleFieldUpdate('contactId', value)}
+                onSave={isClosedOpportunity ? () => Promise.resolve() : (value) => handleFieldUpdate('contactId', value)}
                 placeholder="Select contact"
                 type="select"
                 options={[
@@ -164,7 +195,7 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
               <EditableField
                 label="Owner"
                 value={opportunity.ownerId?.toString() || "none"}
-                onSave={(value) => handleFieldUpdate('ownerId', value)}
+                onSave={isClosedOpportunity ? () => Promise.resolve() : (value) => handleFieldUpdate('ownerId', value)}
                 placeholder="Select owner"
                 type="select"
                 options={[
@@ -195,20 +226,23 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
                   }>
                     {opportunity.stage}
                   </Badge>
+                  {isClosedOpportunity && (
+                    <span className="ml-2 text-xs text-muted-foreground">(Stage changes disabled)</span>
+                  )}
                 </div>
               </div>
 
               <EditablePercentageField
                 label="Probability"
                 value={opportunity.probability}
-                onSave={(value) => handleFieldUpdate('probability', value)}
+                onSave={isClosedOpportunity ? () => Promise.resolve() : (value) => handleFieldUpdate('probability', value)}
                 placeholder="0"
               />
 
               <EditableDateField
                 label="Close Date"
                 value={opportunity.closeDate ? new Date(opportunity.closeDate).toISOString().split('T')[0] : ''}
-                onSave={(value) => handleFieldUpdate('closeDate', value)}
+                onSave={isClosedOpportunity ? () => Promise.resolve() : (value) => handleFieldUpdate('closeDate', value)}
                 placeholder="Select close date"
               />
 
@@ -271,7 +305,7 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
             <EditableCurrencyField
               label="Opportunity Value"
               value={opportunity.value}
-              onSave={(value) => handleFieldUpdate('value', value)}
+              onSave={isClosedOpportunity ? () => Promise.resolve() : (value) => handleFieldUpdate('value', value)}
               placeholder="0.00"
             />
 

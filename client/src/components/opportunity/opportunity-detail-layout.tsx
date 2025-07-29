@@ -75,6 +75,17 @@ export default function OpportunityDetailLayout({
   const handleStageChangeClick = (newStage: string, stageLabel: string) => {
     if (newStage === opportunity?.stage) return;
     
+    // Prevent stage changes for closed opportunities
+    const isClosedOpportunity = opportunity?.stage === 'closed-won' || opportunity?.stage === 'closed-lost';
+    if (isClosedOpportunity) {
+      toast({
+        title: "Cannot Change Stage",
+        description: "Closed opportunities cannot have their stage changed.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setStageChangeModal({
       isOpen: true,
       targetStage: newStage,
@@ -262,12 +273,15 @@ export default function OpportunityDetailLayout({
               const isCompleted = [
                 "prospecting", "qualification", "proposal", "negotiation", "closed-won", "closed-lost"
               ].findIndex(s => s === opportunity?.stage) > index;
+              const isClosedOpportunity = opportunity?.stage === 'closed-won' || opportunity?.stage === 'closed-lost';
               
               return (
                 <div key={stage.value} className="flex items-center">
                   <div 
-                    className={`relative cursor-pointer transition-all duration-200 ${
+                    className={`relative transition-all duration-200 ${
                       isActive ? 'transform scale-110' : ''
+                    } ${
+                      isClosedOpportunity ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-105'
                     }`}
                     onClick={() => handleStageChangeClick(stage.value, stage.label)}
                   >
@@ -323,8 +337,8 @@ export default function OpportunityDetailLayout({
               {opportunity.stage === 'qualification' && 'Qualifying the lead and understanding needs'}
               {opportunity.stage === 'proposal' && 'Preparing and presenting proposal'}
               {opportunity.stage === 'negotiation' && 'Negotiating terms and pricing'}
-              {opportunity.stage === 'closed-won' && 'Deal successfully closed'}
-              {opportunity.stage === 'closed-lost' && 'Deal lost or abandoned'}
+              {opportunity.stage === 'closed-won' && 'Deal successfully closed - Stage changes disabled'}
+              {opportunity.stage === 'closed-lost' && 'Deal lost or abandoned - Stage changes disabled'}
             </div>
           </div>
         </div>
