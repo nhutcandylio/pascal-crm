@@ -349,7 +349,7 @@ export default function ConvertToOpportunityModal({
               type="submit"
               disabled={convertMutation.isPending}
             >
-              {convertMutation.isPending ? "Converting..." : "Convert to Opportunity"}
+              {convertMutation.isPending ? "Creating..." : "Create Opportunity"}
             </Button>
           </div>
         </form>
