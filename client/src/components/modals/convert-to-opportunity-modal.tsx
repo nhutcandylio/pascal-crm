@@ -317,7 +317,7 @@ export default function ConvertToOpportunityModal({
                 </SelectTrigger>
                 <SelectContent>
                   {filteredContacts.map((contact) => (
-                    <SelectItem key={contact.id} value={contact.id?.toString() || ""}>
+                    <SelectItem key={contact.id} value={contact.id?.toString() || "0"}>
                       {contact.firstName} {contact.lastName} - {contact.email}
                     </SelectItem>
                   ))}

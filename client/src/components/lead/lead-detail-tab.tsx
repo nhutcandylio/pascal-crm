@@ -110,7 +110,7 @@ function EditableSelectField({ label, value, onSave, options, placeholder }: Edi
             </SelectTrigger>
             <SelectContent>
               {options.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
+                <SelectItem key={option.value} value={option.value || "none"}>
                   {option.label}
                 </SelectItem>
               ))}
@@ -344,9 +344,12 @@ export default function LeadDetailTab({ lead }: LeadDetailTabProps) {
             
             <EditableSelectField
               label="Source"
-              value={lead.source || ''}
-              onSave={(value) => handleFieldUpdate('source', value || null)}
-              options={sourceOptions}
+              value={lead.source || 'none'}
+              onSave={(value) => handleFieldUpdate('source', value === 'none' ? null : value)}
+              options={[
+                { value: 'none', label: 'No source selected' },
+                ...sourceOptions
+              ]}
               placeholder="Select source"
             />
           </div>
