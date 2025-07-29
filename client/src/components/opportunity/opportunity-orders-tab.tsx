@@ -757,11 +757,18 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
             <div className="text-center py-8 text-muted-foreground">
               <ShoppingCart className="h-12 w-12 mx-auto mb-4" />
               <h3 className="text-lg font-medium mb-2">No Orders</h3>
-              <p className="mb-4">This opportunity doesn't have any orders yet.</p>
-              <Button onClick={() => setNewOrderOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create First Order
-              </Button>
+              <p className="mb-4">
+                {isOpportunityClosed 
+                  ? "This opportunity doesn't have any orders." 
+                  : "This opportunity doesn't have any orders yet."
+                }
+              </p>
+              {!isOpportunityClosed && (
+                <Button onClick={() => setNewOrderOpen(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create First Order
+                </Button>
+              )}
             </div>
           )}
         </CardContent>
