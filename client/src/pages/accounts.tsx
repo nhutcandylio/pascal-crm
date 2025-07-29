@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { EditableField } from "@/components/ui/editable-field";
-import { Plus, Building, Phone, Globe, MapPin, X, UserPlus, Edit } from "lucide-react";
+import { Plus, Building, Phone, Globe, MapPin, X, UserPlus } from "lucide-react";
 import type { Account, Contact, AccountWithContacts } from "@shared/schema";
 
 export default function Accounts() {
@@ -93,10 +93,7 @@ export default function Accounts() {
     setIsContactModalOpen(true);
   };
 
-  const handleEditAccount = (account: Account) => {
-    setEditingAccount(account);
-    setIsModalOpen(true);
-  };
+  
 
   const filteredAccounts = accounts.filter(account =>
     account.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -172,7 +169,6 @@ export default function Accounts() {
                     <TableHead>Contacts</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Created</TableHead>
-                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -237,19 +233,6 @@ export default function Accounts() {
                       </TableCell>
                       <TableCell className="text-slate-500">
                         {new Date(account.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditAccount(account);
-                          }}
-                          className="h-8 w-8 p-0"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
