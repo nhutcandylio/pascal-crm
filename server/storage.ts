@@ -10,6 +10,7 @@ import {
   orders,
   orderItems,
   stageChangeLogs,
+  notes,
   type User,
   type InsertUser,
   type Account, 
@@ -32,6 +33,8 @@ import {
   type InsertStageChangeLog,
   type Activity,
   type InsertActivity,
+  type Note,
+  type InsertNote,
   type OpportunityWithRelations,
   type ActivityWithRelations,
   type LeadWithRelations,
@@ -136,6 +139,16 @@ export interface IStorage {
   updateActivity(id: number, activity: Partial<InsertActivity>): Promise<Activity | undefined>;
   deleteActivity(id: number): Promise<boolean>;
 
+  // Note operations
+  getNotes(): Promise<Note[]>;
+  getNotesByLead(leadId: number): Promise<Note[]>;
+  getNotesByOpportunity(opportunityId: number): Promise<Note[]>;
+  getNotesByAccount(accountId: number): Promise<Note[]>;
+  getNotesByContact(contactId: number): Promise<Note[]>;
+  createNote(note: InsertNote): Promise<Note>;
+  updateNote(id: number, content: string): Promise<Note | undefined>;
+  deleteNote(id: number): Promise<boolean>;
+
   // Dashboard operations
   getDashboardMetrics(): Promise<DashboardMetrics>;
 }
@@ -152,6 +165,7 @@ export class MemStorage implements IStorage {
   private orderItems: Map<number, OrderItem> = new Map();
   private stageChangeLogs: Map<number, StageChangeLog> = new Map();
   private activities: Map<number, Activity> = new Map();
+  private notes: Map<number, Note> = new Map();
   private currentUserId = 1;
   private currentAccountId = 1;
   private currentContactId = 1;
@@ -163,6 +177,7 @@ export class MemStorage implements IStorage {
   private currentOrderItemId = 1;
   private currentStageChangeLogId = 1;
   private currentActivityId = 1;
+  private currentNoteId = 1;
 
   constructor() {
     // Initialize with some sample data for development
@@ -1476,6 +1491,55 @@ export class MemStorage implements IStorage {
     }
 
     return leadsWithRelations;
+  }
+
+  // Note operations
+  async getNotes(): Promise<Note[]> {
+    return Array.from(this.notes.values());
+  }
+
+  async getNotesByLead(leadId: number): Promise<Note[]> {
+    return Array.from(this.notes.values()).filter(note => note.leadId === leadId);
+  }
+
+  async getNotesByOpportunity(opportunityId: number): Promise<Note[]> {
+    return Array.from(this.notes.values()).filter(note => note.opportunityId === opportunityId);
+  }
+
+  async getNotesByAccount(accountId: number): Promise<Note[]> {
+    return Array.from(this.notes.values()).filter(note => note.accountId === accountId);
+  }
+
+  async getNotesByContact(contactId: number): Promise<Note[]> {
+    return Array.from(this.notes.values()).filter(note => note.contactId === contactId);
+  }
+
+  async createNote(note: InsertNote): Promise<Note> {
+    const newNote: Note = {
+      id: this.currentNoteId++,
+      ...note,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.notes.set(newNote.id, newNote);
+    return newNote;
+  }
+
+  async updateNote(id: number, content: string): Promise<Note | undefined> {
+    const note = this.notes.get(id);
+    if (!note) return undefined;
+    
+    const updatedNote = {
+      ...note,
+      content,
+      updatedAt: new Date(),
+    };
+    this.notes.set(id, updatedNote);
+    return updatedNote;
+  }
+
+  async deleteNote(id: number): Promise<boolean> {
+    return this.notes.delete(id);
   }
 
   // Dashboard operations

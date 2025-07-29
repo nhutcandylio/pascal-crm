@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
 import LeadDetailTab from "./lead-detail-tab";
+import NoteList from "@/components/notes/note-list";
 import type { Lead } from "@shared/schema";
 
 interface LeadDetailLayoutProps {
@@ -149,15 +150,7 @@ export default function LeadDetailLayout({
             </TabsContent>
 
             <TabsContent value="activity" className="mt-6">
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <User className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-medium mb-2">Notes & Comments</h3>
-                  <p className="text-muted-foreground">
-                    Notes functionality is coming soon. Convert to opportunity for full CRM features.
-                  </p>
-                </CardContent>
-              </Card>
+              <NoteList leadId={lead.id} />
             </TabsContent>
 
             

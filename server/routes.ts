@@ -12,7 +12,8 @@ import {
   insertProductSchema,
   insertOrderSchema,
   insertOrderItemSchema,
-  insertStageChangeLogSchema
+  insertStageChangeLogSchema,
+  insertNoteSchema
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -569,6 +570,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       res.status(500).json({ error: "Failed to delete user" });
+    }
+  });
+
+  // Notes routes
+  app.get("/api/notes", async (req, res) => {
+    try {
+      const { leadId, opportunityId, accountId, contactId } = req.query;
+      
+      let notes;
+      if (leadId) {
+        notes = await storage.getNotesByLead(parseInt(leadId as string));
+      } else if (opportunityId) {
+        notes = await storage.getNotesByOpportunity(parseInt(opportunityId as string));
+      } else if (accountId) {
+        notes = await storage.getNotesByAccount(parseInt(accountId as string));
+      } else if (contactId) {
+        notes = await storage.getNotesByContact(parseInt(contactId as string));
+      } else {
+        notes = await storage.getNotes();
+      }
+      
+      res.json(notes);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch notes" });
+    }
+  });
+
+  app.post("/api/notes", async (req, res) => {
+    try {
+      const noteData = insertNoteSchema.parse(req.body);
+      const note = await storage.createNote(noteData);
+      res.status(201).json(note);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Invalid note data", details: error.errors });
+      } else {
+        res.status(500).json({ error: "Failed to create note" });
+      }
+    }
+  });
+
+  app.patch("/api/notes/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { content } = req.body;
+      const note = await storage.updateNote(id, content);
+      if (note) {
+        res.json(note);
+      } else {
+        res.status(404).json({ error: "Note not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update note" });
+    }
+  });
+
+  app.delete("/api/notes/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteNote(id);
+      if (success) {
+        res.status(204).send();
+      } else {
+        res.status(404).json({ error: "Note not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete note" });
+    }
+  });
+
+  // Dashboard route
+  app.get("/api/dashboard/metrics", async (req, res) => {
+    try {
+      const metrics = await storage.getDashboardMetrics();
+      res.json(metrics);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch dashboard metrics" });
     }
   });
 

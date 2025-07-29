@@ -221,6 +221,28 @@ export type InsertStageChangeLog = z.infer<typeof insertStageChangeLogSchema>;
 export type Activity = typeof activities.$inferSelect;
 export type InsertActivity = z.infer<typeof insertActivitySchema>;
 
+// Notes table
+export const notes = pgTable('notes', {
+  id: serial('id').primaryKey(),
+  leadId: integer('lead_id').references(() => leads.id),
+  opportunityId: integer('opportunity_id').references(() => opportunities.id),
+  accountId: integer('account_id').references(() => accounts.id),
+  contactId: integer('contact_id').references(() => contacts.id),
+  userId: integer('user_id').references(() => users.id),
+  content: text('content').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const insertNoteSchema = createInsertSchema(notes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Note = typeof notes.$inferSelect;
+export type InsertNote = z.infer<typeof insertNoteSchema>;
+
 // Extended types for API responses
 export type OpportunityWithRelations = Opportunity & {
   account?: Account;
