@@ -141,7 +141,7 @@ export default function LeadDetailLayout({
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="activity">Activity Tracking</TabsTrigger>
+              <TabsTrigger value="activity">Notes</TabsTrigger>
             </TabsList>
 
             <TabsContent value="details" className="mt-6">
@@ -151,10 +151,10 @@ export default function LeadDetailLayout({
             <TabsContent value="activity" className="mt-6">
               <Card>
                 <CardContent className="p-12 text-center">
-                  <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-medium mb-2">Activity Tracking</h3>
+                  <User className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-medium mb-2">Notes & Comments</h3>
                   <p className="text-muted-foreground">
-                    Activity tracking for leads is coming soon. Convert to opportunity to track activities.
+                    Notes functionality is coming soon. Convert to opportunity for full CRM features.
                   </p>
                 </CardContent>
               </Card>
