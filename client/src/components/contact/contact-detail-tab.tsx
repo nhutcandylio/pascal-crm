@@ -1,15 +1,16 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Edit2, Save, X, User, Mail, Phone, Building2, Calendar } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Edit2, Save, X, User, Mail, Phone, Building2, Calendar, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
-import type { ContactWithAccounts, InsertContact } from "@shared/schema";
+import type { ContactWithAccounts, InsertContact, Account } from "@shared/schema";
 
 interface ContactDetailTabProps {
   contact: ContactWithAccounts;
@@ -18,6 +19,7 @@ interface ContactDetailTabProps {
 
 export default function ContactDetailTab({ contact, onNavigateToAccount }: ContactDetailTabProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
   const [editData, setEditData] = useState<Partial<InsertContact>>({
     firstName: contact.firstName,
     lastName: contact.lastName,
@@ -28,6 +30,16 @@ export default function ContactDetailTab({ contact, onNavigateToAccount }: Conta
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Get all accounts for the dropdown
+  const { data: allAccounts = [] } = useQuery<Account[]>({
+    queryKey: ['/api/accounts'],
+  });
+
+  // Filter out accounts that are already associated with this contact
+  const availableAccounts = allAccounts.filter(account => 
+    !contact.accounts?.some(contactAccount => contactAccount.id === account.id)
+  );
 
   const updateMutation = useMutation({
     mutationFn: async (data: Partial<InsertContact>) => {
@@ -74,6 +86,63 @@ export default function ContactDetailTab({ contact, onNavigateToAccount }: Conta
       title: contact.title || "",
     });
     setIsEditing(false);
+  };
+
+  // Mutation to add account association
+  const addAccountMutation = useMutation({
+    mutationFn: async (accountId: number) => {
+      const response = await apiRequest("POST", `/api/accounts/${accountId}/contacts/${contact.id}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts", contact.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      setSelectedAccountId("");
+      toast({
+        title: "Success",
+        description: "Account association added successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add account association.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation to remove account association
+  const removeAccountMutation = useMutation({
+    mutationFn: async (accountId: number) => {
+      const response = await apiRequest("DELETE", `/api/accounts/${accountId}/contacts/${contact.id}`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts", contact.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
+      toast({
+        title: "Success",
+        description: "Account association removed successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove account association.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleAddAccount = () => {
+    if (selectedAccountId) {
+      addAccountMutation.mutate(parseInt(selectedAccountId));
+    }
+  };
+
+  const handleRemoveAccount = (accountId: number) => {
+    removeAccountMutation.mutate(accountId);
   };
 
   return (
@@ -217,21 +286,68 @@ export default function ContactDetailTab({ contact, onNavigateToAccount }: Conta
           </CardTitle>
         </CardHeader>
         <CardContent>
+          {/* Add Account Section */}
+          {availableAccounts.length > 0 && (
+            <div className="mb-6 p-4 bg-slate-50 rounded-lg">
+              <h4 className="text-sm font-medium mb-3">Add Account Association</h4>
+              <div className="flex gap-2">
+                <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select an account to associate" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableAccounts.map((account) => (
+                      <SelectItem key={account.id} value={account.id.toString()}>
+                        {account.companyName}
+                        {account.industry && ` - ${account.industry}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={handleAddAccount}
+                  disabled={!selectedAccountId || addAccountMutation.isPending}
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  {addAccountMutation.isPending ? "Adding..." : "Add"}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Associated Accounts List */}
           {contact.accounts && contact.accounts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {contact.accounts.map((account) => (
                 <div 
                   key={account.id} 
-                  className="p-4 border rounded-lg cursor-pointer hover:bg-slate-50 hover:border-blue-300 transition-colors"
-                  onClick={() => onNavigateToAccount?.(account.id)}
+                  className="p-4 border rounded-lg hover:bg-slate-50 hover:border-blue-300 transition-colors group"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-medium text-blue-600 hover:text-blue-800">
+                    <h3 
+                      className="font-medium text-blue-600 hover:text-blue-800 cursor-pointer flex-1"
+                      onClick={() => onNavigateToAccount?.(account.id)}
+                    >
                       {account.companyName}
                     </h3>
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                      Active
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                        Active
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveAccount(account.id);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-red-600 hover:text-red-800 hover:bg-red-50"
+                        disabled={removeAccountMutation.isPending}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                   {account.industry && (
                     <p className="text-sm text-muted-foreground mb-1">
@@ -253,6 +369,9 @@ export default function ContactDetailTab({ contact, onNavigateToAccount }: Conta
             <div className="text-center py-8 text-muted-foreground">
               <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No associated accounts found</p>
+              {availableAccounts.length > 0 && (
+                <p className="text-sm mt-2">Use the dropdown above to add account associations</p>
+              )}
             </div>
           )}
         </CardContent>
