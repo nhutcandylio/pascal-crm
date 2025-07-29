@@ -194,11 +194,7 @@ export function ProductsPage() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Price</p>
-                      <p className="text-lg font-semibold">{formatCurrency(parseFloat(product.price))}</p>
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {product.category && (
                       <div>
                         <p className="text-sm font-medium text-muted-foreground mb-1">Category</p>

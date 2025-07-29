@@ -81,7 +81,6 @@ export const products = pgTable("products", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   type: text("type").notNull(), // 'onetime', 'subscription', 'service-based'
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   description: text("description"),
   category: text("category"),
   sku: text("sku"),
@@ -106,6 +105,10 @@ export const orderItems = pgTable("order_items", {
   orderId: integer("order_id").notNull(),
   productId: integer("product_id").notNull(),
   quantity: integer("quantity").notNull().default(1),
+  costValue: decimal("cost_value", { precision: 10, scale: 2 }).notNull(),
+  proposalValue: decimal("proposal_value", { precision: 10, scale: 2 }).notNull(),
+  startDate: timestamp("start_date"), // For subscription products
+  endDate: timestamp("end_date"), // For subscription products
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
   totalPrice: decimal("total_price", { precision: 12, scale: 2 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

@@ -44,6 +44,10 @@ const createOrderWithItemsSchema = z.object({
     z.object({
       productId: z.number().min(1, "Please select a product"),
       quantity: z.number().min(1, "Quantity must be at least 1"),
+      costValue: z.string().min(1, "Cost value is required"),
+      proposalValue: z.string().min(1, "Proposal value is required"),
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
     })
   ).min(1, "At least one item is required"),
 });
@@ -67,7 +71,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
     defaultValues: {
       status: "draft",
       orderDate: new Date().toISOString().split('T')[0],
-      items: [{ productId: 0, quantity: 1 }],
+      items: [{ productId: 0, quantity: 1, costValue: "", proposalValue: "", startDate: "", endDate: "" }],
     },
   });
 
@@ -85,13 +89,17 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
       for (const item of data.items) {
         const product = products.find(p => p.id === item.productId);
         if (product) {
-          const itemTotal = parseFloat(product.price) * item.quantity;
+          const itemTotal = parseFloat(item.proposalValue) * item.quantity;
           totalAmount += itemTotal;
           orderItems.push({
             productId: item.productId,
             quantity: item.quantity,
-            unitPrice: product.price,
+            costValue: item.costValue,
+            proposalValue: item.proposalValue,
+            unitPrice: item.proposalValue,
             totalPrice: itemTotal.toFixed(2),
+            startDate: item.startDate ? new Date(item.startDate) : null,
+            endDate: item.endDate ? new Date(item.endDate) : null,
           });
         }
       }
@@ -280,70 +288,147 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => append({ productId: 0, quantity: 1 })}
+                          onClick={() => append({ productId: 0, quantity: 1, costValue: "", proposalValue: "", startDate: "", endDate: "" })}
                         >
                           <Plus className="h-4 w-4 mr-2" />
                           Add Item
                         </Button>
                       </div>
 
-                      {fields.map((field, index) => (
-                        <div key={field.id} className="flex items-end space-x-4 p-4 border rounded-lg">
-                          <FormField
-                            control={orderForm.control}
-                            name={`items.${index}.productId`}
-                            render={({ field }) => (
-                              <FormItem className="flex-1">
-                                <FormLabel>Product</FormLabel>
-                                <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                      {fields.map((field, index) => {
+                        const selectedProduct = products.find(p => p.id === orderForm.watch(`items.${index}.productId`));
+                        return (
+                        <div key={field.id} className="space-y-4 p-4 border rounded-lg">
+                          <div className="flex items-end space-x-4">
+                            <FormField
+                              control={orderForm.control}
+                              name={`items.${index}.productId`}
+                              render={({ field }) => (
+                                <FormItem className="flex-1">
+                                  <FormLabel>Product</FormLabel>
+                                  <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                                    <FormControl>
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select product" />
+                                      </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                      {products.map((product) => (
+                                        <SelectItem key={product.id} value={product.id.toString()}>
+                                          {product.name}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={orderForm.control}
+                              name={`items.${index}.quantity`}
+                              render={({ field }) => (
+                                <FormItem className="w-24">
+                                  <FormLabel>Quantity</FormLabel>
                                   <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select product" />
-                                    </SelectTrigger>
+                                    <Input
+                                      type="number"
+                                      min="1"
+                                      {...field}
+                                      onChange={(e) => field.onChange(parseInt(e.target.value))}
+                                    />
                                   </FormControl>
-                                  <SelectContent>
-                                    {products.map((product) => (
-                                      <SelectItem key={product.id} value={product.id.toString()}>
-                                        {product.name} - ${product.price}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            {fields.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => remove(index)}
+                                className="mb-2"
+                              >
+                                <Minus className="h-4 w-4" />
+                              </Button>
                             )}
-                          />
-                          <FormField
-                            control={orderForm.control}
-                            name={`items.${index}.quantity`}
-                            render={({ field }) => (
-                              <FormItem className="w-24">
-                                <FormLabel>Quantity</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    type="number"
-                                    min="1"
-                                    {...field}
-                                    onChange={(e) => field.onChange(parseInt(e.target.value))}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          {fields.length > 1 && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => remove(index)}
-                              className="mb-2"
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <FormField
+                              control={orderForm.control}
+                              name={`items.${index}.costValue`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Cost Value</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      min="0"
+                                      placeholder="0.00"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={orderForm.control}
+                              name={`items.${index}.proposalValue`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Proposal Value</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      min="0"
+                                      placeholder="0.00"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                          
+                          {selectedProduct?.type === "subscription" && (
+                            <div className="grid grid-cols-2 gap-4">
+                              <FormField
+                                control={orderForm.control}
+                                name={`items.${index}.startDate`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Start Date</FormLabel>
+                                    <FormControl>
+                                      <Input type="date" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                              <FormField
+                                control={orderForm.control}
+                                name={`items.${index}.endDate`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>End Date</FormLabel>
+                                    <FormControl>
+                                      <Input type="date" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
                           )}
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
                     <div className="flex justify-end space-x-2 pt-4">
@@ -402,19 +487,47 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                       <div className="space-y-2">
                         <h5 className="font-medium">Order Items</h5>
                         {order.items.map((item, itemIndex) => (
-                          <div key={itemIndex} className="flex items-center justify-between py-2 px-3 bg-muted/50 rounded">
-                            <div className="flex items-center space-x-3">
-                              <Package className="h-4 w-4 text-muted-foreground" />
-                              <div>
-                                <p className="font-medium">{item.product?.name || `Product #${item.productId}`}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  ${item.unitPrice} × {item.quantity}
-                                </p>
+                          <div key={itemIndex} className="py-2 px-3 bg-muted/50 rounded space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <Package className="h-4 w-4 text-muted-foreground" />
+                                <div>
+                                  <p className="font-medium">{item.product?.name || `Product #${item.productId}`}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    Quantity: {item.quantity}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-semibold">${item.totalPrice}</p>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <p className="font-semibold">${item.totalPrice}</p>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-muted-foreground">Cost: </span>
+                                <span>${item.costValue}</span>
+                              </div>
+                              <div>
+                                <span className="text-muted-foreground">Proposal: </span>
+                                <span>${item.proposalValue}</span>
+                              </div>
                             </div>
+                            {item.product?.type === "subscription" && (item.startDate || item.endDate) && (
+                              <div className="grid grid-cols-2 gap-4 text-sm">
+                                {item.startDate && (
+                                  <div>
+                                    <span className="text-muted-foreground">Start: </span>
+                                    <span>{format(new Date(item.startDate), 'MMM dd, yyyy')}</span>
+                                  </div>
+                                )}
+                                {item.endDate && (
+                                  <div>
+                                    <span className="text-muted-foreground">End: </span>
+                                    <span>{format(new Date(item.endDate), 'MMM dd, yyyy')}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>

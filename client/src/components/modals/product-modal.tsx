@@ -21,7 +21,6 @@ export function ProductModal({ product, open, onOpenChange }: ProductModalProps)
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
-    price: string;
     type: "onetime" | "subscription" | "service-based";
     category: string;
     sku: string;
@@ -29,7 +28,6 @@ export function ProductModal({ product, open, onOpenChange }: ProductModalProps)
   }>({
     name: "",
     description: "",
-    price: "",
     type: "onetime",
     category: "",
     sku: "",
@@ -44,7 +42,6 @@ export function ProductModal({ product, open, onOpenChange }: ProductModalProps)
       setFormData({
         name: product.name || "",
         description: product.description || "",
-        price: product.price.toString(),
         type: product.type as "onetime" | "subscription" | "service-based",
         category: product.category || "",
         sku: product.sku || "",
@@ -54,7 +51,6 @@ export function ProductModal({ product, open, onOpenChange }: ProductModalProps)
       setFormData({
         name: "",
         description: "",
-        price: "",
         type: "onetime",
         category: "",
         sku: "",
@@ -109,21 +105,10 @@ export function ProductModal({ product, open, onOpenChange }: ProductModalProps)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const price = parseFloat(formData.price);
-    if (isNaN(price) || price < 0) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid price.",
-        variant: "destructive",
-      });
-      return;
-    }
 
     const productData: InsertProduct = {
       name: formData.name.trim(),
       description: formData.description.trim() || null,
-      price: price.toString(),
       type: formData.type,
       category: formData.category.trim() || null,
       sku: formData.sku.trim() || null,
@@ -183,30 +168,14 @@ export function ProductModal({ product, open, onOpenChange }: ProductModalProps)
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="price">Price *</Label>
-              <Input
-                id="price"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.price}
-                onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                placeholder="0.00"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Input
-                id="category"
-                value={formData.category}
-                onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                placeholder="Product category"
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Input
+              id="category"
+              value={formData.category}
+              onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+              placeholder="Product category"
+            />
           </div>
 
           <div className="space-y-2">

@@ -221,7 +221,6 @@ export class MemStorage implements IStorage {
       {
         name: "CRM Software License",
         type: "subscription",
-        price: "99.99",
         description: "Monthly subscription to our CRM platform",
         category: "Software",
         sku: "CRM-SUB-001",
@@ -230,7 +229,6 @@ export class MemStorage implements IStorage {
       {
         name: "Implementation Service",
         type: "service-based",
-        price: "2500.00",
         description: "One-time setup and configuration service",
         category: "Services",
         sku: "IMPL-SRV-001",
@@ -239,7 +237,6 @@ export class MemStorage implements IStorage {
       {
         name: "Training Package",
         type: "onetime",
-        price: "500.00",
         description: "User training and documentation package",
         category: "Training",
         sku: "TRN-PKG-001",
@@ -620,36 +617,48 @@ export class MemStorage implements IStorage {
         orderId: createdOrders[0].id,
         productId: 1, // CRM Software License
         quantity: 12,
+        costValue: "80.00",
+        proposalValue: "99.99",
+        startDate: new Date("2024-01-15"),
+        endDate: new Date("2025-01-15"),
         unitPrice: "99.99",
         totalPrice: "1199.88"
       },
       {
         orderId: createdOrders[0].id,
         productId: 2, // Implementation Service
-        quantity: 25,
+        quantity: 1,
+        costValue: "2000.00",
+        proposalValue: "2500.00",
         unitPrice: "2500.00",
-        totalPrice: "62500.00"
+        totalPrice: "2500.00"
       },
       // Order 2 items
       {
         orderId: createdOrders[1].id,
         productId: 2, // Implementation Service
-        quantity: 3,
+        quantity: 1,
+        costValue: "2000.00",
+        proposalValue: "2500.00",
         unitPrice: "2500.00",
-        totalPrice: "7500.00"
+        totalPrice: "2500.00"
       },
       {
         orderId: createdOrders[1].id,
         productId: 3, // Training Package
-        quantity: 5,
+        quantity: 2,
+        costValue: "400.00",
+        proposalValue: "500.00",
         unitPrice: "500.00",
-        totalPrice: "2500.00"
+        totalPrice: "1000.00"
       },
       // Order 3 items
       {
         orderId: createdOrders[2].id,
         productId: 3, // Training Package
         quantity: 3,
+        costValue: "400.00",
+        proposalValue: "500.00",
         unitPrice: "500.00",
         totalPrice: "1500.00"
       }
@@ -661,6 +670,8 @@ export class MemStorage implements IStorage {
       const orderItemObj: OrderItem = {
         ...orderItem,
         quantity: orderItem.quantity || 1,
+        startDate: orderItem.startDate || null,
+        endDate: orderItem.endDate || null,
         id,
         createdAt: now
       };
@@ -1224,6 +1235,8 @@ export class MemStorage implements IStorage {
     const product: Product = {
       ...insertProduct,
       description: insertProduct.description || null,
+      category: insertProduct.category || null,
+      sku: insertProduct.sku || null,
       isActive: insertProduct.isActive ?? true,
       id,
       createdAt: now
@@ -1366,6 +1379,8 @@ export class MemStorage implements IStorage {
     const orderItem: OrderItem = {
       ...insertOrderItem,
       quantity: insertOrderItem.quantity || 1,
+      startDate: insertOrderItem.startDate || null,
+      endDate: insertOrderItem.endDate || null,
       id,
       createdAt: now
     };
