@@ -155,47 +155,77 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              <EditableField
-                label="Opportunity Name"
-                value={opportunity.name}
-                onSave={isClosedOpportunity ? () => Promise.resolve() : (value) => handleFieldUpdate('name', value)}
-                placeholder="Enter opportunity name"
-              />
+              {isClosedOpportunity ? (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Opportunity Name</label>
+                  <div className="mt-1 text-base font-medium text-gray-500 bg-gray-50 px-3 py-2 rounded border">
+                    {opportunity.name}
+                  </div>
+                </div>
+              ) : (
+                <EditableField
+                  label="Opportunity Name"
+                  value={opportunity.name}
+                  onSave={(value) => handleFieldUpdate('name', value)}
+                  placeholder="Enter opportunity name"
+                />
+              )}
 
-              <EditableField
-                label="Account"
-                value={opportunity.accountId?.toString() || "none"}
-                onSave={isClosedOpportunity ? () => Promise.resolve() : (value) => handleFieldUpdate('accountId', value)}
-                placeholder="Select account"
-                type="select"
-                options={[
-                  { value: "none", label: "No Account" },
-                  ...accounts.map(account => ({
-                    value: account.id.toString(),
-                    label: account.companyName
-                  }))
-                ]}
-                displayValue={opportunity.account?.companyName || "No Account"}
-              />
+              {isClosedOpportunity ? (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Account</label>
+                  <div className="mt-1 text-base font-medium text-gray-500 bg-gray-50 px-3 py-2 rounded border">
+                    {opportunity.account?.companyName || "No Account"}
+                  </div>
+                </div>
+              ) : (
+                <EditableField
+                  label="Account"
+                  value={opportunity.accountId?.toString() || "none"}
+                  onSave={(value) => handleFieldUpdate('accountId', value)}
+                  placeholder="Select account"
+                  type="select"
+                  options={[
+                    { value: "none", label: "No Account" },
+                    ...accounts.map(account => ({
+                      value: account.id.toString(),
+                      label: account.companyName
+                    }))
+                  ]}
+                  displayValue={opportunity.account?.companyName || "No Account"}
+                />
+              )}
 
-              <EditableField
-                label="Primary Contact"
-                value={opportunity.contactId?.toString() || "none"}
-                onSave={isClosedOpportunity ? () => Promise.resolve() : (value) => handleFieldUpdate('contactId', value)}
-                placeholder="Select contact"
-                type="select"
-                options={[
-                  { value: "none", label: "No Contact" },
-                  ...(opportunity.accountId ? accountContacts : contacts).map(contact => ({
-                    value: contact.id.toString(),
-                    label: `${contact.firstName} ${contact.lastName}`
-                  }))
-                ]}
-                displayValue={opportunity.contact 
-                  ? `${opportunity.contact.firstName} ${opportunity.contact.lastName}`
-                  : "No Contact"
-                }
-              />
+              {isClosedOpportunity ? (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Primary Contact</label>
+                  <div className="mt-1 text-base font-medium text-gray-500 bg-gray-50 px-3 py-2 rounded border">
+                    {opportunity.contact 
+                      ? `${opportunity.contact.firstName} ${opportunity.contact.lastName}`
+                      : "No Contact"
+                    }
+                  </div>
+                </div>
+              ) : (
+                <EditableField
+                  label="Primary Contact"
+                  value={opportunity.contactId?.toString() || "none"}
+                  onSave={(value) => handleFieldUpdate('contactId', value)}
+                  placeholder="Select contact"
+                  type="select"
+                  options={[
+                    { value: "none", label: "No Contact" },
+                    ...(opportunity.accountId ? accountContacts : contacts).map(contact => ({
+                      value: contact.id.toString(),
+                      label: `${contact.firstName} ${contact.lastName}`
+                    }))
+                  ]}
+                  displayValue={opportunity.contact 
+                    ? `${opportunity.contact.firstName} ${opportunity.contact.lastName}`
+                    : "No Contact"
+                  }
+                />
+              )}
 
               <EditableField
                 label="Owner"
