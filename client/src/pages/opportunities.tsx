@@ -289,12 +289,21 @@ export default function Opportunities() {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center text-sm font-medium">
-                        ${opportunity.grossProfit ? parseFloat(opportunity.grossProfit).toLocaleString() : '0'}
+                        ${(() => {
+                          const value = parseFloat(opportunity.value || "0");
+                          const costValue = parseFloat(opportunity.weightedValue || "0");
+                          return (value - costValue).toLocaleString();
+                        })()}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center text-sm font-medium text-slate-600">
-                        {opportunity.grossProfitMargin || 0}%
+                        {(() => {
+                          const value = parseFloat(opportunity.value || "0");
+                          const costValue = parseFloat(opportunity.weightedValue || "0");
+                          const margin = value > 0 ? ((value - costValue) / value * 100) : 0;
+                          return margin.toFixed(1);
+                        })()}%
                       </div>
                     </TableCell>
                     <TableCell>
