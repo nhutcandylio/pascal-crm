@@ -71,7 +71,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
   const queryClient = useQueryClient();
   
   // Check if opportunity is closed (won or lost) - if so, make it read-only
-  const isClosedOpportunity = opportunity.stage === 'Closed Won' || opportunity.stage === 'Closed Lost';
+  const isClosedOpportunity = opportunity.stage === 'closed-won' || opportunity.stage === 'closed-lost';
   
   const [newOrderOpen, setNewOrderOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<number | null>(null);

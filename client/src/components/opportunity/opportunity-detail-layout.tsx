@@ -76,7 +76,7 @@ export default function OpportunityDetailLayout({
     if (newStage === opportunity?.stage) return;
     
     // Prevent stage changes for closed opportunities
-    const isClosedOpportunity = opportunity?.stage === 'Closed Won' || opportunity?.stage === 'Closed Lost';
+    const isClosedOpportunity = opportunity?.stage === 'closed-won' || opportunity?.stage === 'closed-lost';
     if (isClosedOpportunity) {
       toast({
         title: "Cannot Change Stage",
@@ -184,7 +184,7 @@ export default function OpportunityDetailLayout({
 
   const handleOwnerEdit = () => {
     // Prevent owner editing for closed opportunities
-    const isClosedOpportunity = opportunity?.stage === 'Closed Won' || opportunity?.stage === 'Closed Lost';
+    const isClosedOpportunity = opportunity?.stage === 'closed-won' || opportunity?.stage === 'closed-lost';
     if (isClosedOpportunity) {
       toast({
         title: "Cannot Edit",
@@ -282,7 +282,7 @@ export default function OpportunityDetailLayout({
 
           {/* Action Buttons */}
           <div className="flex items-center space-x-2">
-            {opportunity?.stage !== 'Closed Won' && opportunity?.stage !== 'Closed Lost' ? (
+            {opportunity?.stage !== 'closed-won' && opportunity?.stage !== 'closed-lost' ? (
               <Button variant="outline" size="sm" onClick={() => onEdit(opportunity)}>
                 Edit Opportunity
               </Button>
@@ -298,7 +298,7 @@ export default function OpportunityDetailLayout({
         <div className="mt-6">
           <div className="mb-4">
             <h3 className="text-lg font-semibold">Sales Pipeline</h3>
-            {opportunity?.stage === 'Closed Won' || opportunity?.stage === 'Closed Lost' ? (
+            {opportunity?.stage === 'closed-won' || opportunity?.stage === 'closed-lost' ? (
               <p className="text-sm text-amber-600">Pipeline locked - Closed opportunities cannot be moved to other stages</p>
             ) : (
               <p className="text-sm text-muted-foreground">Click any stage to move this opportunity through the pipeline</p>
@@ -317,7 +317,7 @@ export default function OpportunityDetailLayout({
               const isCompleted = [
                 "prospecting", "qualification", "proposal", "negotiation", "closed-won", "closed-lost"
               ].findIndex(s => s === opportunity?.stage) > index;
-              const isClosedOpportunity = opportunity?.stage === 'Closed Won' || opportunity?.stage === 'Closed Lost';
+              const isClosedOpportunity = opportunity?.stage === 'closed-won' || opportunity?.stage === 'closed-lost';
               
               return (
                 <div key={stage.value} className="flex items-center">
