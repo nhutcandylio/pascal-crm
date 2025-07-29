@@ -97,9 +97,9 @@ export default function LeadDetailLayout({
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b bg-white">
+      <div className="flex items-center justify-between p-6 border-b bg-white flex-shrink-0">
         <div className="flex items-center space-x-4">
           <Button onClick={onBack} variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4 mr-2" />

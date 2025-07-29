@@ -234,9 +234,9 @@ export default function OpportunityDetailLayout({
   const weightedValue = (value * probability) / 100;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col min-h-screen">
       {/* Header Section */}
-      <div className="border-b bg-background p-6">
+      <div className="border-b bg-background p-6 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="sm" onClick={onBack}>
@@ -412,8 +412,8 @@ export default function OpportunityDetailLayout({
       </div>
 
       {/* Tabs Section */}
-      <div className="flex-1 p-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
+      <div className="flex-1 p-6 overflow-auto">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="detail" className="flex items-center space-x-2">
               <FileText className="h-4 w-4" />
@@ -443,20 +443,20 @@ export default function OpportunityDetailLayout({
             </TabsTrigger>
           </TabsList>
 
-          <div className="mt-6 h-full">
-            <TabsContent value="detail" className="h-full">
+          <div className="mt-6">
+            <TabsContent value="detail" className="space-y-6">
               <OpportunityDetailTab opportunity={opportunity} />
             </TabsContent>
 
-            <TabsContent value="related" className="h-full">
+            <TabsContent value="related" className="space-y-6">
               <OpportunityRelatedTab opportunity={opportunity} />
             </TabsContent>
 
-            <TabsContent value="orders" className="h-full">
+            <TabsContent value="orders" className="space-y-6">
               <OpportunityOrdersTab opportunity={opportunity} />
             </TabsContent>
 
-            <TabsContent value="activity" className="h-full">
+            <TabsContent value="activity" className="space-y-6">
               <OpportunityActivityTab opportunity={opportunity} />
             </TabsContent>
           </div>
