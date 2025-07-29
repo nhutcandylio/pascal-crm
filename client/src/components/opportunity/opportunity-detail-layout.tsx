@@ -231,7 +231,20 @@ export default function OpportunityDetailLayout({
 
   const probability = opportunity.probability || 0;
   const value = parseFloat(opportunity.value) || 0;
-  const weightedValue = (value * probability) / 100;
+  
+  // Calculate actual cost value from order items
+  let actualCostValue = 0;
+  if (opportunity.orders) {
+    opportunity.orders.forEach(order => {
+      if (order.items) {
+        order.items.forEach(item => {
+          actualCostValue += parseFloat(item.costValue || "0") * (item.quantity || 1);
+        });
+      }
+    });
+  }
+  
+  const weightedValue = actualCostValue;
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -355,7 +368,7 @@ export default function OpportunityDetailLayout({
         </div>
 
         {/* Key Metrics Bar */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mt-6">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
@@ -387,6 +400,32 @@ export default function OpportunityDetailLayout({
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Cost Value</p>
                   <p className="text-lg font-bold">${weightedValue.toLocaleString()}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <TrendingUp className="h-4 w-4 text-emerald-600" />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Gross Profit</p>
+                  <p className="text-lg font-bold">${(value - weightedValue).toLocaleString()}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <TrendingUp className="h-4 w-4 text-emerald-600" />
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Margin</p>
+                  <p className="text-lg font-bold">
+                    {value > 0 ? ((value - weightedValue) / value * 100).toFixed(1) : '0'}%
+                  </p>
                 </div>
               </div>
             </CardContent>
