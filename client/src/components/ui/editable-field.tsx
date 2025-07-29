@@ -15,6 +15,7 @@ interface EditableFieldProps {
   options?: { value: string; label: string }[];
   className?: string;
   displayValue?: string; // For custom display formatting
+  readOnly?: boolean; // Disable editing functionality
 }
 
 export function EditableField({ 
@@ -25,7 +26,8 @@ export function EditableField({
   type = "text",
   options = [],
   className = "",
-  displayValue
+  displayValue,
+  readOnly = false
 }: EditableFieldProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(String(value || ""));
@@ -125,21 +127,23 @@ export function EditableField({
       ) : (
         <div className="flex items-center justify-between group min-h-[2.5rem]">
           <div className="flex-1">
-            <p className="text-base">
+            <p className={`text-base ${readOnly ? 'text-gray-500' : ''}`}>
               {displayValue || value || placeholder || 'Not provided'}
             </p>
           </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              setEditValue(String(value || ""));
-              setIsEditing(true);
-            }}
-            className="opacity-0 group-hover:opacity-100 transition-opacity ml-2"
-          >
-            <Edit2 className="h-4 w-4" />
-          </Button>
+          {!readOnly && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setEditValue(String(value || ""));
+                setIsEditing(true);
+              }}
+              className="opacity-0 group-hover:opacity-100 transition-opacity ml-2"
+            >
+              <Edit2 className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       )}
     </div>
@@ -152,7 +156,8 @@ export function EditableCurrencyField({
   value, 
   onSave, 
   placeholder = "0.00",
-  className = ""
+  className = "",
+  readOnly = false
 }: Omit<EditableFieldProps, 'type' | 'displayValue'>) {
   const displayValue = value ? `$${parseFloat(String(value)).toLocaleString('en-US', { minimumFractionDigits: 2 })}` : undefined;
   
@@ -165,6 +170,7 @@ export function EditableCurrencyField({
       type="number"
       displayValue={displayValue}
       className={className}
+      readOnly={readOnly}
     />
   );
 }
@@ -175,7 +181,8 @@ export function EditablePercentageField({
   value, 
   onSave, 
   placeholder = "0",
-  className = ""
+  className = "",
+  readOnly = false
 }: Omit<EditableFieldProps, 'type' | 'displayValue'>) {
   const displayValue = value ? `${value}%` : undefined;
   
@@ -188,6 +195,7 @@ export function EditablePercentageField({
       type="number"
       displayValue={displayValue}
       className={className}
+      readOnly={readOnly}
     />
   );
 }
@@ -198,7 +206,8 @@ export function EditableDateField({
   value, 
   onSave, 
   placeholder = "Select date",
-  className = ""
+  className = "",
+  readOnly = false
 }: Omit<EditableFieldProps, 'type' | 'displayValue'>) {
   const displayValue = value ? new Date(String(value)).toLocaleDateString() : undefined;
   
@@ -211,6 +220,7 @@ export function EditableDateField({
       type="text"
       displayValue={displayValue}
       className={className}
+      readOnly={readOnly}
     />
   );
 }

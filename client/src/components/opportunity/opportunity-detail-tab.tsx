@@ -156,108 +156,70 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-              {isClosedOpportunity ? (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Opportunity Name</label>
-                  <div className="mt-1 text-base font-medium text-gray-500 bg-gray-50 px-3 py-2 rounded border">
-                    {opportunity.name}
-                  </div>
-                </div>
-              ) : (
-                <EditableField
-                  label="Opportunity Name"
-                  value={opportunity.name}
-                  onSave={(value) => handleFieldUpdate('name', value)}
-                  placeholder="Enter opportunity name"
-                />
-              )}
+              <EditableField
+                label="Opportunity Name"
+                value={opportunity.name}
+                onSave={(value) => handleFieldUpdate('name', value)}
+                placeholder="Enter opportunity name"
+                readOnly={isClosedOpportunity}
+              />
 
-              {isClosedOpportunity ? (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Account</label>
-                  <div className="mt-1 text-base font-medium text-gray-500 bg-gray-50 px-3 py-2 rounded border">
-                    {opportunity.account?.companyName || "No Account"}
-                  </div>
-                </div>
-              ) : (
-                <EditableField
-                  label="Account"
-                  value={opportunity.accountId?.toString() || "none"}
-                  onSave={(value) => handleFieldUpdate('accountId', value)}
-                  placeholder="Select account"
-                  type="select"
-                  options={[
-                    { value: "none", label: "No Account" },
-                    ...accounts.map(account => ({
-                      value: account.id.toString(),
-                      label: account.companyName
-                    }))
-                  ]}
-                  displayValue={opportunity.account?.companyName || "No Account"}
-                />
-              )}
+              <EditableField
+                label="Account"
+                value={opportunity.accountId?.toString() || "none"}
+                onSave={(value) => handleFieldUpdate('accountId', value)}
+                placeholder="Select account"
+                type="select"
+                options={[
+                  { value: "none", label: "No Account" },
+                  ...accounts.map(account => ({
+                    value: account.id.toString(),
+                    label: account.companyName
+                  }))
+                ]}
+                displayValue={opportunity.account?.companyName || "No Account"}
+                readOnly={isClosedOpportunity}
+              />
 
-              {isClosedOpportunity ? (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Primary Contact</label>
-                  <div className="mt-1 text-base font-medium text-gray-500 bg-gray-50 px-3 py-2 rounded border">
-                    {opportunity.contact 
-                      ? `${opportunity.contact.firstName} ${opportunity.contact.lastName}`
-                      : "No Contact"
-                    }
-                  </div>
-                </div>
-              ) : (
-                <EditableField
-                  label="Primary Contact"
-                  value={opportunity.contactId?.toString() || "none"}
-                  onSave={(value) => handleFieldUpdate('contactId', value)}
-                  placeholder="Select contact"
-                  type="select"
-                  options={[
-                    { value: "none", label: "No Contact" },
-                    ...(opportunity.accountId ? accountContacts : contacts).map(contact => ({
-                      value: contact.id.toString(),
-                      label: `${contact.firstName} ${contact.lastName}`
-                    }))
-                  ]}
-                  displayValue={opportunity.contact 
-                    ? `${opportunity.contact.firstName} ${opportunity.contact.lastName}`
-                    : "No Contact"
-                  }
-                />
-              )}
+              <EditableField
+                label="Primary Contact"
+                value={opportunity.contactId?.toString() || "none"}
+                onSave={(value) => handleFieldUpdate('contactId', value)}
+                placeholder="Select contact"
+                type="select"
+                options={[
+                  { value: "none", label: "No Contact" },
+                  ...(opportunity.accountId ? accountContacts : contacts).map(contact => ({
+                    value: contact.id.toString(),
+                    label: `${contact.firstName} ${contact.lastName}`
+                  }))
+                ]}
+                displayValue={opportunity.contact 
+                  ? `${opportunity.contact.firstName} ${opportunity.contact.lastName}`
+                  : "No Contact"
+                }
+                readOnly={isClosedOpportunity}
+              />
 
-              {isClosedOpportunity ? (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Owner</label>
-                  <div className="mt-1 text-base font-medium text-gray-500 bg-gray-50 px-3 py-2 rounded border">
-                    {opportunity.owner 
-                      ? `${opportunity.owner.firstName} ${opportunity.owner.lastName}`
-                      : "Unassigned"
-                    }
-                  </div>
-                </div>
-              ) : (
-                <EditableField
-                  label="Owner"
-                  value={opportunity.ownerId?.toString() || "none"}
-                  onSave={(value) => handleFieldUpdate('ownerId', value)}
-                  placeholder="Select owner"
-                  type="select"
-                  options={[
-                    { value: "none", label: "Unassigned" },
-                    ...users.map(user => ({
-                      value: user.id.toString(),
-                      label: `${user.firstName} ${user.lastName}`
-                    }))
-                  ]}
-                  displayValue={opportunity.owner 
-                    ? `${opportunity.owner.firstName} ${opportunity.owner.lastName}`
-                    : "Unassigned"
-                  }
-                />
-              )}
+              <EditableField
+                label="Owner"
+                value={opportunity.ownerId?.toString() || "none"}
+                onSave={(value) => handleFieldUpdate('ownerId', value)}
+                placeholder="Select owner"
+                type="select"
+                options={[
+                  { value: "none", label: "Unassigned" },
+                  ...users.map(user => ({
+                    value: user.id.toString(),
+                    label: `${user.firstName} ${user.lastName}`
+                  }))
+                ]}
+                displayValue={opportunity.owner 
+                  ? `${opportunity.owner.firstName} ${opportunity.owner.lastName}`
+                  : "Unassigned"
+                }
+                readOnly={isClosedOpportunity}
+              />
             </div>
 
             <div className="space-y-4">
@@ -280,37 +242,21 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
                 </div>
               </div>
 
-              {isClosedOpportunity ? (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Probability</label>
-                  <div className="mt-1 text-base font-medium text-gray-500 bg-gray-50 px-3 py-2 rounded border">
-                    {opportunity.probability || 0}%
-                  </div>
-                </div>
-              ) : (
-                <EditablePercentageField
-                  label="Probability"
-                  value={opportunity.probability}
-                  onSave={(value) => handleFieldUpdate('probability', value)}
-                  placeholder="0"
-                />
-              )}
+              <EditablePercentageField
+                label="Probability"
+                value={opportunity.probability}
+                onSave={(value) => handleFieldUpdate('probability', value)}
+                placeholder="0"
+                readOnly={isClosedOpportunity}
+              />
 
-              {isClosedOpportunity ? (
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">Close Date</label>
-                  <div className="mt-1 text-base font-medium text-gray-500 bg-gray-50 px-3 py-2 rounded border">
-                    {opportunity.closeDate ? new Date(opportunity.closeDate).toLocaleDateString() : 'Not set'}
-                  </div>
-                </div>
-              ) : (
-                <EditableDateField
-                  label="Close Date"
-                  value={opportunity.closeDate ? new Date(opportunity.closeDate).toISOString().split('T')[0] : ''}
-                  onSave={(value) => handleFieldUpdate('closeDate', value)}
-                  placeholder="Select close date"
-                />
-              )}
+              <EditableDateField
+                label="Close Date"
+                value={opportunity.closeDate ? new Date(opportunity.closeDate).toISOString().split('T')[0] : ''}
+                onSave={(value) => handleFieldUpdate('closeDate', value)}
+                placeholder="Select close date"
+                readOnly={isClosedOpportunity}
+              />
 
               <div>
                 <label className="text-sm font-medium text-muted-foreground">Created Date</label>
