@@ -374,7 +374,7 @@ export default function OpportunityDetailLayout({
         </div>
 
         {/* Key Metrics Bar */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mt-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
@@ -406,32 +406,6 @@ export default function OpportunityDetailLayout({
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Cost Value</p>
                   <p className="text-lg font-bold">${weightedValue.toLocaleString()}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <TrendingUp className="h-4 w-4 text-emerald-600" />
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Gross Profit</p>
-                  <p className="text-lg font-bold">${(calculatedValue - weightedValue).toLocaleString()}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <TrendingUp className="h-4 w-4 text-emerald-600" />
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Margin</p>
-                  <p className="text-lg font-bold">
-                    {calculatedValue > 0 ? ((calculatedValue - weightedValue) / calculatedValue * 100).toFixed(1) : '0'}%
-                  </p>
                 </div>
               </div>
             </CardContent>
