@@ -141,7 +141,7 @@ export default function LeadDetailLayout({
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="activity">Activity</TabsTrigger>
+              <TabsTrigger value="activity">Activity Tracking</TabsTrigger>
             </TabsList>
 
             <TabsContent value="details" className="mt-6">
