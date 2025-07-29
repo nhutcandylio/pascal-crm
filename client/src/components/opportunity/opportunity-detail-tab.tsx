@@ -39,8 +39,9 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
   });
 
   const value = parseFloat(opportunity.value) || 0;
-  const grossProfit = parseFloat(opportunity.grossProfit || "0") || 0;
-  const grossProfitMargin = opportunity.grossProfitMargin || 0;
+  const weightedValue = parseFloat(opportunity.weightedValue || "0") || 0;
+  const grossProfit = value - weightedValue; // Proposal value - Cost value
+  const grossProfitMargin = value > 0 ? ((grossProfit / value) * 100) : 0;
 
   const handleFieldUpdate = async (field: string, value: string) => {
     // Prevent editing if opportunity is closed
@@ -369,19 +370,31 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {isClosedOpportunity ? (
               <div>
-                <label className="text-sm font-medium text-muted-foreground">Opportunity Value</label>
+                <label className="text-sm font-medium text-muted-foreground">Value (Proposal)</label>
                 <div className="mt-1 text-base font-medium text-gray-500 bg-gray-50 px-3 py-2 rounded border">
                   ${parseFloat(opportunity.value || "0").toLocaleString()}
                 </div>
               </div>
             ) : (
-              <EditableCurrencyField
-                label="Opportunity Value"
-                value={opportunity.value}
-                onSave={(value) => handleFieldUpdate('value', value)}
-                placeholder="0.00"
-              />
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Value (Auto-calculated)</label>
+                <div className="mt-1 text-base font-medium text-blue-600 bg-blue-50 px-3 py-2 rounded border">
+                  ${parseFloat(opportunity.value || "0").toLocaleString()}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">Updated automatically from order proposal values</p>
+              </div>
             )}
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">Weighted Value (Cost)</label>
+              <div className="flex items-center space-x-2">
+                <DollarSign className="h-4 w-4 text-orange-600" />
+                <span className="text-xl font-bold text-orange-600">
+                  ${parseFloat(opportunity.weightedValue || "0").toLocaleString()}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">Total cost from all order items</p>
+            </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-muted-foreground">Gross Profit</label>
@@ -391,6 +404,7 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
                   ${grossProfit.toLocaleString()}
                 </span>
               </div>
+              <p className="text-xs text-muted-foreground">Proposal value minus cost value</p>
             </div>
 
             <div className="space-y-2">
@@ -398,26 +412,16 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
               <div className="flex items-center space-x-2">
                 <Percent className="h-4 w-4 text-purple-600" />
                 <span className="text-2xl font-bold text-purple-600">
-                  {grossProfitMargin}%
+                  {grossProfitMargin.toFixed(1)}%
                 </span>
               </div>
+              <p className="text-xs text-muted-foreground">Profit percentage of proposal value</p>
             </div>
           </div>
 
           <Separator className="my-4" />
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-muted-foreground">Weighted Value</label>
-            <div className="flex items-center space-x-2">
-              <DollarSign className="h-4 w-4 text-orange-600" />
-              <span className="text-xl font-bold text-orange-600">
-                ${((value * (opportunity.probability || 0)) / 100).toLocaleString()}
-              </span>
-              <span className="text-sm text-muted-foreground">
-                (Value × Probability)
-              </span>
-            </div>
-          </div>
+
         </CardContent>
       </Card>
 

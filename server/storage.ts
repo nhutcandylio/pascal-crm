@@ -1047,16 +1047,25 @@ export class MemStorage implements IStorage {
   // Helper method to update opportunity value from order totals
   private async updateOpportunityValueFromOrders(opportunityId: number): Promise<void> {
     const orders = await this.getOrdersByOpportunity(opportunityId);
-    const totalValue = orders.reduce((sum, order) => {
-      return sum + parseFloat(order.totalAmount);
-    }, 0);
+    let totalProposalValue = 0;
+    let totalCostValue = 0;
 
-    // Update the opportunity value
+    // Calculate totals from order items
+    for (const order of orders) {
+      const orderItems = await this.getOrderItemsByOrder(order.id);
+      for (const item of orderItems) {
+        totalProposalValue += parseFloat(item.proposalValue) * item.quantity;
+        totalCostValue += parseFloat(item.costValue) * item.quantity;
+      }
+    }
+
+    // Update the opportunity value and weighted value
     const opportunity = this.opportunities.get(opportunityId);
     if (opportunity) {
       const updatedOpportunity: Opportunity = {
         ...opportunity,
-        value: totalValue.toFixed(2),
+        value: totalProposalValue.toFixed(2),
+        weightedValue: totalCostValue.toFixed(2),
         updatedAt: new Date()
       };
       this.opportunities.set(opportunityId, updatedOpportunity);
@@ -1385,6 +1394,13 @@ export class MemStorage implements IStorage {
       createdAt: now
     };
     this.orderItems.set(id, orderItem);
+    
+    // Update opportunity value after creating order item
+    const order = await this.getOrder(orderItem.orderId);
+    if (order) {
+      await this.updateOpportunityValueFromOrders(order.opportunityId);
+    }
+    
     return orderItem;
   }
 
@@ -1397,11 +1413,29 @@ export class MemStorage implements IStorage {
       ...orderItemUpdate
     };
     this.orderItems.set(id, updatedOrderItem);
+    
+    // Update opportunity value after updating order item
+    const order = await this.getOrder(updatedOrderItem.orderId);
+    if (order) {
+      await this.updateOpportunityValueFromOrders(order.opportunityId);
+    }
+    
     return updatedOrderItem;
   }
 
   async deleteOrderItem(id: number): Promise<boolean> {
-    return this.orderItems.delete(id);
+    const orderItem = this.orderItems.get(id);
+    const deleted = this.orderItems.delete(id);
+    
+    if (deleted && orderItem) {
+      // Update opportunity value after deleting order item
+      const order = await this.getOrder(orderItem.orderId);
+      if (order) {
+        await this.updateOpportunityValueFromOrders(order.opportunityId);
+      }
+    }
+    
+    return deleted;
   }
 
   // Stage Change Log operations
