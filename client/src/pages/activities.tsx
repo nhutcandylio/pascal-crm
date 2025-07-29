@@ -45,7 +45,8 @@ export default function Activities() {
   };
 
   return (
-    <div className="p-6">
+    <div className="h-full overflow-auto">
+      <div className="p-6 min-h-full">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             <h2 className="text-lg font-semibold text-slate-900">Recent Activities</h2>
@@ -145,6 +146,7 @@ export default function Activities() {
           isOpen={isModalOpen} 
           onClose={() => setIsModalOpen(false)} 
         /> */}
+      </div>
     </div>
   );
 }
