@@ -130,6 +130,14 @@ The application follows modern web development practices with strong typing, com
 - **Completed**: Storage layer with comprehensive user operations and owner relationship support
 - **Navigation**: Added Users page to sidebar with full team member management capabilities
 
+### July 2025 - Enhanced Order & Discount Management
+- **Implemented**: Inline discount editing in order items with real-time calculations
+- **Fixed**: Discount logic - now only applies to proposal values, not cost values
+- **Updated**: Order totalAmount calculation - sum of all order item totalProposal values
+- **Enhanced**: Opportunity value calculation - sum of all order totalAmount values
+- **Business Logic**: Cost calculations exclude discount, proposal calculations include discount
+- **Cache Management**: Real-time updates across dashboard metrics and opportunity displays
+
 ### January 2025 - Many-to-Many Account-Contact Relationships
 - **Implemented**: Junction table (AccountContacts) for shared contact relationships
 - **Updated**: Storage layer with new relationship management methods

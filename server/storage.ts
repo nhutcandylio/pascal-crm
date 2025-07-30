@@ -1070,43 +1070,51 @@ export class MemStorage implements IStorage {
   }
 
   // Helper method to update opportunity value from order totals
+  // Helper method to update order totalAmount based on order items
+  private async updateOrderTotalAmount(orderId: number): Promise<void> {
+    const orderItems = await this.getOrderItemsByOrder(orderId);
+    let totalAmount = 0;
+
+    // Sum all totalProposal values from order items
+    for (const item of orderItems) {
+      if (item.totalProposal) {
+        totalAmount += parseFloat(item.totalProposal);
+      }
+    }
+
+    // Update the order's totalAmount
+    const order = this.orders.get(orderId);
+    if (order) {
+      const updatedOrder: Order = {
+        ...order,
+        totalAmount: totalAmount.toFixed(2),
+        updatedAt: new Date()
+      };
+      this.orders.set(orderId, updatedOrder);
+    }
+  }
+
   private async updateOpportunityValueFromOrders(opportunityId: number): Promise<void> {
+    // First, update all order totalAmounts
     const orders = await this.getOrdersByOpportunity(opportunityId);
+    for (const order of orders) {
+      await this.updateOrderTotalAmount(order.id);
+    }
+
+    // Then calculate opportunity value from updated order totalAmounts
+    const updatedOrders = await this.getOrdersByOpportunity(opportunityId);
     let totalOpportunityValue = 0;
     let totalWeightedValue = 0;
 
-    // Calculate totals from order items with different logic for subscription vs regular products
-    for (const order of orders) {
+    for (const order of updatedOrders) {
+      // Opportunity value = sum of all order totalAmounts
+      totalOpportunityValue += parseFloat(order.totalAmount);
+
+      // Weighted value = sum of all order item totalCosts
       const orderItems = await this.getOrderItemsByOrder(order.id);
       for (const item of orderItems) {
-        const product = await this.getProduct(item.productId);
-        
-        if (product?.type === 'subscription') {
-          // For subscription products: opportunity value uses totalProposal, weighted value uses totalCost
-          if (item.totalProposal) {
-            totalOpportunityValue += parseFloat(item.totalProposal);
-          } else {
-            totalOpportunityValue += parseFloat(item.proposalValue) * item.quantity;
-          }
-          
-          if (item.totalCost) {
-            totalWeightedValue += parseFloat(item.totalCost);
-          } else {
-            totalWeightedValue += parseFloat(item.costValue) * item.quantity;
-          }
-        } else {
-          // For non-subscription products: use standard calculation
-          if (item.totalProposal) {
-            totalOpportunityValue += parseFloat(item.totalProposal);
-          } else {
-            totalOpportunityValue += parseFloat(item.proposalValue) * item.quantity;
-          }
-          
-          if (item.totalCost) {
-            totalWeightedValue += parseFloat(item.totalCost);
-          } else {
-            totalWeightedValue += parseFloat(item.costValue) * item.quantity;
-          }
+        if (item.totalCost) {
+          totalWeightedValue += parseFloat(item.totalCost);
         }
       }
     }
