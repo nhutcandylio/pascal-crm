@@ -222,13 +222,17 @@ export function calculateOrderItemTotals(
   let totalProposal: number;
 
   if (productType === 'subscription' && startDate && endDate) {
-    // For subscription: quantity * months * cost/proposal * (1 - discount/100)
+    // For subscription: 
+    // - Cost: quantity * months * costValue (NO discount)
+    // - Proposal: quantity * months * proposalValue * (1 - discount/100)
     const months = calculateMonthsBetween(startDate, endDate);
-    totalCost = quantity * months * costValue * (1 - discount / 100);
+    totalCost = quantity * months * costValue; // NO discount for cost
     totalProposal = quantity * months * proposalValue * (1 - discount / 100);
   } else {
-    // For onetime/service-based: quantity * cost/proposal * (1 - discount/100)
-    totalCost = quantity * costValue * (1 - discount / 100);
+    // For onetime/service-based:
+    // - Cost: quantity * costValue (NO discount) 
+    // - Proposal: quantity * proposalValue * (1 - discount/100)
+    totalCost = quantity * costValue; // NO discount for cost
     totalProposal = quantity * proposalValue * (1 - discount / 100);
   }
 
