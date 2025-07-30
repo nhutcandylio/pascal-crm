@@ -257,7 +257,7 @@ export default function OpportunityDetailLayout({
   const weightedValue = actualCostValue;
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col h-screen">
       {/* Header Section */}
       <div className="border-b bg-background p-6 flex-shrink-0">
         <div className="flex items-center justify-between">
@@ -438,53 +438,57 @@ export default function OpportunityDetailLayout({
       </div>
 
       {/* Tabs Section */}
-      <div className="flex-1 p-6 overflow-auto">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="detail" className="flex items-center space-x-2">
-              <FileText className="h-4 w-4" />
-              <span>Detail</span>
-            </TabsTrigger>
-            <TabsTrigger value="related" className="flex items-center space-x-2">
-              <Package className="h-4 w-4" />
-              <span>Related</span>
-            </TabsTrigger>
-            <TabsTrigger value="orders" className="flex items-center space-x-2">
-              <ShoppingCart className="h-4 w-4" />
-              <span>Orders</span>
-              {opportunity.orders && opportunity.orders.length > 0 && (
-                <Badge variant="secondary" className="ml-1">
-                  {opportunity.orders.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="activity" className="flex items-center space-x-2">
-              <Users className="h-4 w-4" />
-              <span>Activity</span>
-              {opportunity.activities && opportunity.activities.length > 0 && (
-                <Badge variant="secondary" className="ml-1">
-                  {opportunity.activities.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
+      <div className="flex-1 flex flex-col min-h-0">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
+          <div className="p-6 pb-0 flex-shrink-0">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="detail" className="flex items-center space-x-2">
+                <FileText className="h-4 w-4" />
+                <span>Detail</span>
+              </TabsTrigger>
+              <TabsTrigger value="related" className="flex items-center space-x-2">
+                <Package className="h-4 w-4" />
+                <span>Related</span>
+              </TabsTrigger>
+              <TabsTrigger value="orders" className="flex items-center space-x-2">
+                <ShoppingCart className="h-4 w-4" />
+                <span>Orders</span>
+                {opportunity.orders && opportunity.orders.length > 0 && (
+                  <Badge variant="secondary" className="ml-1">
+                    {opportunity.orders.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="activity" className="flex items-center space-x-2">
+                <Users className="h-4 w-4" />
+                <span>Activity</span>
+                {opportunity.activities && opportunity.activities.length > 0 && (
+                  <Badge variant="secondary" className="ml-1">
+                    {opportunity.activities.length}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
+          </div>
+          
+          <div className="flex-1 overflow-auto p-6 pt-0">
+            <div className="mt-6">
+              <TabsContent value="detail" className="space-y-6 mt-0">
+                <OpportunityDetailTab opportunity={opportunity} />
+              </TabsContent>
 
-          <div className="mt-6">
-            <TabsContent value="detail" className="space-y-6">
-              <OpportunityDetailTab opportunity={opportunity} />
-            </TabsContent>
+              <TabsContent value="related" className="space-y-6 mt-0">
+                <OpportunityRelatedTab opportunity={opportunity} />
+              </TabsContent>
 
-            <TabsContent value="related" className="space-y-6">
-              <OpportunityRelatedTab opportunity={opportunity} />
-            </TabsContent>
+              <TabsContent value="orders" className="space-y-6 mt-0">
+                <OpportunityOrdersTab opportunity={opportunity} />
+              </TabsContent>
 
-            <TabsContent value="orders" className="space-y-6">
-              <OpportunityOrdersTab opportunity={opportunity} />
-            </TabsContent>
-
-            <TabsContent value="activity" className="space-y-6">
-              <OpportunityActivityTab opportunity={opportunity} />
-            </TabsContent>
+              <TabsContent value="activity" className="space-y-6 mt-0">
+                <OpportunityActivityTab opportunity={opportunity} />
+              </TabsContent>
+            </div>
           </div>
         </Tabs>
       </div>
