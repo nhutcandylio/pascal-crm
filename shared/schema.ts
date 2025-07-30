@@ -190,6 +190,9 @@ export const insertOrderSchema = createInsertSchema(orders).omit({
 export const insertOrderItemSchema = createInsertSchema(orderItems).omit({
   id: true,
   createdAt: true,
+}).extend({
+  startDate: z.union([z.date(), z.string().transform(str => str ? new Date(str) : null), z.null()]).optional(),
+  endDate: z.union([z.date(), z.string().transform(str => str ? new Date(str) : null), z.null()]).optional(),
 });
 
 export const insertStageChangeLogSchema = createInsertSchema(stageChangeLogs).omit({
