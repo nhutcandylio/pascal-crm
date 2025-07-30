@@ -977,6 +977,7 @@ function EditOrderItemForm({ item, products, onSave, onCancel, isLoading }: Edit
   const [quantity, setQuantity] = useState(item.quantity);
   const [costValue, setCostValue] = useState(item.costValue);
   const [proposalValue, setProposalValue] = useState(item.proposalValue);
+  const [discount, setDiscount] = useState(item.discount || "0");
   const [startDate, setStartDate] = useState(item.startDate ? format(new Date(item.startDate), 'yyyy-MM-dd') : '');
   const [endDate, setEndDate] = useState(item.endDate ? format(new Date(item.endDate), 'yyyy-MM-dd') : '');
 
@@ -987,6 +988,7 @@ function EditOrderItemForm({ item, products, onSave, onCancel, isLoading }: Edit
       quantity,
       costValue,
       proposalValue,
+      discount,
       unitPrice: proposalValue,
       totalPrice: (parseFloat(proposalValue) * quantity).toFixed(2),
       startDate: startDate ? new Date(startDate) : null,
@@ -997,7 +999,7 @@ function EditOrderItemForm({ item, products, onSave, onCancel, isLoading }: Edit
 
   return (
     <div className="space-y-4 border-t pt-4">
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="text-sm font-medium">Quantity</label>
           <Input
@@ -1007,6 +1009,20 @@ function EditOrderItemForm({ item, products, onSave, onCancel, isLoading }: Edit
             onChange={(e) => setQuantity(parseInt(e.target.value))}
           />
         </div>
+        <div>
+          <label className="text-sm font-medium">Discount (%)</label>
+          <Input
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            value={discount}
+            onChange={(e) => setDiscount(e.target.value)}
+          />
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="text-sm font-medium">Cost Value</label>
           <Input

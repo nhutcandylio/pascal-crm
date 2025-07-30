@@ -539,17 +539,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/order-items/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      console.log(`Received order item update for ID ${id}:`, req.body);
+      
+      // Get existing order item to determine product type for recalculation
+      const existingItem = await storage.getOrderItem(id);
+      if (!existingItem) {
+        return res.status(404).json({ error: "Order item not found" });
+      }
+      
+      // Get product info to determine type
+      const product = await storage.getProduct(existingItem.productId);
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      
       const orderItemData = insertOrderItemSchema.partial().parse(req.body);
+      
+      // If discount, cost, proposal, quantity, or dates are being updated, recalculate totals
+      if (orderItemData.discount !== undefined || 
+          orderItemData.costValue !== undefined || 
+          orderItemData.proposalValue !== undefined || 
+          orderItemData.quantity !== undefined ||
+          orderItemData.startDate !== undefined ||
+          orderItemData.endDate !== undefined) {
+        
+        // Use updated values or fall back to existing values
+        const quantity = orderItemData.quantity || existingItem.quantity;
+        const costValue = parseFloat(orderItemData.costValue || existingItem.costValue);
+        const proposalValue = parseFloat(orderItemData.proposalValue || existingItem.proposalValue);
+        const discount = parseFloat(orderItemData.discount || existingItem.discount || '0');
+        const startDate = orderItemData.startDate || existingItem.startDate;
+        const endDate = orderItemData.endDate || existingItem.endDate;
+        
+        // Calculate new totals
+        const { totalCost, totalProposal } = calculateOrderItemTotals(
+          product.type,
+          quantity,
+          costValue,
+          proposalValue,
+          discount,
+          startDate,
+          endDate
+        );
+        
+        // Add calculated totals to update data
+        orderItemData.totalCost = totalCost.toString();
+        orderItemData.totalProposal = totalProposal.toString();
+        
+        // Update totalPrice for display purposes
+        orderItemData.totalPrice = (proposalValue * quantity).toFixed(2);
+      }
+      
       const orderItem = await storage.updateOrderItem(id, orderItemData);
       if (orderItem) {
+        console.log('Updated order item:', orderItem);
         res.json(orderItem);
       } else {
         res.status(404).json({ error: "Order item not found" });
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
+        console.log("Order item update validation error details:", error.errors);
         res.status(400).json({ error: "Invalid order item data", details: error.errors });
       } else {
+        console.error("Order item update error:", error);
         res.status(500).json({ error: "Failed to update order item" });
       }
     }
