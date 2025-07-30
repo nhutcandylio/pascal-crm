@@ -56,6 +56,7 @@ const createOrderWithItemsSchema = z.object({
       quantity: z.number().min(1, "Quantity must be at least 1"),
       costValue: z.string().min(1, "Cost value is required"),
       proposalValue: z.string().min(1, "Proposal value is required"),
+      discount: z.string().optional().default("0"),
       startDate: z.string().optional(),
       endDate: z.string().optional(),
     })
@@ -100,7 +101,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
     defaultValues: {
       status: "draft",
       orderDate: new Date().toISOString().split('T')[0],
-      items: [{ productId: 0, quantity: 1, costValue: "", proposalValue: "", startDate: "", endDate: "" }],
+      items: [{ productId: 0, quantity: 1, costValue: "", proposalValue: "", discount: "0", startDate: "", endDate: "" }],
     },
   });
 
@@ -125,6 +126,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
             quantity: item.quantity,
             costValue: item.costValue,
             proposalValue: item.proposalValue,
+            discount: item.discount || "0",
             unitPrice: item.proposalValue,
             totalPrice: itemTotal.toFixed(2),
             startDate: item.startDate ? new Date(item.startDate) : null,
@@ -476,7 +478,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => append({ productId: 0, quantity: 1, costValue: "", proposalValue: "", startDate: "", endDate: "" })}
+                          onClick={() => append({ productId: 0, quantity: 1, costValue: "", proposalValue: "", discount: "0", startDate: "", endDate: "" })}
                         >
                           <Plus className="h-4 w-4 mr-2" />
                           Add Item
@@ -543,7 +545,7 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                             )}
                           </div>
                           
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="grid grid-cols-3 gap-4">
                             <FormField
                               control={orderForm.control}
                               name={`items.${index}.costValue`}
@@ -574,6 +576,26 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                                       type="number"
                                       step="0.01"
                                       min="0"
+                                      placeholder="0.00"
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                            <FormField
+                              control={orderForm.control}
+                              name={`items.${index}.discount`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Discount (%)</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      min="0"
+                                      max="100"
                                       placeholder="0.00"
                                       {...field}
                                     />
@@ -793,14 +815,28 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
                               />
                             ) : (
                               <>
-                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div className="grid grid-cols-3 gap-4 text-sm">
                                   <div>
                                     <span className="text-muted-foreground">Cost: </span>
                                     <span>${item.costValue}</span>
+                                    {item.totalCost && (
+                                      <span className="text-xs text-green-600 block">
+                                        Total: ${item.totalCost}
+                                      </span>
+                                    )}
                                   </div>
                                   <div>
                                     <span className="text-muted-foreground">Proposal: </span>
                                     <span>${item.proposalValue}</span>
+                                    {item.totalProposal && (
+                                      <span className="text-xs text-green-600 block">
+                                        Total: ${item.totalProposal}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <span className="text-muted-foreground">Discount: </span>
+                                    <span>{item.discount || 0}%</span>
                                   </div>
                                 </div>
                                 {item.product?.type === "subscription" && (item.startDate || item.endDate) && (

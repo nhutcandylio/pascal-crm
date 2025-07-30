@@ -13,7 +13,8 @@ import {
   insertOrderSchema,
   insertOrderItemSchema,
   insertStageChangeLogSchema,
-  insertNoteSchema
+  insertNoteSchema,
+  calculateOrderItemTotals
 } from "@shared/schema";
 import { z } from "zod";
 
@@ -473,9 +474,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/order-items", async (req, res) => {
     try {
       console.log("Received order item data:", req.body);
+      
+      // Get product info to determine type
+      const product = await storage.getProduct(req.body.productId);
+      if (!product) {
+        return res.status(404).json({ error: "Product not found" });
+      }
+      
       const orderItemData = insertOrderItemSchema.parse(req.body);
-      console.log("Validated order item data:", orderItemData);
-      const orderItem = await storage.createOrderItem(orderItemData);
+      
+      // Calculate totals based on product type and discount
+      const { totalCost, totalProposal } = calculateOrderItemTotals(
+        product.type,
+        orderItemData.quantity,
+        parseFloat(orderItemData.costValue),
+        parseFloat(orderItemData.proposalValue),
+        parseFloat(orderItemData.discount || '0'),
+        orderItemData.startDate || undefined,
+        orderItemData.endDate || undefined
+      );
+      
+      // Add calculated totals to order item data
+      const enrichedOrderItemData = {
+        ...orderItemData,
+        totalCost: totalCost.toString(),
+        totalProposal: totalProposal.toString()
+      };
+      
+      console.log("Enriched order item data:", enrichedOrderItemData);
+      const orderItem = await storage.createOrderItem(enrichedOrderItemData);
       res.status(201).json(orderItem);
     } catch (error) {
       if (error instanceof z.ZodError) {

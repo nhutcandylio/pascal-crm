@@ -108,10 +108,13 @@ export const orderItems = pgTable("order_items", {
   quantity: integer("quantity").notNull().default(1),
   costValue: decimal("cost_value", { precision: 10, scale: 2 }).notNull(),
   proposalValue: decimal("proposal_value", { precision: 10, scale: 2 }).notNull(),
+  discount: decimal("discount", { precision: 5, scale: 2 }).default('0.00'), // Discount percentage (0-100)
   startDate: timestamp("start_date"), // For subscription products
   endDate: timestamp("end_date"), // For subscription products
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
   totalPrice: decimal("total_price", { precision: 12, scale: 2 }).notNull(),
+  totalCost: decimal("total_cost", { precision: 12, scale: 2 }).notNull(), // Calculated total cost after discount
+  totalProposal: decimal("total_proposal", { precision: 12, scale: 2 }).notNull(), // Calculated total proposal after discount
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -194,6 +197,43 @@ export const insertOrderItemSchema = createInsertSchema(orderItems).omit({
   startDate: z.union([z.date(), z.string().transform(str => str ? new Date(str) : null), z.null()]).optional(),
   endDate: z.union([z.date(), z.string().transform(str => str ? new Date(str) : null), z.null()]).optional(),
 });
+
+// Utility function to calculate months between two dates
+export function calculateMonthsBetween(startDate: Date, endDate: Date): number {
+  const yearDiff = endDate.getFullYear() - startDate.getFullYear();
+  const monthDiff = endDate.getMonth() - startDate.getMonth();
+  return yearDiff * 12 + monthDiff + 1; // +1 to include both start and end months
+}
+
+// Calculate order item totals based on product type
+export function calculateOrderItemTotals(
+  productType: string,
+  quantity: number,
+  costValue: number,
+  proposalValue: number,
+  discount: number = 0,
+  startDate?: Date,
+  endDate?: Date
+): { totalCost: number; totalProposal: number } {
+  let totalCost: number;
+  let totalProposal: number;
+
+  if (productType === 'subscription' && startDate && endDate) {
+    // For subscription: quantity * months * cost/proposal * (1 - discount/100)
+    const months = calculateMonthsBetween(startDate, endDate);
+    totalCost = quantity * months * costValue * (1 - discount / 100);
+    totalProposal = quantity * months * proposalValue * (1 - discount / 100);
+  } else {
+    // For onetime/service-based: quantity * cost/proposal * (1 - discount/100)
+    totalCost = quantity * costValue * (1 - discount / 100);
+    totalProposal = quantity * proposalValue * (1 - discount / 100);
+  }
+
+  return { 
+    totalCost: Math.round(totalCost * 100) / 100, // Round to 2 decimal places
+    totalProposal: Math.round(totalProposal * 100) / 100 
+  };
+}
 
 export const insertStageChangeLogSchema = createInsertSchema(stageChangeLogs).omit({
   id: true,

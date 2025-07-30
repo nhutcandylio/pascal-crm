@@ -1075,12 +1075,22 @@ export class MemStorage implements IStorage {
     let totalProposalValue = 0;
     let totalCostValue = 0;
 
-    // Calculate totals from order items
+    // Calculate totals from order items using totalProposal and totalCost (includes discount calculation)
     for (const order of orders) {
       const orderItems = await this.getOrderItemsByOrder(order.id);
       for (const item of orderItems) {
-        totalProposalValue += parseFloat(item.proposalValue) * item.quantity;
-        totalCostValue += parseFloat(item.costValue) * item.quantity;
+        // Use calculated totals if available, otherwise fallback to quantity * value
+        if (item.totalProposal) {
+          totalProposalValue += parseFloat(item.totalProposal);
+        } else {
+          totalProposalValue += parseFloat(item.proposalValue) * item.quantity;
+        }
+        
+        if (item.totalCost) {
+          totalCostValue += parseFloat(item.totalCost);
+        } else {
+          totalCostValue += parseFloat(item.costValue) * item.quantity;
+        }
       }
     }
 
@@ -1413,8 +1423,11 @@ export class MemStorage implements IStorage {
     const orderItem: OrderItem = {
       ...insertOrderItem,
       quantity: insertOrderItem.quantity || 1,
+      discount: insertOrderItem.discount || "0.00",
       startDate: insertOrderItem.startDate || null,
       endDate: insertOrderItem.endDate || null,
+      totalCost: insertOrderItem.totalCost || "0.00",
+      totalProposal: insertOrderItem.totalProposal || "0.00",
       id,
       createdAt: now
     };
