@@ -113,13 +113,27 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
   const createOrderMutation = useMutation({
     mutationFn: async (data: any) => {
       // Calculate total amount from selected products
+      // For subscription products: use totalCost, for others: use proposalValue * quantity
       let totalAmount = 0;
       const orderItems = [];
 
       for (const item of data.items) {
         const product = products.find(p => p.id === item.productId);
         if (product) {
-          const itemTotal = parseFloat(item.proposalValue) * item.quantity;
+          let itemTotal;
+          if (product.type === 'subscription' && item.startDate && item.endDate) {
+            // For subscription: calculate totalCost (cost * quantity * months * discount)
+            const startDate = new Date(item.startDate);
+            const endDate = new Date(item.endDate);
+            const months = Math.max(1, Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 30.44))); // Average days per month
+            const discountMultiplier = 1 - (parseFloat(item.discount || "0") / 100);
+            itemTotal = parseFloat(item.costValue) * item.quantity * months * discountMultiplier;
+          } else {
+            // For non-subscription: use proposalValue * quantity * discount
+            const discountMultiplier = 1 - (parseFloat(item.discount || "0") / 100);
+            itemTotal = parseFloat(item.proposalValue) * item.quantity * discountMultiplier;
+          }
+          
           totalAmount += itemTotal;
           orderItems.push({
             productId: item.productId,
@@ -384,8 +398,14 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
               <DollarSign className="h-8 w-8 mx-auto mb-2 text-purple-600" />
               <p className="text-2xl font-bold">
                 ${opportunity.orders?.reduce((total, order) => 
-                  total + (order.items?.reduce((itemTotal, item) => 
-                    itemTotal + (parseFloat(item.unitPrice) * item.quantity), 0) || 0), 0)?.toLocaleString() || '0'}
+                  total + (order.items?.reduce((itemTotal, item) => {
+                    // For subscription products, use totalCost; for others, use totalProposal or calculated value
+                    if (item.product?.type === 'subscription') {
+                      return itemTotal + (parseFloat(item.totalCost || '0'));
+                    } else {
+                      return itemTotal + (parseFloat(item.totalProposal || '0') || (parseFloat(item.unitPrice) * item.quantity));
+                    }
+                  }, 0) || 0), 0)?.toLocaleString() || '0'}
               </p>
               <p className="text-sm text-muted-foreground">Order Value</p>
             </div>

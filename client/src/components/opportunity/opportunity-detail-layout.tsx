@@ -236,17 +236,40 @@ export default function OpportunityDetailLayout({
   const probability = opportunity.probability || 0;
   const value = parseFloat(opportunity.value) || 0;
   
-  // Calculate actual cost value from order items
+  // Calculate actual cost and proposal values from order items with subscription logic
   let actualCostValue = 0;
   let actualProposalValue = 0;
   if (opportunity.orders) {
     opportunity.orders.forEach(order => {
       if (order.items) {
         order.items.forEach(item => {
-          const itemCost = parseFloat(item.costValue || "0") * (item.quantity || 1);
-          const itemProposal = parseFloat(item.proposalValue || "0") * (item.quantity || 1);
-          actualCostValue += itemCost;
-          actualProposalValue += itemProposal;
+          if (item.product?.type === 'subscription') {
+            // For subscription: use calculated totals if available
+            if (item.totalCost) {
+              actualCostValue += parseFloat(item.totalCost);
+            } else {
+              actualCostValue += parseFloat(item.costValue || "0") * (item.quantity || 1);
+            }
+            
+            if (item.totalProposal) {
+              actualProposalValue += parseFloat(item.totalProposal);
+            } else {
+              actualProposalValue += parseFloat(item.proposalValue || "0") * (item.quantity || 1);
+            }
+          } else {
+            // For non-subscription: use calculated totals if available, otherwise standard calculation
+            if (item.totalCost) {
+              actualCostValue += parseFloat(item.totalCost);
+            } else {
+              actualCostValue += parseFloat(item.costValue || "0") * (item.quantity || 1);
+            }
+            
+            if (item.totalProposal) {
+              actualProposalValue += parseFloat(item.totalProposal);
+            } else {
+              actualProposalValue += parseFloat(item.proposalValue || "0") * (item.quantity || 1);
+            }
+          }
         });
       }
     });

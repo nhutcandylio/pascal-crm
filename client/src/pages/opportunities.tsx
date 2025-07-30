@@ -290,7 +290,7 @@ export default function Opportunities() {
                     <TableCell>
                       <div className="flex items-center text-sm font-medium">
                         ${(() => {
-                          // Calculate actual gross profit from order items
+                          // Calculate actual gross profit from order items with subscription logic
                           let totalProposal = 0;
                           let totalCost = 0;
                           
@@ -298,8 +298,15 @@ export default function Opportunities() {
                             opportunity.orders.forEach(order => {
                               if (order.items) {
                                 order.items.forEach(item => {
-                                  totalProposal += parseFloat(item.proposalValue || "0") * (item.quantity || 1);
-                                  totalCost += parseFloat(item.costValue || "0") * (item.quantity || 1);
+                                  if (item.product?.type === 'subscription') {
+                                    // For subscription: use calculated totals
+                                    totalProposal += parseFloat(item.totalProposal || item.proposalValue || "0");
+                                    totalCost += parseFloat(item.totalCost || item.costValue || "0");
+                                  } else {
+                                    // For non-subscription: use calculated totals or standard calculation
+                                    totalProposal += parseFloat(item.totalProposal || "0") || (parseFloat(item.proposalValue || "0") * (item.quantity || 1));
+                                    totalCost += parseFloat(item.totalCost || "0") || (parseFloat(item.costValue || "0") * (item.quantity || 1));
+                                  }
                                 });
                               }
                             });
@@ -312,7 +319,7 @@ export default function Opportunities() {
                     <TableCell>
                       <div className="flex items-center text-sm font-medium text-slate-600">
                         {(() => {
-                          // Calculate actual margin from order items
+                          // Calculate actual margin from order items with subscription logic
                           let totalProposal = 0;
                           let totalCost = 0;
                           
@@ -320,8 +327,15 @@ export default function Opportunities() {
                             opportunity.orders.forEach(order => {
                               if (order.items) {
                                 order.items.forEach(item => {
-                                  totalProposal += parseFloat(item.proposalValue || "0") * (item.quantity || 1);
-                                  totalCost += parseFloat(item.costValue || "0") * (item.quantity || 1);
+                                  if (item.product?.type === 'subscription') {
+                                    // For subscription: use calculated totals
+                                    totalProposal += parseFloat(item.totalProposal || item.proposalValue || "0");
+                                    totalCost += parseFloat(item.totalCost || item.costValue || "0");
+                                  } else {
+                                    // For non-subscription: use calculated totals or standard calculation
+                                    totalProposal += parseFloat(item.totalProposal || "0") || (parseFloat(item.proposalValue || "0") * (item.quantity || 1));
+                                    totalCost += parseFloat(item.totalCost || "0") || (parseFloat(item.costValue || "0") * (item.quantity || 1));
+                                  }
                                 });
                               }
                             });

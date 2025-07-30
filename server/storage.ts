@@ -1072,24 +1072,41 @@ export class MemStorage implements IStorage {
   // Helper method to update opportunity value from order totals
   private async updateOpportunityValueFromOrders(opportunityId: number): Promise<void> {
     const orders = await this.getOrdersByOpportunity(opportunityId);
-    let totalProposalValue = 0;
-    let totalCostValue = 0;
+    let totalOpportunityValue = 0;
+    let totalWeightedValue = 0;
 
-    // Calculate totals from order items using totalProposal and totalCost (includes discount calculation)
+    // Calculate totals from order items with different logic for subscription vs regular products
     for (const order of orders) {
       const orderItems = await this.getOrderItemsByOrder(order.id);
       for (const item of orderItems) {
-        // Use calculated totals if available, otherwise fallback to quantity * value
-        if (item.totalProposal) {
-          totalProposalValue += parseFloat(item.totalProposal);
-        } else {
-          totalProposalValue += parseFloat(item.proposalValue) * item.quantity;
-        }
+        const product = await this.getProduct(item.productId);
         
-        if (item.totalCost) {
-          totalCostValue += parseFloat(item.totalCost);
+        if (product?.type === 'subscription') {
+          // For subscription products: opportunity value uses totalProposal, weighted value uses totalCost
+          if (item.totalProposal) {
+            totalOpportunityValue += parseFloat(item.totalProposal);
+          } else {
+            totalOpportunityValue += parseFloat(item.proposalValue) * item.quantity;
+          }
+          
+          if (item.totalCost) {
+            totalWeightedValue += parseFloat(item.totalCost);
+          } else {
+            totalWeightedValue += parseFloat(item.costValue) * item.quantity;
+          }
         } else {
-          totalCostValue += parseFloat(item.costValue) * item.quantity;
+          // For non-subscription products: use standard calculation
+          if (item.totalProposal) {
+            totalOpportunityValue += parseFloat(item.totalProposal);
+          } else {
+            totalOpportunityValue += parseFloat(item.proposalValue) * item.quantity;
+          }
+          
+          if (item.totalCost) {
+            totalWeightedValue += parseFloat(item.totalCost);
+          } else {
+            totalWeightedValue += parseFloat(item.costValue) * item.quantity;
+          }
         }
       }
     }
@@ -1099,8 +1116,8 @@ export class MemStorage implements IStorage {
     if (opportunity) {
       const updatedOpportunity: Opportunity = {
         ...opportunity,
-        value: totalProposalValue.toFixed(2),
-        weightedValue: totalCostValue.toFixed(2),
+        value: totalOpportunityValue.toFixed(2),
+        weightedValue: totalWeightedValue.toFixed(2),
         updatedAt: new Date()
       };
       this.opportunities.set(opportunityId, updatedOpportunity);
