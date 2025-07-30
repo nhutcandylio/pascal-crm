@@ -103,8 +103,13 @@ export default function OpportunityModal({ open, onOpenChange, opportunity }: Op
       }
     },
     onSuccess: () => {
+      // Invalidate all opportunity-related queries to update tables and metrics
       queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities/with-orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
+      if (opportunity) {
+        queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+      }
       toast({
         title: "Success",
         description: opportunity ? "Opportunity updated successfully." : "Opportunity created successfully.",

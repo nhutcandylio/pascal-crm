@@ -96,7 +96,9 @@ export default function ConvertToOpportunityModal({
       return opportunity;
     },
     onSuccess: (opportunity) => {
+      // Invalidate all opportunity-related queries to ensure immediate updates
       queryClient.invalidateQueries({ queryKey: ['/api/opportunities'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/opportunities/with-orders'] });
       queryClient.invalidateQueries({ queryKey: ['/api/leads'] });
       queryClient.invalidateQueries({ queryKey: ['/api/accounts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/contacts'] });
