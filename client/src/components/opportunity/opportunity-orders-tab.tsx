@@ -157,7 +157,11 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
       return order;
     },
     onSuccess: () => {
+      // Invalidate all related queries to update metrics and lists
       queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities/with-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
       toast({
         title: "Success",
         description: "Order created successfully.",
@@ -224,7 +228,11 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate all related queries to update metrics and lists
       queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities/with-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
       toast({
         title: "Success",
         description: "Order status updated successfully.",
@@ -247,7 +255,11 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate all related queries to update metrics and lists
       queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities/with-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
       toast({
         title: "Success",
         description: "Order item updated successfully.",
@@ -273,7 +285,11 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate all related queries to update metrics and lists
       queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities/with-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
       toast({
         title: "Success",
         description: "Product added to order successfully.",
@@ -296,7 +312,11 @@ export default function OpportunityOrdersTab({ opportunity }: OpportunityOrdersT
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate all related queries to update metrics and lists
       queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities/with-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
       toast({
         title: "Success",
         description: "Order deleted successfully.",

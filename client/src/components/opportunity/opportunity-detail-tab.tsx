@@ -76,7 +76,9 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
       }
       
       queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/opportunities/with-orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
       
       // If account was updated, automatically set the contact from that account
       if (field === 'accountId') {
@@ -97,10 +99,16 @@ export default function OpportunityDetailTab({ opportunity }: OpportunityDetailT
           // Update the contact field to match the account
           await apiRequest("PATCH", `/api/opportunities/${opportunity.id}`, { contactId: newContactId });
           queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/opportunities/with-orders"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
         } else {
           // If no account selected, clear the contact
           await apiRequest("PATCH", `/api/opportunities/${opportunity.id}`, { contactId: null });
           queryClient.invalidateQueries({ queryKey: ["/api/opportunities", opportunity.id, "with-relations"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/opportunities/with-orders"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/opportunities"] });
+          queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
         }
       }
 
