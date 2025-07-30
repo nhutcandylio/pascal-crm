@@ -196,6 +196,9 @@ export const insertOrderItemSchema = createInsertSchema(orderItems).omit({
 }).extend({
   startDate: z.union([z.date(), z.string().transform(str => str ? new Date(str) : null), z.null()]).optional(),
   endDate: z.union([z.date(), z.string().transform(str => str ? new Date(str) : null), z.null()]).optional(),
+}).partial({
+  totalCost: true,
+  totalProposal: true,
 });
 
 // Utility function to calculate months between two dates
